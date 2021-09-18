@@ -100,7 +100,18 @@ func _physics_process(delta: float) -> void:
 	point_mass.p = clamped_distance_to(point_mass.p, mass_center, 0, angular_limit)
 	#point_mass.pp = clamped_distance_to(point_mass.pp, mass_center, 0, angular_limit)
 
-	#skeleton.set_bone_pose(bone_idx, Transform(global_to_rest_pose, Vector3()))
+	# TODO: correct axis?
+	var global_x: = global_bone_pose.basis * Vector3.RIGHT
+	var axis_y: = (point_mass.p - origin).normalized()
+	var axis_z: = global_x.cross(axis_y).normalized()
+	var axis_x: = axis_y.cross(axis_z)
+	var basis: = Basis(axis_x, axis_y, axis_z)
+
+	skeleton.set_bone_pose(bone_idx, Transform(global_to_pose.basis * basis, Vector3()))
+
+	# TODO: remove? to draw gizmo correctly
+	global_transform.basis = basis
+	global_transform.origin = origin
 
 	var mc: Spatial = $MassCenter
 	mc.set_as_toplevel(true)
@@ -171,65 +182,7 @@ class PointMass:
 		a = Vector3()
 
 	func solve_constraint(target: Vector3, stiffness: float) -> void:
-		#p += (target - p) * stiffness
-
-		var d: = p - target
-		var l: = d.length()
-		var r: = 0.0
-
-		if l != 0.0:
-			r = (0 - l) / l
-
-		d *= r
-
-		var f1: = 1.0 - 1.0 / (1.0 + 1.0);
-		var s1: = f1 * stiffness;
-		var s2: = stiffness - s1;
-
-		p += d * s1
-
-		"""
-			var p1 = this.p1;
-			var p2 = this.p2;
-
-			// current distance vector between points
-			// d = p1 - p2
-			var d = p1.p.sub(p2.p);
-
-			// scalar distance between points
-			// l = |d|
-			var l = d.length;
-
-			var r = 0.0;
-
-			// proportion between current distance and resting distance
-			if (l != 0.0) {
-				r = (this.restDist - l) / l;
-			}
-
-			// distance vector differing from resting distance
-			// d *= r
-			d = d.mult(r);
-
-			// mass influence of `p1` as fraction between 0.0 and 1.0
-			// `0.5` would mean that `p1` and `p2` have the same mass
-			var f1 = 1.0 - p1.mass / (p1.mass + p2.mass);
-
-			// influences of `p1` and `p2`
-			var s1 = f1 * this.stiffness;
-			var s2 = this.stiffness - s1;
-
-			if (!p1.pinned) {
-				// p1 += d * s1
-				p1.p = p1.p.add(d.mult(s1));
-			}
-
-			if (!p2.pinned) {
-				// p2 -= d * s2
-				p2.p = p2.p.sub(d.mult(s2));
-			}
-
-	"""
+		p += (target - p) * stiffness
 
 	func apply_force(force: Vector3) -> void:
 		a += force
