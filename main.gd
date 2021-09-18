@@ -17,7 +17,7 @@ func prepare_skeleton() -> void:
 	var bone_idx3: = skeleton.get_bone_count()
 	skeleton.add_bone("wiggle2_end")
 
-	var bone_transform: = Transform().rotated(Vector3.RIGHT, PI * 0.5)
+	var bone_transform: = Transform()#.rotated(Vector3.RIGHT, PI * 0.5)
 
 	skeleton.set_bone_rest(bone_idx1, bone_transform)
 	skeleton.set_bone_rest(bone_idx2, Transform().translated(Vector3(0.0, 0.5, 0.0)))

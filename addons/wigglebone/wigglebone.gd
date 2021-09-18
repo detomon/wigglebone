@@ -88,14 +88,14 @@ func _physics_process(delta: float) -> void:
 	var max_distance: = mass_distance
 
 	# TODO: dislocation?
-	if properties.max_dislocation >= 0:
-		min_distance = max(0, min_distance - properties.max_dislocation)
-		max_distance = max(0, max_distance + properties.max_dislocation)
+	#if properties.max_dislocation >= 0:
+	#	min_distance = max(0, min_distance - properties.max_dislocation)
+	#	max_distance = max(0, max_distance + properties.max_dislocation)
 
 	point_mass.p = clamped_distance_to(point_mass.p, origin, min_distance, max_distance)
 	point_mass.pp = clamped_distance_to(point_mass.pp, origin, min_distance, max_distance)
 
-	var angular_limit: = (1.0 - cos(deg2rad(properties.angle_max_degrees))) * mass_distance * SQRT_2
+	var angular_limit: = (1.0 - cos(deg2rad(properties.max_degrees))) * mass_distance * SQRT_2
 	angular_limit += properties.max_dislocation
 	point_mass.p = clamped_distance_to(point_mass.p, mass_center, 0, angular_limit)
 	#point_mass.pp = clamped_distance_to(point_mass.pp, mass_center, 0, angular_limit)

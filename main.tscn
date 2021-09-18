@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=2]
@@ -7,23 +7,20 @@
 [sub_resource type="Resource" id=1]
 script = ExtResource( 3 )
 mass_center = Vector3( 0, 0.5, 0 )
-gravity = Vector3( 0, -200, 0 )
+gravity = Vector3( 0, -50, 0 )
 stiffness = 0.1
-damping = 0.3
-max_dislocation = 0.0
-angle_max_degrees = 60.0
-
-[sub_resource type="CubeMesh" id=2]
-size = Vector3( 0.1, 0.1, 0.1 )
+damping = 0.1
+mode = 0
+max_degrees = 60.0
 
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
 
 [node name="Skeleton" type="Skeleton" parent="."]
-transform = Transform( 1, 0, 0, 0, -0.0991286, 0.995075, 0, -0.995075, -0.0991286, 0, 0, 0 )
+transform = Transform( 1, 0, 0, 0, 0.810584, -0.585623, 0, 0.585623, 0.810584, 0, 0, 0 )
 bones/0/name = "wiggle"
 bones/0/parent = -1
-bones/0/rest = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0 )
+bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 bones/0/enabled = true
 bones/0/bound_children = [  ]
 bones/1/name = "wiggle_end"
@@ -38,27 +35,19 @@ bones/2/enabled = true
 bones/2/bound_children = [  ]
 
 [node name="WiggleBone" type="Spatial" parent="Skeleton"]
-transform = Transform( 1, 5.60519e-45, 0, -1.4013e-45, 0.0981664, -0.99517, -5.60519e-45, 0.99517, 0.0981664, 0, 0, 0 )
+transform = Transform( 1, 0, 0, 0, 0.996698, -0.0811872, 0, 0.0811872, 0.996698, 0, 0, 0 )
 script = ExtResource( 2 )
 bone_name = "wiggle"
 properties = SubResource( 1 )
 
 [node name="MassCenter" type="Position3D" parent="Skeleton/WiggleBone"]
-transform = Transform( 0.999993, -4.38968e-06, -2.40636e-06, 1.01497e-05, 1.00008, -7.83801e-06, 8.51461e-07, 1.27107e-05, 1.00005, 0, 0.5, 7.45058e-09 )
-
-[node name="MeshInstance" type="MeshInstance" parent="Skeleton/WiggleBone"]
-mesh = SubResource( 2 )
-material/0 = null
+transform = Transform( 1.00001, -3.84668e-06, -2.34793e-06, 6.13407e-06, 1.00011, -1.90735e-05, 3.26037e-06, 3.016e-05, 1.00006, 0, 0.5, 4.47035e-08 )
 
 [node name="WiggleBone2" type="Spatial" parent="Skeleton"]
-transform = Transform( 1, 1.68156e-44, 1.4013e-45, -4.2039e-45, 0.284591, -0.958649, -1.54143e-44, 0.958649, 0.284591, 2.8026e-45, 0.0490832, 0.497585 )
+transform = Transform( 1, 0, 0, 0, 0.985457, -0.169923, 0, 0.169923, 0.985457, 0, 0.498349, 0.0405936 )
 script = ExtResource( 2 )
 bone_name = "wiggle_end"
 properties = SubResource( 1 )
 
 [node name="MassCenter" type="Position3D" parent="Skeleton/WiggleBone2"]
-transform = Transform( 1, 9.89391e-07, -2.53152e-06, -9.60039e-06, 0.999983, -5.06639e-06, 6.05407e-06, 1.3411e-05, 1.00006, 0, 0.5, -2.23517e-08 )
-
-[node name="MeshInstance" type="MeshInstance" parent="Skeleton/WiggleBone2"]
-mesh = SubResource( 2 )
-material/0 = null
+transform = Transform( 1, 1.575e-09, 1.24221e-05, -3.16812e-06, 1.00005, -8.34465e-06, 1.38964e-05, 2.19345e-05, 1.00008, 0, 0.5, 0 )
