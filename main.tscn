@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://main.gd" type="Script" id=1]
+[ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=2]
+[ext_resource path="res://addons/wigglebone/wiggleproperties.gd" type="Script" id=3]
+
+[sub_resource type="Resource" id=1]
+script = ExtResource( 3 )
+mass_center = Vector3( 0, 0.5, 0 )
+gravity = Vector3( 0, 0, 0 )
+stiffness = 0.2
+damping = 0.1
+max_dislocation = 0.0
+angle_max_degrees = 60.0
+
+[node name="Main" type="Spatial"]
+script = ExtResource( 1 )
+
+[node name="Skeleton" type="Skeleton" parent="."]
+bones/0/name = "wiggle"
+bones/0/parent = -1
+bones/0/rest = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0 )
+bones/0/enabled = true
+bones/0/bound_children = [  ]
+bones/1/name = "wiggle_end"
+bones/1/parent = 0
+bones/1/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
+bones/1/enabled = true
+bones/1/bound_children = [  ]
+
+[node name="WiggleBone" type="Spatial" parent="Skeleton"]
+script = ExtResource( 2 )
+bone_name = "wiggle"
+properties = SubResource( 1 )
+
+[node name="MassCenter" type="Position3D" parent="Skeleton/WiggleBone"]
+transform = Transform( 1.00001, 1.84741e-13, 5.66244e-07, 1.03018e-13, 0.999967, -2.0709e-06, -2.97919e-07, -5.66172e-06, 0.999834, 0, 2.18557e-08, -0.5 )

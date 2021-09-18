@@ -1,0 +1,49 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[ {
+"base": "Spatial",
+"class": "WiggleBone",
+"language": "GDScript",
+"path": "res://addons/wigglebone/wigglebone.gd"
+}, {
+"base": "EditorSpatialGizmoPlugin",
+"class": "WiggleGizmoPlugin",
+"language": "GDScript",
+"path": "res://addons/wigglebone/wigglegizmoplugin.gd"
+}, {
+"base": "Resource",
+"class": "WiggleProperties",
+"language": "GDScript",
+"path": "res://addons/wigglebone/wiggleproperties.gd"
+} ]
+_global_script_class_icons={
+"WiggleBone": "",
+"WiggleGizmoPlugin": "",
+"WiggleProperties": ""
+}
+
+[application]
+
+config/name="Wigglebone"
+run/main_scene="res://main.tscn"
+config/icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/wigglebone/plugin.cfg" )
+
+[physics]
+
+common/enable_pause_aware_picking=true
+
+[rendering]
+
+environment/default_environment="res://default_env.tres"
