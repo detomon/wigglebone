@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://examples/simple/simple.tres" type="Resource" id=1]
+[ext_resource path="res://examples/bone.obj" type="ArrayMesh" id=2]
+[ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=3]
+[ext_resource path="res://examples/simple/simple.gd" type="Script" id=4]
+
+[node name="Simple" type="Spatial"]
+script = ExtResource( 4 )
+
+[node name="Skeleton" type="Skeleton" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.999999, 0, 0, 0, 0.999999, 0, 0, 0 )
+bones/0/name = "bone1"
+bones/0/parent = -1
+bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+bones/0/enabled = true
+bones/0/bound_children = [  ]
+bones/1/name = "end"
+bones/1/parent = 0
+bones/1/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
+bones/1/enabled = true
+bones/1/bound_children = [  ]
+
+[node name="WiggleBone" type="Spatial" parent="Skeleton"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+script = ExtResource( 3 )
+bone_name = "bone1"
+properties = ExtResource( 1 )
+anchor = NodePath("Anchor")
+show_gizmo = true
+
+[node name="Anchor" type="Spatial" parent="Skeleton/WiggleBone"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+__meta__ = {
+"_editor_description_": "Only used to visualize bone"
+}
+
+[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone/Anchor"]
+transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
+mesh = ExtResource( 2 )
+material/0 = null

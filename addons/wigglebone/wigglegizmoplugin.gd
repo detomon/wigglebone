@@ -2,71 +2,66 @@ extends EditorSpatialGizmoPlugin
 
 class_name WiggleGizmoPlugin
 
-const GIZMO_SCALE: = Vector3(0.05, 0.2, 0.05)
+const SQRT_1_2: = 0.7071067812
 
-var lines: = []
+var gizmo_lines: = generate_lines()
 
 func _init() -> void:
 	create_material("main", Color.red, false, true)
 	create_handle_material("handles")
-	lines = generate_lines(GIZMO_SCALE)
 
 func get_name() -> String:
-	return "Wiggle Bone"
+	return "WiggleBone"
 
 func has_gizmo(spatial: Spatial) -> bool:
 	return spatial is WiggleBone
 
 func redraw(gizmo: EditorSpatialGizmo) -> void:
-	print("redraw")
-
 	gizmo.clear()
 
-	var spatial: Spatial = gizmo.get_spatial_node()
+	var spatial: WiggleBone = gizmo.get_spatial_node()
+	var properties: WiggleProperties = spatial.properties
 
-	var handles: = PoolVector3Array([
-		Vector3(0, 1, 0),
-		Vector3(0, 2, 0),
-	])
+	if properties and spatial.show_gizmo:
+		var length: = properties.mass_center.length()
+		var scale_x: = sin(deg2rad(properties.max_degrees)) / SQRT_1_2
+		var scale_y: = cos(deg2rad(properties.max_degrees)) / SQRT_1_2
+		var scale: = Vector3(scale_x, scale_y, scale_x) * length * 0.5
 
-	gizmo.add_lines(lines, get_material("main", gizmo), false)
-	gizmo.add_handles(handles, get_material("handles", gizmo))
+		var lines: = lines(scale)
+		lines.append(Vector3(0, 0, 0))
+		lines.append(properties.mass_center)
 
-func get_handle_name(gizmo: EditorSpatialGizmo, index: int) -> String:
-	return [
-		"Handle 1",
-		"Handle 2",
-	][index]
+		gizmo.add_lines(lines, get_material("main", gizmo), false)
 
-func get_handle_value(gizmo: EditorSpatialGizmo, index: int) -> float:
-	return [
-		0.1,
-		0.5,
-	][index]
+func generate_lines() -> PoolVector3Array:
+	var count: = 6
+	var lines: = PoolVector3Array()
+	var prev_point: = Vector3()
+	var points: = PoolVector3Array()
 
-func commit_handle(gizmo: EditorSpatialGizmo, index: int, restore, cancel: bool = false) -> void:
-	prints("commit", gizmo, index, restore, cancel)
+	for i in count:
+		var x: = cos(i * TAU / float(count))
+		var y: = sin(i * TAU / float(count))
+		var point: = Vector3(x, 1, y)
 
-func set_handle(gizmo: EditorSpatialGizmo, index: int, camera: Camera, point: Vector2) -> void:
-	prints("handle", gizmo, index, camera, point)
+		points.append(point)
+		lines.append(Vector3(0, 0, 0))
+		lines.append(point)
 
-func generate_lines(scale: Vector3) -> PoolVector3Array:
-	return PoolVector3Array([
-		Vector3(0, 0, 0) * scale,
-		Vector3(1, 1, 1) * scale,
-		Vector3(0, 0, 0) * scale,
-		Vector3(-1, 1, 1) * scale,
-		Vector3(0, 0, 0) * scale,
-		Vector3(-1, 1, -1) * scale,
-		Vector3(0, 0, 0) * scale,
-		Vector3(1, 1, -1) * scale,
+	for i in len(points) - 1:
+		lines.append(points[i])
+		lines.append(points[i + 1])
 
-		Vector3(1, 1, 1) * scale,
-		Vector3(-1, 1, 1) * scale,
-		Vector3(-1, 1, 1) * scale,
-		Vector3(-1, 1, -1) * scale,
-		Vector3(-1, 1, -1) * scale,
-		Vector3(1, 1, -1) * scale,
-		Vector3(1, 1, -1) * scale,
-		Vector3(1, 1, 1) * scale,
-	])
+	lines.append(points[0])
+	lines.append(points[len(points) - 1])
+
+	return lines
+
+func lines(scale: Vector3) -> PoolVector3Array:
+	var new_lines: = gizmo_lines
+
+	for i in len(new_lines):
+		new_lines[i] *= scale
+
+	return new_lines
