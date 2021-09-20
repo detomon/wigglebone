@@ -9,7 +9,7 @@
 script = ExtResource( 4 )
 
 [node name="Skeleton" type="Skeleton" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.972255, -0.23392, 0, 0.23392, 0.972255, 0, 0, 0 )
+transform = Transform( 1, 0, 0, 0, 0.792811, 0.609467, 0, -0.609467, 0.792811, 0, 0, 0 )
 bones/0/name = "bone1"
 bones/0/parent = -1
 bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
@@ -34,15 +34,16 @@ anchor = NodePath("Anchor")
 show_gizmo = true
 
 [node name="Anchor" type="Spatial" parent="Skeleton/WiggleBone1"]
-transform = Transform( 1, 0, 0, 0, 0.990606, -0.136757, 0, 0.136757, 0.990606, 0, 0, 0 )
+transform = Transform( 1, 0, 0, 0, 0.950965, 0.3093, 0, -0.3093, 0.950965, 0, 0, 0 )
 
 [node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone1/Anchor"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
+visible = false
 mesh = ExtResource( 2 )
 material/0 = null
 
 [node name="WiggleBone2" type="Spatial" parent="Skeleton"]
-transform = Transform( 1, 0, 0, 0, 0.990606, -0.136757, 0, 0.136757, 0.990606, 0, 0.495303, 0.0683786 )
+transform = Transform( 1, 0, 0, 0, 0.950965, 0.3093, 0, -0.3093, 0.950965, 0, 0.475482, -0.15465 )
 script = ExtResource( 3 )
 bone_name = "bone2"
 properties = ExtResource( 1 )
@@ -50,9 +51,10 @@ anchor = NodePath("Anchor")
 show_gizmo = true
 
 [node name="Anchor" type="Spatial" parent="Skeleton/WiggleBone2"]
-transform = Transform( 1, 0, 0, 0, 0.978628, -0.205638, 0, 0.205638, 0.978628, 0, 0, 0 )
+transform = Transform( 1, 0, 0, 0, 0.930882, 0.365319, 0, -0.365319, 0.930882, 0, 0, 0 )
 
 [node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone2/Anchor"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
+visible = false
 mesh = ExtResource( 2 )
 material/0 = null

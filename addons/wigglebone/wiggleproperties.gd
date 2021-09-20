@@ -40,9 +40,9 @@ func set_mode(new_mode: int) -> void:
 	emit_changed()
 
 # maximum distance the bone root will be dislodged from its pose position
-var max_dislocation: = 0.1 setget set_max_dislocation
-func set_max_dislocation(value: float) -> void:
-	max_dislocation = value
+var max_distance: = 0.1 setget set_max_distance
+func set_max_distance(value: float) -> void:
+	max_distance = value
 	emit_changed()
 
 # maximum rotation
@@ -91,10 +91,10 @@ func _get_property_list() -> Array:
 			})
 		Mode.DISLOCATION:
 			props.append({
-				name = "max_dislocation",
+				name = "max_distance",
 				type = TYPE_REAL,
 				hint = PROPERTY_HINT_RANGE,
-				hint_string = "0,1000",
+				hint_string = "0,1,or_greater",
 				usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 			})
 
