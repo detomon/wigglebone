@@ -9,7 +9,6 @@
 script = ExtResource( 4 )
 
 [node name="Skeleton" type="Skeleton" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.792811, 0.609467, 0, -0.609467, 0.792811, 0, 0, 0 )
 bones/0/name = "bone1"
 bones/0/parent = -1
 bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
@@ -30,31 +29,30 @@ bones/2/bound_children = [  ]
 script = ExtResource( 3 )
 bone_name = "bone1"
 properties = ExtResource( 1 )
-anchor = NodePath("Anchor")
+attachment = NodePath("Attachment")
 show_gizmo = true
 
-[node name="Anchor" type="Spatial" parent="Skeleton/WiggleBone1"]
-transform = Transform( 1, 0, 0, 0, 0.950965, 0.3093, 0, -0.3093, 0.950965, 0, 0, 0 )
-
-[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone1/Anchor"]
-transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
+[node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone1"]
+transform = Transform( 1, -5.74803e-05, 0, 5.74803e-05, 1, -6.65522e-05, 3.82545e-09, 6.65522e-05, 1, 0, 0, 0 )
 visible = false
+
+[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone1/Attachment"]
+transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
 mesh = ExtResource( 2 )
 material/0 = null
 
 [node name="WiggleBone2" type="Spatial" parent="Skeleton"]
-transform = Transform( 1, 0, 0, 0, 0.950965, 0.3093, 0, -0.3093, 0.950965, 0, 0.475482, -0.15465 )
+transform = Transform( 1, -5.74803e-05, 0, 5.74803e-05, 1, -6.65522e-05, 3.82545e-09, 6.65522e-05, 1, -2.87402e-05, 0.5, 3.32761e-05 )
 script = ExtResource( 3 )
 bone_name = "bone2"
 properties = ExtResource( 1 )
-anchor = NodePath("Anchor")
+attachment = NodePath("Attachment")
 show_gizmo = true
 
-[node name="Anchor" type="Spatial" parent="Skeleton/WiggleBone2"]
-transform = Transform( 1, 0, 0, 0, 0.930882, 0.365319, 0, -0.365319, 0.930882, 0, 0, 0 )
+[node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone2"]
+transform = Transform( 0.999998, 0.00207406, 1.33227e-15, -0.00207406, 0.999995, 0.00240119, 4.98022e-06, -0.00240119, 0.999997, 0, 0, 0 )
 
-[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone2/Anchor"]
+[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone2/Attachment"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
-visible = false
 mesh = ExtResource( 2 )
 material/0 = null

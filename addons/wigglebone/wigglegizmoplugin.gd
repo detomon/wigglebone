@@ -1,11 +1,11 @@
+tool
 extends EditorSpatialGizmoPlugin
-
 class_name WiggleGizmoPlugin
 
 const SQRT_1_2: = 0.7071067812
 
 var cone_lines: = generate_cone_lines()
-var cube_lines: = generate_cube_lines()
+var sphere_lines: = generate_sphere_lines()
 
 func _init() -> void:
 	create_material("main", Color.red, false, true)
@@ -27,14 +27,14 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 		match properties.mode:
 			WiggleProperties.Mode.ROTATION:
 				var length: = properties.mass_center.length()
-				var scale_x: = sin(deg2rad(properties.max_degrees)) / SQRT_1_2
-				var scale_y: = cos(deg2rad(properties.max_degrees)) / SQRT_1_2
-				var scale: = Vector3(scale_x, scale_y, scale_x)
+				var scale_x: = sin(deg2rad(properties.max_degrees))
+				var scale_y: = cos(deg2rad(properties.max_degrees))
+				var scale: = Vector3(scale_x, scale_y, scale_x) / SQRT_1_2
 
 				var bone_look_at: = WiggleBone.create_bone_look_at(properties.mass_center, Vector3.RIGHT)
 				var transform: = bone_look_at * Basis().scaled(scale * length * 0.5)
 
-				var lines: = transform_lines(cone_lines, transform)
+				var lines: = transform_points(cone_lines, transform)
 				lines.append(Vector3(0, 0, 0))
 				lines.append(properties.mass_center)
 
@@ -45,68 +45,57 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 				var scale: = Vector3.ONE * max_distance
 				var transform: = Basis().scaled(scale)
 
-				var lines: = transform_lines(cube_lines, transform)
+				var lines: = transform_points(sphere_lines, transform)
 
-				gizmo.add_lines(lines, get_material("main", gizmo), false)
+				gizmo.add_lines(lines, get_material("main", gizmo), true)
 
-func generate_cone_lines() -> PoolVector3Array:
-	var count: = 6
+static func generate_cone_lines() -> PoolVector3Array:
+	var count: = 32
 	var lines: = PoolVector3Array()
-	var prev_point: = Vector3()
 	var points: = PoolVector3Array()
+	var prev_point: = Vector3()
 
 	for i in count:
-		var x: = cos(i * TAU / float(count))
-		var y: = sin(i * TAU / float(count))
-		var point: = Vector3(x, 1, y)
-
-		points.append(point)
-		lines.append(Vector3(0, 0, 0))
-		lines.append(point)
+		points.append(Vector3(1, 1, 0).rotated(Vector3.UP, i * TAU / count))
 
 	for i in len(points) - 1:
 		lines.append(points[i])
 		lines.append(points[i + 1])
+
+		if i % 8 == 0:
+			lines.append(Vector3(0, 0, 0))
+			lines.append(points[i])
 
 	lines.append(points[0])
 	lines.append(points[len(points) - 1])
 
 	return lines
 
-func generate_cube_lines() -> PoolVector3Array:
-	return PoolVector3Array([
-		Vector3(-1, -1, -1),
-		Vector3(+1, -1, -1),
-		Vector3(+1, -1, -1),
-		Vector3(+1, -1, +1),
-		Vector3(+1, -1, +1),
-		Vector3(-1, -1, +1),
-		Vector3(-1, -1, +1),
-		Vector3(-1, -1, -1),
+static func generate_sphere_lines() -> PoolVector3Array:
+	var count: = 24
+	var lines: = PoolVector3Array()
+	var points: = PoolVector3Array()
+	var prev_point: = Vector3()
 
-		Vector3(-1, +1, -1),
-		Vector3(+1, +1, -1),
-		Vector3(+1, +1, -1),
-		Vector3(+1, +1, +1),
-		Vector3(+1, +1, +1),
-		Vector3(-1, +1, +1),
-		Vector3(-1, +1, +1),
-		Vector3(-1, +1, -1),
+	for i in count:
+		points.append(Vector3(1, 0, 0).rotated(Vector3.UP, i * TAU / count))
 
-		Vector3(-1, -1, -1),
-		Vector3(-1, +1, -1),
-		Vector3(+1, -1, -1),
-		Vector3(+1, +1, -1),
-		Vector3(+1, -1, +1),
-		Vector3(+1, +1, +1),
-		Vector3(-1, -1, +1),
-		Vector3(-1, +1, +1),
-	])
+	for transform in [Basis(), Basis().rotated(Vector3.RIGHT, PI * 0.5), Basis().rotated(Vector3.BACK, PI * 0.5)]:
+		var new_lines: = transform_points(points, transform)
 
-static func transform_lines(lines: PoolVector3Array, transform: Basis) -> PoolVector3Array:
-	var new_lines: = lines
+		for i in len(new_lines) - 1:
+			lines.append(new_lines[i])
+			lines.append(new_lines[i + 1])
 
-	for i in len(new_lines):
-		new_lines[i] = transform * new_lines[i]
+		lines.append(new_lines[0])
+		lines.append(new_lines[len(new_lines) - 1])
 
-	return new_lines
+	return lines
+
+static func transform_points(points: PoolVector3Array, transform: Basis) -> PoolVector3Array:
+	var new_points: = points
+
+	for i in len(new_points):
+		new_points[i] = transform * new_points[i]
+
+	return new_points

@@ -24,15 +24,15 @@ bones/1/bound_children = [  ]
 script = ExtResource( 3 )
 bone_name = "bone1"
 properties = ExtResource( 1 )
-anchor = NodePath("Anchor")
+attachment = NodePath("Attachment")
 show_gizmo = true
 
-[node name="Anchor" type="Spatial" parent="Skeleton/WiggleBone"]
+[node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone"]
 __meta__ = {
 "_editor_description_": ""
 }
 
-[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone/Anchor"]
+[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone/Attachment"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
 mesh = ExtResource( 2 )
 material/0 = null

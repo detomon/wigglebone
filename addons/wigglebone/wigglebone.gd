@@ -1,6 +1,5 @@
 tool
 extends Spatial
-
 class_name WiggleBone
 
 const PRECALCULATE_ITERATIONS: = 10
@@ -27,10 +26,10 @@ func set_properties(new_properties: WiggleProperties) -> void:
 	if properties:
 		properties.connect("changed", self, "_properties_changed")
 
-var anchor: NodePath setget set_anchor
-func set_anchor(new_anchor: NodePath) -> void:
-	anchor = new_anchor
-	anchor_spatial = get_node_or_null(anchor)
+var attachment: NodePath setget set_attachment
+func set_attachment(new_attachment: NodePath) -> void:
+	attachment = new_attachment
+	attachment_spatial = get_node_or_null(attachment)
 
 var show_gizmo: = true setget set_show_gizmo
 func set_show_gizmo(value: bool) -> void:
@@ -39,7 +38,7 @@ func set_show_gizmo(value: bool) -> void:
 
 var skeleton: Skeleton
 var bone_idx: = -1
-var anchor_spatial: Spatial
+var attachment_spatial: Spatial
 
 var point_mass: = PointMass.new()
 var should_reset: = false
@@ -47,7 +46,7 @@ var should_reset: = false
 func _ready() -> void:
 	set_as_toplevel(true)
 	set_enabled(enabled)
-	set_anchor(anchor)
+	set_attachment(attachment)
 
 func _enter_tree() -> void:
 	skeleton = get_parent() as Skeleton
@@ -67,10 +66,13 @@ func _get_property_list() -> Array:
 		name = "properties",
 		type = TYPE_OBJECT,
 		hint = PROPERTY_HINT_RESOURCE_TYPE,
-		hint_string = "WiggleProperties",
+		# produces error in editor when loading from file
+		# use general resource type for now
+		#hint_string = "WiggleProperties",
+		hint_string = "Resource",
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}, {
-		name = "anchor",
+		name = "attachment",
 		type = TYPE_NODE_PATH,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}, {
@@ -112,8 +114,8 @@ func _physics_process(delta: float) -> void:
 	skeleton.set_bone_pose(bone_idx, pose)
 
 	global_transform = global_bone_pose
-	if anchor_spatial:
-		anchor_spatial.transform.basis = pose.basis
+	if attachment_spatial:
+		attachment_spatial.transform = pose
 
 func _get_global_pose() -> Transform:
 	var rest_pose: = skeleton.get_bone_rest(bone_idx)

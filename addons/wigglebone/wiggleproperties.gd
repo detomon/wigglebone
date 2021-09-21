@@ -1,6 +1,5 @@
 tool
 extends Resource
-
 class_name WiggleProperties
 
 enum Mode {
