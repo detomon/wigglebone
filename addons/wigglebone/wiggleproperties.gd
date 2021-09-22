@@ -33,8 +33,8 @@ func set_damping(value: float) -> void:
 
 # wiggle mode
 var mode: int = Mode.ROTATION setget set_mode
-func set_mode(new_mode: int) -> void:
-	mode = new_mode
+func set_mode(value: int) -> void:
+	mode = value
 	property_list_changed_notify()
 	emit_changed()
 
