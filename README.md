@@ -36,6 +36,8 @@ The bone rotates around its origin as if some mass is attached to its end. The r
 
 The bone moves relative to its origin as if some mass is attached to its end but without rotating. The distance can be limited to a certain value with `Max Distance`
 
-## Transformation
+## Bone Attachment
 
-The **WiggleBone** node inherits its transformation from the bones pose (without wiggle) and acts the same way as a **BoneAttachment**. One of its **Spatial** child can also inherit the full transformation (including wiggle) using the `Attachment` property and can be used to attach something.
+The **WiggleBone** node inherits its transformation from the bones pose (without wiggle) and acts the same way as a **BoneAttachment**. One of its **Spatial** children can also inherit the full transformation (including wiggle) using the `Attachment` property.
+
+When using the `Attachment` property, be aware that the calculation runs in `_physics_process` because it's more stable. When the attachment position doesn't line up with the expected bone position when animations are used, make sure `AnimationPlayer` run with `Process Mode`: `Physics`.

@@ -34,7 +34,6 @@ attachment = NodePath("Attachment")
 show_gizmo = true
 
 [node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone1"]
-transform = Transform( 1, 0, 0, 0, 1, -1.54083e-15, 0, 1.54083e-15, 1, 0, 0, 0 )
 
 [node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone1/Attachment"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
@@ -43,7 +42,7 @@ material/0 = null
 
 [node name="WiggleBone2" type="Spatial" parent="Skeleton"]
 process_priority = 1000
-transform = Transform( 1, 0, 0, 0, 1, -1.54083e-15, 0, 1.54083e-15, 1, 0, 0.5, 7.70414e-16 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
 script = ExtResource( 3 )
 bone_name = "bone2"
 properties = ExtResource( 1 )
@@ -51,7 +50,6 @@ attachment = NodePath("Attachment")
 show_gizmo = true
 
 [node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone2"]
-transform = Transform( 1, 0, 0, 0, 1, -1.06932e-13, 0, 1.06932e-13, 1, 0, 0, 0 )
 
 [node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone2/Attachment"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
