@@ -166,7 +166,7 @@ func _solve_pose(global_bone_pose: Transform, delta: float) -> Transform:
 			point_mass.p = clamp_distance_to(point_mass.p, origin, min_distance, max_distance)
 			point_mass.pp = clamp_distance_to(point_mass.pp, origin, min_distance, max_distance)
 
-			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.UP)
+			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
 			var angular_limit: = angular_offset * mass_distance
 
 			point_mass.p = clamp_distance_to(point_mass.p, mass_center, 0, angular_limit)
