@@ -14,7 +14,7 @@ func set_mass_center(value: Vector3) -> void:
 	emit_changed()
 
 # gravity pulling at mass center
-var gravity: = Vector3(0.0, -50.0, 0.0) setget set_gravity
+var gravity: = Vector3(0.0, -0.5, 0.0) setget set_gravity
 func set_gravity(value: Vector3) -> void:
 	gravity = value
 	emit_changed()

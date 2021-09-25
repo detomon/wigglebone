@@ -166,8 +166,6 @@ func _solve(global_bone_pose: Transform, delta: float) -> void:
 		point_mass.solve_constraint(mass_center, properties.stiffness)
 
 func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
-	# TODO: extrapolation
-
 	var pose = Transform()
 	var mass_center: = global_bone_pose * properties.mass_center
 	var global_to_pose: = global_bone_pose.basis.inverse()
@@ -184,15 +182,18 @@ func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
 			var angular_limit: = angular_offset * mass_distance
 
 			point_mass.p = clamp_distance_to(point_mass.p, mass_center, 0, angular_limit)
-			# TODO: add?
-			#point_mass.pp = clamped_distance_to(point_mass.pp, mass_center, 0, angular_limit)
+			# TODO: limit point_mass.pp
+
+			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
 
 			var axis_x: = global_bone_pose.basis * Vector3.RIGHT
-			var basis: = create_bone_look_at(point_mass.p - origin, axis_x)
+			var basis: = create_bone_look_at(p - origin, axis_x)
 			pose.basis = global_to_pose * basis
 
 		WiggleProperties.Mode.DISLOCATION:
-			var dislocation: = clamp_length(point_mass.p - mass_center, 0, properties.max_distance)
+			# TODO: limit point_mass.pp
+			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
+			var dislocation: = clamp_length(p - mass_center, 0, properties.max_distance)
 			pose.origin = global_to_pose * dislocation
 
 	return pose
@@ -239,12 +240,11 @@ class PointMass:
 	var a: Vector3
 
 	func inertia(delta: float, damping: float) -> void:
-		var dtf: = 0.5 * delta * delta
 		var v: = (p - pp) * (1.0 - damping)
-		var n: = p + v + a * dtf
+		var pn: = p + v + a * delta
 
 		pp = p
-		p = n
+		p = pn
 		a = Vector3()
 
 	func solve_constraint(target: Vector3, stiffness: float) -> void:
