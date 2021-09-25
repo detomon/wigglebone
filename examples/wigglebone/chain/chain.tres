@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource( 1 )
 mass_center = Vector3( 0, 0.5, 0 )
-gravity = Vector3( 0, -50, 0 )
+gravity = Vector3( 0, -0.5, 0 )
 stiffness = 0.1
 damping = 0.1
 mode = 0

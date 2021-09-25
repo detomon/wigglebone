@@ -1,12 +1,12 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://examples/chain/chain.tres" type="Resource" id=1]
-[ext_resource path="res://examples/bone.obj" type="ArrayMesh" id=2]
+[ext_resource path="res://examples/wigglebone/chain/chain.gd" type="Script" id=1]
+[ext_resource path="res://examples/wigglebone/bone.obj" type="ArrayMesh" id=2]
 [ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=3]
-[ext_resource path="res://examples/chain/chain.gd" type="Script" id=4]
+[ext_resource path="res://examples/wigglebone/chain/chain.tres" type="Resource" id=4]
 
 [node name="Chain" type="Spatial"]
-script = ExtResource( 4 )
+script = ExtResource( 1 )
 
 [node name="Skeleton" type="Skeleton" parent="."]
 bones/0/name = "bone1"
@@ -30,7 +30,7 @@ process_priority = 1000
 script = ExtResource( 3 )
 enabled = true
 bone_name = "bone1"
-properties = ExtResource( 1 )
+properties = ExtResource( 4 )
 attachment = NodePath("Attachment")
 show_gizmo = true
 
@@ -47,7 +47,7 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
 script = ExtResource( 3 )
 enabled = true
 bone_name = "bone2"
-properties = ExtResource( 1 )
+properties = ExtResource( 4 )
 attachment = NodePath("Attachment")
 show_gizmo = true
 
