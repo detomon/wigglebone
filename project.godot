@@ -27,7 +27,6 @@ _global_script_class_icons={
 [application]
 
 config/name="Wigglebone"
-run/main_scene="res://examples/chain/chain.tscn"
 config/icon="res://icon.svg"
 
 [editor_plugins]

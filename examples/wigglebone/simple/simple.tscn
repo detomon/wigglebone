@@ -9,7 +9,6 @@
 script = ExtResource( 2 )
 
 [node name="Skeleton" type="Skeleton" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 bones/0/name = "bone1"
 bones/0/parent = -1
 bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
@@ -24,6 +23,9 @@ bones/1/bound_children = [  ]
 [node name="WiggleBone" type="Spatial" parent="Skeleton"]
 process_priority = 1000
 script = ExtResource( 3 )
+__meta__ = {
+"_edit_group_": true
+}
 enabled = true
 bone_name = "bone1"
 properties = ExtResource( 4 )
@@ -31,7 +33,6 @@ attachment = NodePath("Attachment")
 show_gizmo = true
 
 [node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone"]
-transform = Transform( 0.999999, 0.00120238, 0, -0.00120238, 0.999998, 0.00157745, 1.8967e-06, -0.00157745, 0.999999, 0, 0, 0 )
 __meta__ = {
 "_editor_description_": ""
 }

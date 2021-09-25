@@ -4,6 +4,10 @@ extends EditorSpatialGizmoPlugin
 var cone_lines: = generate_cone_lines()
 var sphere_lines: = generate_sphere_lines()
 
+var handle_init_position: = Vector3.ZERO
+var handle_position: = Vector3.ZERO
+var handle_dragging: = false
+
 func _init() -> void:
 	create_material("main", Color.red, false)
 	create_handle_material("handles")
@@ -13,6 +17,41 @@ func get_name() -> String:
 
 func has_gizmo(spatial: Spatial) -> bool:
 	return spatial is WiggleBone
+
+func get_handle_name(gizmo: EditorSpatialGizmo, index: int) -> String:
+	match index:
+		0:
+			return "Wiggle Force"
+		_:
+			return ""
+
+func get_handle_value(gizmo: EditorSpatialGizmo, index: int):
+	match index:
+		0:
+			return handle_position - handle_init_position
+		_:
+			return Vector3.ZERO
+
+func set_handle(gizmo: EditorSpatialGizmo, index: int, camera: Camera, point: Vector2) -> void:
+	var bone: WiggleBone = gizmo.get_spatial_node()
+	var handle_position: = bone.global_transform.origin + get_handle_position(bone.properties)
+	var depth: = (handle_position - camera.global_transform.origin).length()
+
+	handle_position = camera.project_position(point, depth)
+
+	if not handle_dragging:
+		handle_init_position = handle_position
+		handle_dragging = true
+
+	bone.set_const_force(handle_position - handle_init_position)
+
+func commit_handle(gizmo: EditorSpatialGizmo, index: int, restore, cancel: bool = false) -> void:
+	var bone: WiggleBone = gizmo.get_spatial_node()
+	bone.set_const_force(Vector3.ZERO)
+
+	handle_init_position = Vector3.ZERO
+	handle_position = Vector3.ZERO
+	handle_dragging = false
 
 func redraw(gizmo: EditorSpatialGizmo) -> void:
 	gizmo.clear()
@@ -32,7 +71,7 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 				var transform: = bone_look_at * Basis().scaled(scale * length * 0.75)
 
 				var lines: = transform_points(cone_lines, transform)
-				lines.append(Vector3(0, 0, 0))
+				lines.append(Vector3.ZERO)
 				lines.append(properties.mass_center)
 
 				gizmo.add_lines(lines, get_material("main", gizmo), false)
@@ -45,6 +84,21 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 				var lines: = transform_points(sphere_lines, transform)
 
 				gizmo.add_lines(lines, get_material("main", gizmo), true)
+
+		var handle_position: = get_handle_position(properties)
+		var handles: = PoolVector3Array([handle_position])
+		gizmo.add_handles(handles, get_material("handles"), false)
+
+static func get_handle_position(properties: WiggleProperties) -> Vector3:
+	if properties:
+		match properties.mode:
+			WiggleProperties.Mode.ROTATION:
+				return properties.mass_center
+
+			WiggleProperties.Mode.DISLOCATION:
+				Vector3.ZERO
+
+	return Vector3.ZERO
 
 static func generate_cone_lines() -> PoolVector3Array:
 	var count: = 32

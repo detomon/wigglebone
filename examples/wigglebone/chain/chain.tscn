@@ -28,6 +28,9 @@ bones/2/bound_children = [  ]
 [node name="WiggleBone1" type="Spatial" parent="Skeleton"]
 process_priority = 1000
 script = ExtResource( 3 )
+__meta__ = {
+"_edit_group_": true
+}
 enabled = true
 bone_name = "bone1"
 properties = ExtResource( 4 )
@@ -45,6 +48,9 @@ material/0 = null
 process_priority = 1000
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
 script = ExtResource( 3 )
+__meta__ = {
+"_edit_group_": true
+}
 enabled = true
 bone_name = "bone2"
 properties = ExtResource( 4 )
@@ -52,6 +58,7 @@ attachment = NodePath("Attachment")
 show_gizmo = true
 
 [node name="Attachment" type="Spatial" parent="Skeleton/WiggleBone2"]
+transform = Transform( 1, -3.71478e-12, 0, 3.71478e-12, 1, 6.63174e-13, -2.46355e-24, -6.63174e-13, 1, 0, 0, 0 )
 
 [node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone2/Attachment"]
 transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )

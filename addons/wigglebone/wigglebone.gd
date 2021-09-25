@@ -41,7 +41,8 @@ var bone_idx: = -1
 var attachment_spatial: Spatial
 
 var point_mass: = PointMass.new()
-var global_bone_pose: Transform
+var global_bone_pose: = Transform()
+var const_force: = Vector3.ZERO
 var should_reset: = false
 
 func _ready() -> void:
@@ -139,7 +140,7 @@ func _get_global_pose() -> Transform:
 	return skeleton.global_transform * parent_pose * rest_pose * pose
 
 func _solve(global_bone_pose: Transform, delta: float) -> void:
-	var gravity: = properties.gravity
+	var gravity: = properties.gravity + const_force
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
@@ -208,6 +209,12 @@ func _fetch_bone() -> void:
 	bone_idx = skeleton.find_bone(bone_name) if skeleton else -1
 	_update_enabled()
 
+func apply_force(force: Vector3) -> void:
+	point_mass.apply_force(force)
+
+func set_const_force(force: Vector3) -> void:
+	const_force = force
+
 static func _sorted_bone_names(skeleton: Skeleton) -> Array:
 	var bone_names: = []
 	if skeleton:
@@ -235,9 +242,9 @@ static func clamp_distance_to(v: Vector3, origin: Vector3, min_length: float, ma
 	return origin + clamp_length(v - origin, min_length, max_length)
 
 class PointMass:
-	var p: Vector3
-	var pp: Vector3
-	var a: Vector3
+	var p: = Vector3.ZERO
+	var pp: = Vector3.ZERO
+	var a: = Vector3.ZERO
 
 	func inertia(delta: float, damping: float) -> void:
 		var v: = (p - pp) * (1.0 - damping)
@@ -245,7 +252,7 @@ class PointMass:
 
 		pp = p
 		p = pn
-		a = Vector3()
+		a = Vector3.ZERO
 
 	func solve_constraint(target: Vector3, stiffness: float) -> void:
 		p += (target - p) * stiffness
@@ -256,4 +263,4 @@ class PointMass:
 	func reset(position: Vector3) -> void:
 		p = position
 		pp = position
-		a = Vector3()
+		a = Vector3.ZERO
