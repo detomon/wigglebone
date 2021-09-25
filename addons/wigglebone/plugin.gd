@@ -1,10 +1,11 @@
 tool
 extends EditorPlugin
 
+const gizmo_script: Script = preload("wigglegizmoplugin.gd")
 const wigglebone: Script = preload("wigglebone.gd")
 const icon: Texture = preload("icon.svg")
 
-var gizmo_plugin: = WiggleGizmoPlugin.new()
+var gizmo_plugin: = gizmo_script.new()
 
 func _enter_tree() -> void:
 	add_custom_type("WiggleBone", "Spatial", wigglebone, icon)

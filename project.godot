@@ -14,11 +14,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/wigglebone/wigglebone.gd"
 }, {
-"base": "EditorSpatialGizmoPlugin",
-"class": "WiggleGizmoPlugin",
-"language": "GDScript",
-"path": "res://addons/wigglebone/wigglegizmoplugin.gd"
-}, {
 "base": "Resource",
 "class": "WiggleProperties",
 "language": "GDScript",
@@ -26,7 +21,6 @@ _global_script_classes=[ {
 } ]
 _global_script_class_icons={
 "WiggleBone": "",
-"WiggleGizmoPlugin": "",
 "WiggleProperties": ""
 }
 

@@ -1,12 +1,11 @@
 tool
 extends EditorSpatialGizmoPlugin
-class_name WiggleGizmoPlugin
 
 var cone_lines: = generate_cone_lines()
 var sphere_lines: = generate_sphere_lines()
 
 func _init() -> void:
-	create_material("main", Color.red, false, true)
+	create_material("main", Color.red, false)
 	create_handle_material("handles")
 
 func get_name() -> String:

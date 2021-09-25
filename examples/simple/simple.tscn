@@ -21,7 +21,9 @@ bones/1/enabled = true
 bones/1/bound_children = [  ]
 
 [node name="WiggleBone" type="Spatial" parent="Skeleton"]
+process_priority = 1000
 script = ExtResource( 3 )
+enabled = true
 bone_name = "bone1"
 properties = ExtResource( 1 )
 attachment = NodePath("Attachment")

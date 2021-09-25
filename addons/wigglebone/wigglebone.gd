@@ -4,31 +4,31 @@ class_name WiggleBone
 
 const PRECALCULATE_ITERATIONS: = 10
 
-export var enabled: = true setget set_enabled
-func set_enabled(flag: bool) -> void:
-	enabled = flag
+var enabled: = true setget set_enabled
+func set_enabled(value: bool) -> void:
+	enabled = value
 	should_reset = true
 	_update_enabled()
 
 var bone_name: String setget set_bone_name
-func set_bone_name(new_name: String) -> void:
-	bone_name = new_name
+func set_bone_name(value: String) -> void:
+	bone_name = value
 	_fetch_bone()
 	update_configuration_warning()
 
 var properties: WiggleProperties setget set_properties
-func set_properties(new_properties: WiggleProperties) -> void:
+func set_properties(value: WiggleProperties) -> void:
 	if properties:
 		properties.disconnect("changed", self, "_properties_changed")
-	properties = new_properties
+	properties = value
 	_update_enabled()
 	update_configuration_warning()
 	if properties:
 		properties.connect("changed", self, "_properties_changed")
 
 var attachment: NodePath setget set_attachment
-func set_attachment(new_attachment: NodePath) -> void:
-	attachment = new_attachment
+func set_attachment(value: NodePath) -> void:
+	attachment = value
 	attachment_spatial = get_node_or_null(attachment)
 
 var show_gizmo: = true setget set_show_gizmo
@@ -41,6 +41,7 @@ var bone_idx: = -1
 var attachment_spatial: Spatial
 
 var point_mass: = PointMass.new()
+var global_bone_pose: Transform
 var should_reset: = false
 
 func _ready() -> void:
@@ -62,7 +63,11 @@ func _properties_changed() -> void:
 	update_gizmo()
 
 func _get_property_list() -> Array:
-	return [
+	return [{
+		name = "enabled",
+		type = TYPE_BOOL,
+		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+	},
 		_get_bone_name_property(),
 	{
 		name = "properties",
@@ -85,7 +90,7 @@ func _get_property_list() -> Array:
 
 func _get_bone_name_property() -> Dictionary:
 	var show_enum: = skeleton != null
-	var bone_names: = _sorted_bone_names()
+	var bone_names: = _sorted_bone_names(skeleton)
 	# add empty option if bone_name is invalid
 	if bone_idx < 0:
 		bone_names.push_front("")
@@ -110,9 +115,15 @@ func _get_configuration_warning() -> String:
 	return ""
 
 func _physics_process(delta: float) -> void:
-	var global_bone_pose: = _get_global_pose()
-	var pose: = _solve_pose(global_bone_pose, delta)
+	global_bone_pose = _get_global_pose()
+	_solve(global_bone_pose, delta)
 
+func _process(_delta: float) -> void:
+	var physics_delta: = 1.0 / float(Engine.iterations_per_second)
+	var fraction: = Engine.get_physics_interpolation_fraction()
+	var extrapolation: = physics_delta * fraction
+
+	var pose: = _pose(global_bone_pose, extrapolation)
 	skeleton.set_bone_custom_pose(bone_idx, pose)
 
 	global_transform = global_bone_pose
@@ -124,17 +135,24 @@ func _get_global_pose() -> Transform:
 	var pose: = skeleton.get_bone_pose(bone_idx)
 	var parent_idx: = skeleton.get_bone_parent(bone_idx)
 	var parent_pose: = skeleton.get_bone_global_pose(parent_idx) if parent_idx >= 0 else Transform()
-	var global_bone_pose: = skeleton.global_transform * parent_pose * rest_pose * pose
 
-	return global_bone_pose
+	return skeleton.global_transform * parent_pose * rest_pose * pose
 
-func _solve_pose(global_bone_pose: Transform, delta: float) -> Transform:
+func _solve(global_bone_pose: Transform, delta: float) -> void:
+	var gravity: = properties.gravity
+
+	match properties.mode:
+		WiggleProperties.Mode.ROTATION:
+			var origin: = global_bone_pose.origin
+			var local_p: = point_mass.p - origin
+			var mass_distance: = properties.mass_center.length()
+			gravity = project_to_vector_plane(local_p, mass_distance, gravity)
+
+		WiggleProperties.Mode.DISLOCATION:
+			pass
+
 	var interations: = 1
-	var mode: = properties.mode
-	var global_to_pose: = global_bone_pose.basis.inverse()
 	var mass_center: = global_bone_pose * properties.mass_center
-	var origin: = global_bone_pose.origin
-	var mass_distance: = properties.mass_center.length()
 
 	if should_reset:
 		point_mass.reset(mass_center)
@@ -142,29 +160,25 @@ func _solve_pose(global_bone_pose: Transform, delta: float) -> Transform:
 		# try to reduce motion for first frame
 		interations = PRECALCULATE_ITERATIONS
 
-	var gravity: = Vector3()
-	var pose = Transform()
-
-	match mode:
-		WiggleProperties.Mode.ROTATION:
-			var local_p: = point_mass.p - origin
-			gravity = project_to_vector_plane(local_p, mass_distance, properties.gravity)
-
-		WiggleProperties.Mode.DISLOCATION:
-			gravity = properties.gravity
-
 	for i in interations:
 		point_mass.apply_force(gravity)
 		point_mass.inertia(delta, properties.damping)
 		point_mass.solve_constraint(mass_center, properties.stiffness)
 
+func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
+	# TODO: extrapolation
+
+	var pose = Transform()
+	var mass_center: = global_bone_pose * properties.mass_center
+	var global_to_pose: = global_bone_pose.basis.inverse()
+
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
-			var min_distance: = mass_distance
-			var max_distance: = mass_distance
+			var origin: = global_bone_pose.origin
+			var mass_distance: = properties.mass_center.length()
 
-			point_mass.p = clamp_distance_to(point_mass.p, origin, min_distance, max_distance)
-			point_mass.pp = clamp_distance_to(point_mass.pp, origin, min_distance, max_distance)
+			point_mass.p = clamp_distance_to(point_mass.p, origin, mass_distance, mass_distance)
+			point_mass.pp = clamp_distance_to(point_mass.pp, origin, mass_distance, mass_distance)
 
 			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
 			var angular_limit: = angular_offset * mass_distance
@@ -173,7 +187,8 @@ func _solve_pose(global_bone_pose: Transform, delta: float) -> Transform:
 			# TODO: add?
 			#point_mass.pp = clamped_distance_to(point_mass.pp, mass_center, 0, angular_limit)
 
-			var basis: = create_bone_look_at(point_mass.p - origin, global_bone_pose.basis * Vector3.RIGHT)
+			var axis_x: = global_bone_pose.basis * Vector3.RIGHT
+			var basis: = create_bone_look_at(point_mass.p - origin, axis_x)
 			pose.basis = global_to_pose * basis
 
 		WiggleProperties.Mode.DISLOCATION:
@@ -184,13 +199,15 @@ func _solve_pose(global_bone_pose: Transform, delta: float) -> Transform:
 
 func _update_enabled() -> void:
 	var valid: = skeleton != null and bone_idx >= 0 and properties != null
-	set_physics_process(enabled and valid)
+	var active: = enabled and valid
+	set_physics_process(active)
+	set_process(active)
 
 func _fetch_bone() -> void:
 	bone_idx = skeleton.find_bone(bone_name) if skeleton else -1
 	_update_enabled()
 
-func _sorted_bone_names() -> Array:
+static func _sorted_bone_names(skeleton: Skeleton) -> Array:
 	var bone_names: = []
 	if skeleton:
 		for i in skeleton.get_bone_count():
