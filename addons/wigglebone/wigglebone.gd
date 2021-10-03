@@ -21,15 +21,22 @@ func set_properties(value: WiggleProperties) -> void:
 	if properties:
 		properties.disconnect("changed", self, "_properties_changed")
 	properties = value
-	_update_enabled()
-	update_configuration_warning()
 	if properties:
 		properties.connect("changed", self, "_properties_changed")
+	_update_enabled()
+	update_configuration_warning()
 
 var attachment: NodePath setget set_attachment
 func set_attachment(value: NodePath) -> void:
 	attachment = value
-	attachment_spatial = get_node_or_null(attachment)
+
+	if is_inside_tree() and not attachment.is_empty():
+		attachment_spatial = get_node_or_null(attachment) as Spatial
+
+		if not attachment_spatial or attachment_spatial.get_parent() != self:
+			attachment = ""
+			attachment_spatial = null
+			printerr("WiggleBone: Attachment must be a direct Spatial child")
 
 var show_gizmo: = true setget set_show_gizmo
 func set_show_gizmo(value: bool) -> void:
@@ -49,7 +56,7 @@ func _ready() -> void:
 	set_as_toplevel(true)
 	set_enabled(enabled)
 	set_attachment(attachment)
-	# execute after animations (hopefully)
+	# execute after animations
 	process_priority = 1000
 
 func _enter_tree() -> void:
@@ -68,9 +75,13 @@ func _get_property_list() -> Array:
 		name = "enabled",
 		type = TYPE_BOOL,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	},
-		_get_bone_name_property(),
-	{
+	}, {
+		name = "bone_name",
+		type = TYPE_STRING,
+		hint = PROPERTY_HINT_ENUM if skeleton != null else PROPERTY_HINT_NONE,
+		hint_string = bone_names_enum_string(skeleton, bone_idx),
+		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+	}, {
 		name = "properties",
 		type = TYPE_OBJECT,
 		hint = PROPERTY_HINT_RESOURCE_TYPE,
@@ -89,34 +100,17 @@ func _get_property_list() -> Array:
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}]
 
-func _get_bone_name_property() -> Dictionary:
-	var show_enum: = skeleton != null
-	var bone_names: = _sorted_bone_names(skeleton)
-	# add empty option if bone_name is invalid
-	if bone_idx < 0:
-		bone_names.push_front("")
-
-	var enum_string: = PoolStringArray(bone_names).join(",")
-
-	return {
-		name = "bone_name",
-		type = TYPE_STRING,
-		hint = PROPERTY_HINT_ENUM if show_enum else PROPERTY_HINT_NONE,
-		hint_string = enum_string,
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}
-
 func _get_configuration_warning() -> String:
 	if not skeleton:
 		return "Parent must be Skeleton"
-	if bone_idx < 0:
+	elif bone_idx < 0:
 		return "Bone name '%s' not found" % bone_name
-	if not properties:
+	elif not properties:
 		return "WiggleProperties resource is required"
 	return ""
 
 func _physics_process(delta: float) -> void:
-	global_bone_pose = _get_global_pose()
+	global_bone_pose = global_bone_pose(skeleton, bone_idx)
 	_solve(global_bone_pose, delta)
 
 func _process(_delta: float) -> void:
@@ -127,17 +121,10 @@ func _process(_delta: float) -> void:
 	var pose: = _pose(global_bone_pose, extrapolation)
 	skeleton.set_bone_custom_pose(bone_idx, pose)
 
+	# TODO: also update in _physics_process?
 	global_transform = global_bone_pose
 	if attachment_spatial:
 		attachment_spatial.transform = pose
-
-func _get_global_pose() -> Transform:
-	var rest_pose: = skeleton.get_bone_rest(bone_idx)
-	var pose: = skeleton.get_bone_pose(bone_idx)
-	var parent_idx: = skeleton.get_bone_parent(bone_idx)
-	var parent_pose: = skeleton.get_bone_global_pose(parent_idx) if parent_idx >= 0 else Transform()
-
-	return skeleton.global_transform * parent_pose * rest_pose * pose
 
 func _solve(global_bone_pose: Transform, delta: float) -> void:
 	var gravity: = properties.gravity + const_force
@@ -158,7 +145,7 @@ func _solve(global_bone_pose: Transform, delta: float) -> void:
 	if should_reset:
 		point_mass.reset(mass_center)
 		should_reset = false
-		# try to reduce motion for first frame
+		# try to reduce motion at first frame
 		interations = PRECALCULATE_ITERATIONS
 
 	for i in interations:
@@ -167,15 +154,14 @@ func _solve(global_bone_pose: Transform, delta: float) -> void:
 		point_mass.solve_constraint(mass_center, properties.stiffness)
 
 func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
-	var pose = Transform()
+	var pose: = Transform()
 	var mass_center: = global_bone_pose * properties.mass_center
 	var global_to_pose: = global_bone_pose.basis.inverse()
+	var mass_distance: = properties.mass_center.length()
+	var origin: = global_bone_pose.origin
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
-			var origin: = global_bone_pose.origin
-			var mass_distance: = properties.mass_center.length()
-
 			point_mass.p = clamp_distance_to(point_mass.p, origin, mass_distance, mass_distance)
 			point_mass.pp = clamp_distance_to(point_mass.pp, origin, mass_distance, mass_distance)
 
@@ -183,17 +169,29 @@ func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
 			var angular_limit: = angular_offset * mass_distance
 
 			point_mass.p = clamp_distance_to(point_mass.p, mass_center, 0, angular_limit)
-			# TODO: limit point_mass.pp
+			#point_mass.pp = project_to_vector_plane(point_mass.p - origin, mass_distance, point_mass.pp - origin) + origin
 
+			# TODO: limit point_mass.pp?
 			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
 
 			var axis_x: = global_bone_pose.basis * Vector3.RIGHT
 			var basis: = create_bone_look_at(p - origin, axis_x)
+
+#			var y: = (global_to_pose * (p - origin)).normalized()
+#			var y0: = properties.mass_center.normalized()
+#			var d: = y.dot(y0)
+#			var basis: = Basis()
+#			var axis: = y0.cross(y).normalized()
+#
+#			print(d)
+
 			pose.basis = global_to_pose * basis
 
 		WiggleProperties.Mode.DISLOCATION:
-			# TODO: limit point_mass.pp
+			point_mass.p = clamp_distance_to(point_mass.p, origin, 0, mass_distance)
+			point_mass.pp = clamp_distance_to(point_mass.pp, origin, 0, mass_distance)
 			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
+
 			var dislocation: = clamp_length(p - mass_center, 0, properties.max_distance)
 			pose.origin = global_to_pose * dislocation
 
@@ -209,13 +207,26 @@ func _fetch_bone() -> void:
 	bone_idx = skeleton.find_bone(bone_name) if skeleton else -1
 	_update_enabled()
 
-func apply_force(force: Vector3) -> void:
-	point_mass.apply_force(force)
-
 func set_const_force(force: Vector3) -> void:
 	const_force = force
 
-static func _sorted_bone_names(skeleton: Skeleton) -> Array:
+static func global_bone_pose(skeleton: Skeleton, bone_idx: int) -> Transform:
+	var rest_pose: = skeleton.get_bone_rest(bone_idx)
+	var pose: = skeleton.get_bone_pose(bone_idx)
+	var parent_idx: = skeleton.get_bone_parent(bone_idx)
+	var parent_pose: = skeleton.get_bone_global_pose(parent_idx) if parent_idx >= 0 else Transform()
+
+	return skeleton.global_transform * parent_pose * rest_pose * pose
+
+static func bone_names_enum_string(skeleton: Skeleton, bone_idx: int) -> String:
+	var bone_names: = sorted_bone_names(skeleton)
+	# add empty option if bone_name is invalid
+	if bone_idx < 0:
+		bone_names.push_front("")
+
+	return PoolStringArray(bone_names).join(",")
+
+static func sorted_bone_names(skeleton: Skeleton) -> Array:
 	var bone_names: = []
 	if skeleton:
 		for i in skeleton.get_bone_count():

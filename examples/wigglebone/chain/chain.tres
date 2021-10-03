@@ -10,3 +10,4 @@ stiffness = 0.1
 damping = 0.1
 mode = 0
 max_degrees = 60.0
+max_distance = 0.1

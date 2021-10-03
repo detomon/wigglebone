@@ -21,7 +21,7 @@ func has_gizmo(spatial: Spatial) -> bool:
 func get_handle_name(gizmo: EditorSpatialGizmo, index: int) -> String:
 	match index:
 		0:
-			return "Wiggle Force"
+			return "Force"
 		_:
 			return ""
 
@@ -34,7 +34,7 @@ func get_handle_value(gizmo: EditorSpatialGizmo, index: int):
 
 func set_handle(gizmo: EditorSpatialGizmo, index: int, camera: Camera, point: Vector2) -> void:
 	var bone: WiggleBone = gizmo.get_spatial_node()
-	var handle_position: = bone.global_transform.origin + get_handle_position(bone.properties)
+	var handle_position: = bone.global_transform * get_handle_position(bone.properties)
 	var depth: = (handle_position - camera.global_transform.origin).length()
 
 	handle_position = camera.project_position(point, depth)
@@ -54,10 +54,10 @@ func commit_handle(gizmo: EditorSpatialGizmo, index: int, restore, cancel: bool 
 	handle_dragging = false
 
 func redraw(gizmo: EditorSpatialGizmo) -> void:
-	gizmo.clear()
-
 	var wigglebone: WiggleBone = gizmo.get_spatial_node()
 	var properties: WiggleProperties = wigglebone.properties
+
+	gizmo.clear()
 
 	if properties and wigglebone.show_gizmo:
 		match properties.mode:
@@ -73,7 +73,6 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 				var lines: = transform_points(cone_lines, transform)
 				lines.append(Vector3.ZERO)
 				lines.append(properties.mass_center)
-
 				gizmo.add_lines(lines, get_material("main", gizmo), false)
 
 			WiggleProperties.Mode.DISLOCATION:
@@ -82,12 +81,10 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 				var transform: = Basis().scaled(scale)
 
 				var lines: = transform_points(sphere_lines, transform)
-
 				gizmo.add_lines(lines, get_material("main", gizmo), true)
 
-		var handle_position: = get_handle_position(properties)
-		var handles: = PoolVector3Array([handle_position])
-		gizmo.add_handles(handles, get_material("handles"), false)
+		var handle: = get_handle_position(properties)
+		gizmo.add_handles([handle], get_material("handles"), false)
 
 static func get_handle_position(properties: WiggleProperties) -> Vector3:
 	if properties:
@@ -96,7 +93,7 @@ static func get_handle_position(properties: WiggleProperties) -> Vector3:
 				return properties.mass_center
 
 			WiggleProperties.Mode.DISLOCATION:
-				Vector3.ZERO
+				return Vector3.ZERO
 
 	return Vector3.ZERO
 

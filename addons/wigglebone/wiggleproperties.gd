@@ -2,6 +2,9 @@ tool
 extends Resource
 class_name WiggleProperties
 
+const PROPERTY_VISIBLE: = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
+const PROPERTY_HIDDEN: = PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
+
 enum Mode {
 	ROTATION,
 	DISLOCATION,
@@ -44,57 +47,49 @@ func set_max_distance(value: float) -> void:
 	max_distance = value
 	emit_changed()
 
-# maximum rotation
+# maximum rotation relative to pose position
 var max_degrees: = 60.0 setget set_max_degrees
 func set_max_degrees(value: float) -> void:
 	max_degrees = value
 	emit_changed()
 
 func _get_property_list() -> Array:
-	var props: = [{
+	return [{
 		name = "mass_center",
 		type = TYPE_VECTOR3,
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "gravity",
 		type = TYPE_VECTOR3,
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "stiffness",
 		type = TYPE_REAL,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0,1",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "damping",
 		type = TYPE_REAL,
 		hint = PROPERTY_HINT_RANGE,
-		hint_string = "0,1",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		hint_string = "0.01,1",
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "mode",
 		type = TYPE_INT,
 		hint = PROPERTY_HINT_ENUM,
 		hint_string = "Rotation,Dislocation",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
+	}, {
+		name = "max_degrees",
+		type = TYPE_REAL,
+		hint = PROPERTY_HINT_RANGE,
+		hint_string = "0,90",
+		usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN,
+	}, {
+		name = "max_distance",
+		type = TYPE_REAL,
+		hint = PROPERTY_HINT_RANGE,
+		hint_string = "0,1,or_greater",
+		usage = PROPERTY_VISIBLE if mode == Mode.DISLOCATION else PROPERTY_HIDDEN,
 	}]
-
-	match mode:
-		Mode.ROTATION:
-			props.append({
-				name = "max_degrees",
-				type = TYPE_REAL,
-				hint = PROPERTY_HINT_RANGE,
-				hint_string = "0,90",
-				usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-			})
-		Mode.DISLOCATION:
-			props.append({
-				name = "max_distance",
-				type = TYPE_REAL,
-				hint = PROPERTY_HINT_RANGE,
-				hint_string = "0,1,or_greater",
-				usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-			})
-
-	return props

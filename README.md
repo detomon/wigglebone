@@ -4,17 +4,17 @@ Add jiggle physics to your **Skeleton**. The node is used like a **BoneAttachmen
 
 > Scaled **Skeletons** or their **MeshInstances** may not work as intended as global values are used for calculation.
 
-## Properties
+## Bone Properties
 
 Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused and shared between multiple bones.
 
 ### Mass Center
 
-The mass center is attached to the bone end and determines how motion and gravity influences the motion. As there is no way to get the bone length automatically, this point has to be set manually. Usually its along the Y-axis of the bone.
+The mass center is attached to the bone's end and determines how motion and gravity influences the motion. As there is no way to get the bone length automatically, this point has to be set manually. Usually its along the Y-axis of the bone.
 
 ### Gravity
 
-The force pulling at the mass center. This can be any force but is usually used for gravity. This value has no real unit; make it bigger to pull more :)
+The force pulling at the mass center. This can be any force but is usually used for gravity.
 
 ### Stiffness
 
@@ -22,22 +22,25 @@ This is the bones tendency to return to its original pose. The higher the value 
 
 ### Damping
 
-Reduces the bones motion. The higher the value the slower it moves.
+Reduces the bones motion. The higher the value the slower it moves in general.
 
 ### Mode
 
-Two different modes are supported:
+Two different deformation modes are supported:
 
 `Rotation`
 
-The bone rotates around its origin as if some mass is attached to its end. The rotation angle can be limited with `Max Degrees` to a certain value but has an upper limit of 90° relative to the original pose due to the implementation.
+The bone rotates around its origin. The rotation angle can be limited with `Max Degrees` to a certain value but has an upper limit of 90° relative to the original pose.
 
 `Dislocation`
 
-The bone moves relative to its origin as if some mass is attached to its end but without rotating. The distance can be limited to a certain value with `Max Distance`
+The bone moves relative to its origin but without rotating. The distance can be limited to a certain value with `Max Distance`
+
 
 ## Bone Attachment
 
-The **WiggleBone** node inherits its transformation from the bones pose (without wiggle) and acts the same way as a **BoneAttachment**. One of its **Spatial** children can also inherit the full transformation (including wiggle) using the `Attachment` property.
+The **WiggleBone** node inherits its transformation from the bone's pose (without wiggle) and acts the same way as a **BoneAttachment**. One of its **Spatial** children can also inherit the full transformation (including wiggle) using the `Attachment` property.
 
-When using the `Attachment` property, be aware that the calculation runs in `_physics_process` because it's more stable. When the attachment position doesn't line up with the expected bone position when animations are used, make sure `AnimationPlayer` run with `Process Mode`: `Physics`.
+## Testing in Editor
+
+A force can be applied to the bone to test the properties in the editor by dragging its handle. The handle appears at the bone's end when `Rotation` mode is used or at the root when `Dislocation` mode is used, respectively. Another way is to move or rotate the **Skeleton** or one of its parents directly.
