@@ -99,23 +99,20 @@ static func get_handle_position(properties: WiggleProperties) -> Vector3:
 
 static func generate_cone_lines() -> PoolVector3Array:
 	var count: = 32
-	var points: = PoolVector3Array()
-
-	for i in count:
-		points.append(Vector3(1, 1, 0).rotated(Vector3.UP, i * TAU / count))
-
 	var lines: = PoolVector3Array()
+	var prev_point: = Vector3(1, 1, 0)
 
-	for i in len(points) - 1:
-		lines.append(points[i])
-		lines.append(points[i + 1])
+	for i in range(1, count + 1):
+		var point: = Vector3(1, 1, 0).rotated(Vector3.UP, i * TAU / count)
+
+		lines.append(prev_point)
+		lines.append(point)
 
 		if i % 8 == 0:
 			lines.append(Vector3(0, 0, 0))
-			lines.append(points[i])
+			lines.append(point)
 
-	lines.append(points[0])
-	lines.append(points[len(points) - 1])
+		prev_point = point
 
 	return lines
 
@@ -134,14 +131,11 @@ static func generate_sphere_lines() -> PoolVector3Array:
 	]
 
 	for transform in rotations:
-		var new_lines: = transform_points(points, transform)
+		var new_points: = transform_points(points, transform)
 
-		for i in len(new_lines) - 1:
-			lines.append(new_lines[i])
-			lines.append(new_lines[i + 1])
-
-		lines.append(new_lines[0])
-		lines.append(new_lines[len(new_lines) - 1])
+		for i in count:
+			lines.append(new_points[i])
+			lines.append(new_points[(i + 1) % count])
 
 	return lines
 

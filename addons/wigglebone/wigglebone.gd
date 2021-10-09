@@ -75,13 +75,9 @@ func _get_property_list() -> Array:
 		name = "enabled",
 		type = TYPE_BOOL,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
-		name = "bone_name",
-		type = TYPE_STRING,
-		hint = PROPERTY_HINT_ENUM if skeleton != null else PROPERTY_HINT_NONE,
-		hint_string = bone_names_enum_string(skeleton, bone_idx),
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
+	},
+		_get_bone_name_property(),
+	{
 		name = "properties",
 		type = TYPE_OBJECT,
 		hint = PROPERTY_HINT_RESOURCE_TYPE,
@@ -99,6 +95,21 @@ func _get_property_list() -> Array:
 		type = TYPE_BOOL,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}]
+
+func _get_bone_name_property() -> Dictionary:
+	var show_enum: = skeleton != null
+	var bone_names: = sorted_bone_names(skeleton)
+	# add empty option if bone_name is invalid
+	if bone_idx < 0:
+		bone_names.push_front("")
+
+	return {
+		name = "bone_name",
+		type = TYPE_STRING,
+		hint = PROPERTY_HINT_ENUM if show_enum else PROPERTY_HINT_NONE,
+		hint_string = PoolStringArray(bone_names).join(","),
+		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+	}
 
 func _get_configuration_warning() -> String:
 	if not skeleton:
@@ -188,8 +199,8 @@ func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
 			pose.basis = global_to_pose * basis
 
 		WiggleProperties.Mode.DISLOCATION:
-			point_mass.p = clamp_distance_to(point_mass.p, origin, 0, mass_distance)
-			point_mass.pp = clamp_distance_to(point_mass.pp, origin, 0, mass_distance)
+			point_mass.p = clamp_distance_to(point_mass.p, origin, 0, mass_distance + properties.max_distance)
+			point_mass.pp = clamp_distance_to(point_mass.pp, origin, 0, mass_distance + properties.max_distance)
 			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
 
 			var dislocation: = clamp_length(p - mass_center, 0, properties.max_distance)
@@ -217,14 +228,6 @@ static func global_bone_pose(skeleton: Skeleton, bone_idx: int) -> Transform:
 	var parent_pose: = skeleton.get_bone_global_pose(parent_idx) if parent_idx >= 0 else Transform()
 
 	return skeleton.global_transform * parent_pose * rest_pose * pose
-
-static func bone_names_enum_string(skeleton: Skeleton, bone_idx: int) -> String:
-	var bone_names: = sorted_bone_names(skeleton)
-	# add empty option if bone_name is invalid
-	if bone_idx < 0:
-		bone_names.push_front("")
-
-	return PoolStringArray(bone_names).join(",")
 
 static func sorted_bone_names(skeleton: Skeleton) -> Array:
 	var bone_names: = []
