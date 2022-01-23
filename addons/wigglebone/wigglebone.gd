@@ -91,6 +91,10 @@ func _get_property_list() -> Array:
 		type = TYPE_NODE_PATH,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}, {
+		name = "const_force",
+		type = TYPE_VECTOR3,
+		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+	}, {
 		name = "show_gizmo",
 		type = TYPE_BOOL,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
