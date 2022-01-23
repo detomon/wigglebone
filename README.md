@@ -43,4 +43,4 @@ The **WiggleBone** node inherits its transformation from the bone's pose (withou
 
 ## Testing in Editor
 
-A force can be applied to the bone to test the properties in the editor by dragging its handle. The handle appears at the bone's end when `Rotation` mode is used or at the root when `Dislocation` mode is used, respectively. Another way is to move or rotate the **Skeleton** or one of its parents directly.
+A force can be applied to the bone to test the properties in the editor by dragging its handle. The handle appears at the bone's end when `Rotation` mode is used or at the root when `Dislocation` mode is used, respectively. Another way is to drag or rotate the **Skeleton** or one of its parents directly.
