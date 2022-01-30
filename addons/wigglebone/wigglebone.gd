@@ -56,8 +56,8 @@ func _ready() -> void:
 	set_as_toplevel(true)
 	set_enabled(enabled)
 	set_attachment(attachment)
-	# execute after animations
-	process_priority = 1000
+	# execute before animations
+	process_priority = -1
 
 func _enter_tree() -> void:
 	skeleton = get_parent() as Skeleton
