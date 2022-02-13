@@ -1,6 +1,6 @@
 tool
-extends Spatial
-class_name WiggleBone
+extends BoneAttachment
+class_name WiggleBone, "icon.svg"
 
 const PRECALCULATE_ITERATIONS: = 10
 
@@ -10,9 +10,8 @@ func set_enabled(value: bool) -> void:
 	should_reset = true
 	_update_enabled()
 
-var bone_name: String setget set_bone_name
 func set_bone_name(value: String) -> void:
-	bone_name = value
+	.set_bone_name(value)
 	_fetch_bone()
 	update_configuration_warning()
 
@@ -26,18 +25,6 @@ func set_properties(value: WiggleProperties) -> void:
 	_update_enabled()
 	update_configuration_warning()
 
-var attachment: NodePath setget set_attachment
-func set_attachment(value: NodePath) -> void:
-	attachment = value
-
-	if is_inside_tree() and not attachment.is_empty():
-		attachment_spatial = get_node_or_null(attachment) as Spatial
-
-		if not attachment_spatial or attachment_spatial.get_parent() != self:
-			attachment = ""
-			attachment_spatial = null
-			printerr("WiggleBone: Attachment must be a direct Spatial child")
-
 var show_gizmo: = true setget set_show_gizmo
 func set_show_gizmo(value: bool) -> void:
 	show_gizmo = value
@@ -45,7 +32,6 @@ func set_show_gizmo(value: bool) -> void:
 
 var skeleton: Skeleton
 var bone_idx: = -1
-var attachment_spatial: Spatial
 
 var point_mass: = PointMass.new()
 var global_bone_pose: = Transform()
@@ -53,11 +39,7 @@ var const_force: = Vector3.ZERO
 var should_reset: = false
 
 func _ready() -> void:
-	set_as_toplevel(true)
 	set_enabled(enabled)
-	set_attachment(attachment)
-	# execute before animations
-	process_priority = -1
 
 func _enter_tree() -> void:
 	skeleton = get_parent() as Skeleton
@@ -76,7 +58,6 @@ func _get_property_list() -> Array:
 		type = TYPE_BOOL,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	},
-		_get_bone_name_property(),
 	{
 		name = "properties",
 		type = TYPE_OBJECT,
@@ -87,10 +68,6 @@ func _get_property_list() -> Array:
 		hint_string = "Resource",
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}, {
-		name = "attachment",
-		type = TYPE_NODE_PATH,
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
 		name = "const_force",
 		type = TYPE_VECTOR3,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
@@ -99,21 +76,6 @@ func _get_property_list() -> Array:
 		type = TYPE_BOOL,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}]
-
-func _get_bone_name_property() -> Dictionary:
-	var show_enum: = skeleton != null
-	var bone_names: = sorted_bone_names(skeleton)
-	# add empty option if bone_name is invalid
-	if bone_idx < 0:
-		bone_names.push_front("")
-
-	return {
-		name = "bone_name",
-		type = TYPE_STRING,
-		hint = PROPERTY_HINT_ENUM if show_enum else PROPERTY_HINT_NONE,
-		hint_string = PoolStringArray(bone_names).join(","),
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}
 
 func _get_configuration_warning() -> String:
 	if not skeleton:
@@ -135,11 +97,6 @@ func _process(_delta: float) -> void:
 
 	var pose: = _pose(global_bone_pose, extrapolation)
 	skeleton.set_bone_custom_pose(bone_idx, pose)
-
-	# TODO: also update in _physics_process?
-	global_transform = global_bone_pose
-	if attachment_spatial:
-		attachment_spatial.transform = pose
 
 func _solve(global_bone_pose: Transform, delta: float) -> void:
 	var gravity: = properties.gravity + const_force
