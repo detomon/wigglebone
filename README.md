@@ -4,6 +4,10 @@ Add jiggle physics to your **Skeleton**. The node is used like a **BoneAttachmen
 
 > Scaled **Skeletons** or their **MeshInstances** may not work as intended as global values are used for calculation.
 
+## Bone Name
+
+Selects which bone should be used. Shows a list of bone names from the parent **Skeleton**.
+
 ## Bone Properties
 
 Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused and shared between multiple bones.
@@ -26,7 +30,7 @@ Reduces the bones motion. The higher the value the slower it moves in general.
 
 ### Mode
 
-Two different deformation modes are supported:
+Two different pose modes are supported:
 
 `Rotation`
 
@@ -37,10 +41,14 @@ The bone rotates around its origin. The rotation angle can be limited with `Max 
 The bone moves relative to its origin but without rotating. The distance can be limited to a certain value with `Max Distance`
 
 
-## Bone Attachment
+## Bone Attachment (`Attachment`)
 
-The **WiggleBone** node inherits its transformation from the bone's pose (without wiggle) and acts the same way as a **BoneAttachment**. One of its **Spatial** children can also inherit the full transformation (including wiggle) using the `Attachment` property.
+The **WiggleBone** node inherits its transformation from the bone's pose (without wiggle) and acts the same way as a **BoneAttachment**.
+
+## Constant Force (`Const Force`)
+
+This applies a constant force additionally to the gravity already set in **WiggleProperties** but per bone. This can be used to apply an impluse when only set for one frame.
 
 ## Testing in Editor
 
-A force can be applied to the bone to test the properties in the editor by dragging its handle. The handle appears at the bone's end when `Rotation` mode is used or at the root when `Dislocation` mode is used, respectively. Another way is to drag or rotate the **Skeleton** or one of its parents directly.
+A force can be applied to the bone to test the properties in the editor by dragging its handle. When selected, the handle appears at the bone's end when `Rotation` mode is used or at the root when `Dislocation` mode is used, respectively. Another way is to drag or rotate the **Skeleton** or one of its parents directly.
