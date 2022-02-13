@@ -20,7 +20,7 @@ _global_script_classes=[ {
 "path": "res://addons/wigglebone/wiggleproperties.gd"
 } ]
 _global_script_class_icons={
-"WiggleBone": "res://addons/wigglebone/icon.svg",
+"WiggleBone": "",
 "WiggleProperties": ""
 }
 

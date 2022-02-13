@@ -1,6 +1,6 @@
 tool
 extends BoneAttachment
-class_name WiggleBone, "icon.svg"
+class_name WiggleBone
 
 const PRECALCULATE_ITERATIONS: = 10
 
