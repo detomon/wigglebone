@@ -2,8 +2,6 @@ tool
 extends BoneAttachment
 class_name WiggleBone
 
-const PRECALCULATE_ITERATIONS: = 10
-
 var enabled: = true setget set_enabled
 func set_enabled(value: bool) -> void:
 	enabled = value
@@ -37,6 +35,9 @@ var point_mass: = PointMass.new()
 var global_bone_pose: = Transform()
 var const_force: = Vector3.ZERO
 var should_reset: = false
+
+var prev_mass_center: = Vector3.ZERO
+var prev_velocity: = Vector3.ZERO
 
 func _ready() -> void:
 	set_enabled(enabled)
@@ -86,86 +87,92 @@ func _get_configuration_warning() -> String:
 		return "WiggleProperties resource is required"
 	return ""
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
+	#var physics_delta: = 1.0 / float(Engine.iterations_per_second)
+	#var fraction: = Engine.get_physics_interpolation_fraction()
+	#var extrapolation: = physics_delta * fraction
+
 	global_bone_pose = global_bone_pose(skeleton, bone_idx)
 	_solve(global_bone_pose, delta)
 
-func _process(_delta: float) -> void:
-	var physics_delta: = 1.0 / float(Engine.iterations_per_second)
-	var fraction: = Engine.get_physics_interpolation_fraction()
-	var extrapolation: = physics_delta * fraction
-
-	var pose: = _pose(global_bone_pose, extrapolation)
+	var pose: = _pose(global_bone_pose)
 	skeleton.set_bone_custom_pose(bone_idx, pose)
 
 func _solve(global_bone_pose: Transform, delta: float) -> void:
-	var gravity: = properties.gravity + const_force
+	var force: = properties.gravity + const_force
+	var global_to_pose: = global_bone_pose.basis.inverse()
+
+	# make local
+	force = global_to_pose * force
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
-			var origin: = global_bone_pose.origin
-			var local_p: = point_mass.p - origin
-			var mass_distance: = properties.mass_center.length()
-			gravity = project_to_vector_plane(local_p, mass_distance, gravity)
+			#var origin: = global_bone_pose.origin
+			#var local_p: = point_mass.p - origin
+			#var mass_distance: = properties.mass_center.length()
+			#force = project_to_vector_plane(local_p, mass_distance, force)
+
+			# TODO: make relative to mass offset
+			pass
 
 		WiggleProperties.Mode.DISLOCATION:
 			pass
 
-	var interations: = 1
 	var mass_center: = global_bone_pose * properties.mass_center
+	var delta_mass_center: = prev_mass_center - mass_center
+	prev_mass_center = lerp(prev_mass_center, mass_center, 0.5)
 
-	if should_reset:
-		point_mass.reset(mass_center)
-		should_reset = false
-		# try to reduce motion at first frame
-		interations = PRECALCULATE_ITERATIONS
+	var global_velocity: = delta_mass_center / delta
+	var local_velocity: = global_to_pose * global_velocity
+	var local_acceleration: = local_velocity - prev_velocity
+	prev_velocity = local_velocity
 
-	for i in interations:
-		point_mass.apply_force(gravity)
-		point_mass.inertia(delta, properties.damping)
-		point_mass.solve_constraint(mass_center, properties.stiffness)
+	force += local_acceleration
 
-func _pose(global_bone_pose: Transform, extrapolation: float) -> Transform:
+	point_mass.apply_force(force)
+	point_mass.inertia(delta, properties.damping)
+	point_mass.solve_constraint(Vector3.ZERO, properties.stiffness)
+
+func _pose(global_bone_pose: Transform) -> Transform:
 	var pose: = Transform()
-	var mass_center: = global_bone_pose * properties.mass_center
-	var global_to_pose: = global_bone_pose.basis.inverse()
-	var mass_distance: = properties.mass_center.length()
-	var origin: = global_bone_pose.origin
+	#var mass_center: = global_bone_pose * properties.mass_center
+	#var global_to_pose: = global_bone_pose.basis.inverse()
+	#var mass_distance: = properties.mass_center.length()
+#	var origin: = global_bone_pose.origin
+	var rest_pose: = skeleton.get_bone_rest(bone_idx).basis
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
-			point_mass.p = clamp_distance_to(point_mass.p, origin, mass_distance, mass_distance)
-			point_mass.pp = clamp_distance_to(point_mass.pp, origin, mass_distance, mass_distance)
+			#point_mass.p = clamp_distance_to(point_mass.p, origin, mass_distance, mass_distance)
+			#point_mass.pp = clamp_distance_to(point_mass.pp, origin, mass_distance, mass_distance)
 
-			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
-			var angular_limit: = angular_offset * mass_distance
+			#var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
+			#var angular_limit: = angular_offset * mass_distance
 
-			point_mass.p = clamp_distance_to(point_mass.p, mass_center, 0, angular_limit)
+			#point_mass.p = clamp_distance_to(point_mass.p, mass_center, 0, angular_limit)
 			#point_mass.pp = project_to_vector_plane(point_mass.p - origin, mass_distance, point_mass.pp - origin) + origin
 
 			# TODO: limit point_mass.pp?
-			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
+			#var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
 
-			var axis_x: = global_bone_pose.basis * Vector3.RIGHT
-			var basis: = create_bone_look_at(p - origin, axis_x)
+			var mass_local: = rest_pose * (properties.mass_center + point_mass.p)
 
-#			var y: = (global_to_pose * (p - origin)).normalized()
-#			var y0: = properties.mass_center.normalized()
-#			var d: = y.dot(y0)
-#			var basis: = Basis()
-#			var axis: = y0.cross(y).normalized()
-#
-#			print(d)
+			var axis_x: = rest_pose * Vector3.RIGHT
+			var basis: = create_bone_look_at(mass_local, axis_x)
 
-			pose.basis = global_to_pose * basis
+			pose.basis = rest_pose.inverse() * basis
 
 		WiggleProperties.Mode.DISLOCATION:
-			point_mass.p = clamp_distance_to(point_mass.p, origin, 0, mass_distance + properties.max_distance)
-			point_mass.pp = clamp_distance_to(point_mass.pp, origin, 0, mass_distance + properties.max_distance)
-			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
+			var mass_local: = rest_pose * (properties.mass_center + point_mass.p)
 
-			var dislocation: = clamp_length(p - mass_center, 0, properties.max_distance)
-			pose.origin = global_to_pose * dislocation
+			pose.origin = rest_pose * mass_local
+
+#			point_mass.p = clamp_distance_to(point_mass.p, origin, 0, mass_distance + properties.max_distance)
+#			point_mass.pp = clamp_distance_to(point_mass.pp, origin, 0, mass_distance + properties.max_distance)
+#			var p: = point_mass.p + (point_mass.p - point_mass.pp) * extrapolation
+#
+#			var dislocation: = clamp_length(p - mass_center, 0, properties.max_distance)
+#			pose.origin = global_to_pose * dislocation
 
 	return pose
 
