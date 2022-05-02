@@ -183,8 +183,14 @@ func _fetch_bone() -> void:
 func set_const_force(force: Vector3) -> void:
 	const_force = force
 
-func apply_impulse(impulse: Vector3) -> void:
+func apply_impulse(impulse: Vector3, global: = false) -> void:
+	if global:
+		impulse = global_to_pose * impulse
+
 	point_mass.apply_force(impulse)
+
+func reset() -> void:
+	should_reset = true
 
 static func global_bone_pose(skeleton: Skeleton, bone_idx: int) -> Transform:
 	var rest_pose: = skeleton.get_bone_rest(bone_idx)
