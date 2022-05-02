@@ -2,13 +2,11 @@
 
 Add jiggle physics to your **Skeleton**. The node is used like a **BoneAttachment** but influences the bones custom pose to react to (animated or global) motion of the **Skeleton**.
 
-> Scaled **Skeletons** or their **MeshInstances** may not work as intended as global values are used for calculation.
-
 ## Bone Name
 
 Selects which bone should be used. Shows a list of bone names from the parent **Skeleton**.
 
-## Bone Properties
+## Bone Properties (`Properties`)
 
 Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused and shared between multiple bones.
 
@@ -18,7 +16,7 @@ The mass center is attached to the bone's end and determines how motion and grav
 
 ### Gravity
 
-The force pulling at the mass center. This can be any force but is usually used for gravity.
+The force pulling at the mass center.
 
 ### Stiffness
 
@@ -40,14 +38,23 @@ The bone rotates around its origin. The rotation angle can be limited with `Max 
 
 The bone moves relative to its origin but without rotating. The distance can be limited to a certain value with `Max Distance`
 
-
-## Bone Attachment (`Attachment`)
-
-The **WiggleBone** node inherits its transformation from the bone's pose (without wiggle) and acts the same way as a **BoneAttachment**.
-
 ## Constant Force (`Const Force`)
 
-This applies a constant force additionally to the gravity already set in **WiggleProperties** but per bone. This can be used to apply an impluse when only set for one frame.
+This applies a global constant force additionally to the gravity already set in **WiggleProperties** but per bone. This can be used to apply an impluse when only set for one frame.
+
+## Functions
+
+### `set_const_force(force: Vector3)`
+
+Sets an additional global constant force.
+
+### `apply_impulse(impulse: Vector3, global: bool = true)`
+
+Adds a single impulse force for the next frame.
+
+### `reset()`
+
+Resets all forces. Can be used, for example, after "teleporting" the character (moving instantaneously a long distance) to prevent overshooting.
 
 ## Testing in Editor
 
