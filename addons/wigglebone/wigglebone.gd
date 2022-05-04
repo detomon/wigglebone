@@ -2,6 +2,8 @@ tool
 extends BoneAttachment
 class_name WiggleBone
 
+const ACCELERATION_WEIGHT: = 0.5
+
 var enabled: = true setget set_enabled
 func set_enabled(value: bool) -> void:
 	enabled = value
@@ -101,7 +103,8 @@ func _process(delta: float) -> void:
 	global_bone_pose = global_bone_pose(skeleton, bone_idx)
 	global_to_pose = global_bone_pose.basis.inverse()
 
-	acceleration = _update_acceleration(delta)
+	var new_acceleration: = _update_acceleration(delta)
+	acceleration = acceleration.linear_interpolate(new_acceleration, ACCELERATION_WEIGHT)
 
 func _physics_process(delta: float) -> void:
 	var global_to_local: = global_bone_pose(skeleton, bone_idx).basis.inverse()
@@ -119,7 +122,8 @@ func _update_acceleration(delta: float) -> Vector3:
 		delta_mass_center = Vector3.ZERO
 
 	var global_velocity: = delta_mass_center / delta
-	var acceleration: = global_velocity - prev_velocity
+	acceleration = global_velocity - prev_velocity
+
 	prev_velocity = global_velocity
 
 	if should_reset:
@@ -131,13 +135,19 @@ func _update_acceleration(delta: float) -> Vector3:
 	return acceleration
 
 func _solve(global_to_local: Basis, acceleration: Vector3, delta: float) -> void:
-	var global_force: = properties.gravity + const_force + acceleration
+	#var global_force: = properties.gravity + const_force + acceleration
+	var global_force: = properties.gravity + const_force
 	var local_force: = global_to_local * global_force
+
+	var mass_distance: = properties.mass_center.length()
+	var local_acc: = global_to_local * acceleration
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
-			var mass_distance: = properties.mass_center.length()
 			local_force = project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
+			local_acc = project_to_vector_plane(Vector3.ZERO, mass_distance, local_acc)
+
+	point_mass.p += local_acc * delta
 
 	point_mass.apply_force(local_force)
 	point_mass.inertia(delta, properties.damping)
@@ -153,6 +163,7 @@ func _pose() -> Transform:
 			var angular_limit: = angular_offset * mass_distance
 			var mass_constrained: = clamp_length(point_mass.p, 0.0, angular_limit)
 
+			# TODO: soft limit
 			var mass_local: = bone_rest * (properties.mass_center + mass_constrained)
 			var axis_x: = bone_rest * Vector3.RIGHT
 			var basis: = create_bone_look_at(mass_local, axis_x)
@@ -160,6 +171,7 @@ func _pose() -> Transform:
 			pose.basis = bone_rest_inv * basis
 
 		WiggleProperties.Mode.DISLOCATION:
+			# TODO: soft limit
 			var mass_constrained: = clamp_length(point_mass.p, 0.0, properties.max_distance)
 			var mass_local: = bone_rest * (properties.mass_center + mass_constrained)
 
@@ -172,6 +184,9 @@ func _update_enabled() -> void:
 	var active: = enabled and valid
 	set_physics_process(active)
 	set_process(active)
+
+	if valid and not enabled:
+		skeleton.set_bone_custom_pose(bone_idx, Transform())
 
 func _fetch_bone() -> void:
 	bone_idx = skeleton.find_bone(bone_name) if skeleton else -1
