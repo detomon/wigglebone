@@ -175,7 +175,7 @@ func _pose() -> Transform:
 			var mass_constrained: = clamp_length(point_mass.p, 0.0, properties.max_distance)
 			var mass_local: = bone_rest * (properties.mass_center + mass_constrained)
 
-			pose.origin = bone_rest * mass_local
+			pose.origin = bone_rest_inv * mass_local
 
 	return pose
 
