@@ -8,12 +8,12 @@ const SOFT_LIMIT_FACTOR: = 0.5
 var enabled: = true setget set_enabled
 func set_enabled(value: bool) -> void:
 	enabled = value
-	should_reset = true
+	_should_reset = true
 	_update_enabled()
 
 func set_bone_name(value: String) -> void:
 	.set_bone_name(value)
-	should_reset = true
+	_should_reset = true
 	_fetch_bone()
 	update_configuration_warning()
 
@@ -24,31 +24,33 @@ func set_properties(value: WiggleProperties) -> void:
 	properties = value
 	if properties:
 		properties.connect("changed", self, "_properties_changed")
-	should_reset = true
+	_should_reset = true
 	_update_enabled()
 	update_configuration_warning()
 
-var skeleton: Skeleton
-var bone_idx: = -1
+var const_force: = Vector3.ZERO # global force
+var const_force_local: = Vector3.ZERO # local force relative to bone pose
 
-var point_mass: = PointMass.new()
-var global_to_pose: = Basis()
-var const_force: = Vector3.ZERO
-var should_reset: = true
+var _skeleton: Skeleton
+var _bone_idx: = -1
 
-var acceleration: = Vector3.ZERO # local bone acceleration at mass center
-var prev_mass_center: = Vector3.ZERO
-var prev_velocity: = Vector3.ZERO
+var _point_mass: = PointMass.new()
+var _global_to_pose: = Basis()
+var _should_reset: = true
+
+var _acceleration: = Vector3.ZERO # local bone acceleration at mass center
+var _prev_mass_center: = Vector3.ZERO
+var _prev_velocity: = Vector3.ZERO
 
 func _ready() -> void:
 	set_enabled(enabled)
 
 func _enter_tree() -> void:
-	skeleton = get_parent() as Skeleton
+	_skeleton = get_parent() as Skeleton
 	_fetch_bone()
 
 func _exit_tree() -> void:
-	skeleton = null
+	_skeleton = null
 	_fetch_bone()
 
 func _properties_changed() -> void:
@@ -73,12 +75,16 @@ func _get_property_list() -> Array:
 		name = "const_force",
 		type = TYPE_VECTOR3,
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+	}, {
+		name = "const_force_local",
+		type = TYPE_VECTOR3,
+		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}]
 
 func _get_configuration_warning() -> String:
-	if not skeleton:
+	if not _skeleton:
 		return "Parent must be Skeleton"
-	elif bone_idx < 0:
+	elif _bone_idx < 0:
 		return "Bone name '%s' not found" % bone_name
 	elif not properties:
 		return "WiggleProperties resource is required"
@@ -89,44 +95,44 @@ func _process(delta: float) -> void:
 	if delta == 0.0:
 		delta = 1.0 / float(Engine.iterations_per_second)
 
-	var custom_pose_inv: = skeleton.get_bone_custom_pose(bone_idx).inverse()
+	var custom_pose_inv: = _skeleton.get_bone_custom_pose(_bone_idx).inverse()
 	# global pose including nomal pose but without custom pose
 	var global_bone_pose: = global_transform * custom_pose_inv
-	global_to_pose = global_bone_pose.basis.inverse()
+	_global_to_pose = global_bone_pose.basis.inverse()
 
 	var new_acceleration: = _update_acceleration(global_bone_pose, delta)
-	acceleration = acceleration.linear_interpolate(new_acceleration, ACCELERATION_WEIGHT)
+	_acceleration = _acceleration.linear_interpolate(new_acceleration, ACCELERATION_WEIGHT)
 
 	var pose: = _pose()
-	skeleton.set_bone_custom_pose(bone_idx, pose)
+	_skeleton.set_bone_custom_pose(_bone_idx, pose)
 
 func _physics_process(delta: float) -> void:
-	_solve(global_to_pose, acceleration, delta)
+	_solve(_global_to_pose, _acceleration, delta)
 
 func _update_acceleration(global_bone_pose: Transform, delta: float) -> Vector3:
 	var mass_center: = global_bone_pose * properties.mass_center
-	var delta_mass_center: = prev_mass_center - mass_center
-	prev_mass_center = mass_center
+	var delta_mass_center: = _prev_mass_center - mass_center
+	_prev_mass_center = mass_center
 
-	if should_reset:
+	if _should_reset:
 		delta_mass_center = Vector3.ZERO
 
 	var global_velocity: = delta_mass_center / delta
-	acceleration = global_velocity - prev_velocity
+	_acceleration = global_velocity - _prev_velocity
 
-	prev_velocity = global_velocity
+	_prev_velocity = global_velocity
 
-	if should_reset:
-		prev_velocity = global_velocity
-		acceleration = Vector3.ZERO
-		point_mass.reset(Vector3.ZERO)
-		should_reset = false
+	if _should_reset:
+		_prev_velocity = global_velocity
+		_acceleration = Vector3.ZERO
+		_point_mass.reset(Vector3.ZERO)
+		_should_reset = false
 
-	return acceleration
+	return _acceleration
 
 func _solve(global_to_local: Basis, acceleration: Vector3, delta: float) -> void:
 	var global_force: = properties.gravity + const_force
-	var local_force: = global_to_local * global_force
+	var local_force: = global_to_local * global_force + const_force_local
 
 	var mass_distance: = properties.mass_center.length()
 	var local_acc: = global_to_local * acceleration
@@ -136,10 +142,10 @@ func _solve(global_to_local: Basis, acceleration: Vector3, delta: float) -> void
 			local_force = project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
 			local_acc = project_to_vector_plane(Vector3.ZERO, mass_distance, local_acc)
 
-	point_mass.p += local_acc * delta
-	point_mass.apply_force(local_force)
-	point_mass.inertia(delta, properties.damping)
-	point_mass.solve_constraint(Vector3.ZERO, properties.stiffness)
+	_point_mass.p += local_acc * delta
+	_point_mass.apply_force(local_force)
+	_point_mass.inertia(delta, properties.damping)
+	_point_mass.solve_constraint(Vector3.ZERO, properties.stiffness)
 
 func _pose() -> Transform:
 	var pose: = Transform()
@@ -150,7 +156,7 @@ func _pose() -> Transform:
 			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
 			var angular_limit: = angular_offset * mass_distance
 			var k: = angular_limit * SOFT_LIMIT_FACTOR
-			var mass_constrained: = clamp_length_soft(point_mass.p, 0.0, angular_limit, k)
+			var mass_constrained: = clamp_length_soft(_point_mass.p, 0.0, angular_limit, k)
 
 			var mass_local: = properties.mass_center + mass_constrained
 			var axis_x: = Vector3.RIGHT
@@ -160,7 +166,7 @@ func _pose() -> Transform:
 
 		WiggleProperties.Mode.DISLOCATION:
 			var k: = properties.max_distance * SOFT_LIMIT_FACTOR
-			var mass_constrained: = clamp_length_soft(point_mass.p, 0.0, properties.max_distance, k)
+			var mass_constrained: = clamp_length_soft(_point_mass.p, 0.0, properties.max_distance, k)
 			var mass_local: = properties.mass_center + mass_constrained
 
 			pose.origin = mass_local
@@ -168,29 +174,26 @@ func _pose() -> Transform:
 	return pose
 
 func _update_enabled() -> void:
-	var valid: = skeleton != null and bone_idx >= 0 and properties != null
+	var valid: = _skeleton != null and _bone_idx >= 0 and properties != null
 	var active: = enabled and valid
 	set_physics_process(active)
 	set_process(active)
 
 	if valid and not enabled:
-		skeleton.set_bone_custom_pose(bone_idx, Transform())
+		_skeleton.set_bone_custom_pose(_bone_idx, Transform())
 
 func _fetch_bone() -> void:
-	bone_idx = skeleton.find_bone(bone_name) if skeleton else -1
+	_bone_idx = _skeleton.find_bone(bone_name) if _skeleton else -1
 	_update_enabled()
-
-func set_const_force(force: Vector3) -> void:
-	const_force = force
 
 func apply_impulse(impulse: Vector3, global: = false) -> void:
 	if global:
-		impulse = global_to_pose * impulse
+		impulse = _global_to_pose * impulse
 
-	point_mass.apply_force(impulse)
+	_point_mass.apply_force(impulse)
 
 func reset() -> void:
-	should_reset = true
+	_should_reset = true
 
 static func sorted_bone_names(skeleton: Skeleton) -> Array:
 	var bone_names: = []
