@@ -2,55 +2,59 @@
 
 Add jiggle physics to your **Skeleton**. The node is used like a **BoneAttachment** but influences the bones custom pose to react to (animated or global) motion of the **Skeleton**.
 
-## Bone Name
+## Enabled (`enabled`)
 
-Selects which bone should be used. Shows a list of bone names from the parent **Skeleton**.
+Enables or disables wiggling. When disabled, the bone returns to it's normal pose.
 
-## Bone Properties (`Properties`)
+## Bone Name (`bone_name`)
+
+Selects which bone should be used.
+
+## Properties (`properties`)
 
 Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused and shared between multiple bones.
 
-### Mass Center
+### Mass Center (`mass_center`)
 
 The mass center is attached to the bone's end and determines how motion and gravity influences the motion. As there is no way to get the bone length automatically, this point has to be set manually. Usually its along the Y-axis of the bone.
 
-### Gravity
+### Gravity (`gravity`)
 
 The force pulling at the mass center.
 
-### Stiffness
+### Stiffness (`stiffness`)
 
 This is the bones tendency to return to its original pose. The higher the value the stronger the pull.
 
-### Damping
+### Damping (`damping`)
 
 Reduces the bones motion. The higher the value the slower it moves in general.
 
-### Mode
+### Mode (`mode`)
 
 Two different pose modes are supported:
 
-`Rotation`
+#### Rotation (`WiggleProperties.Mode.ROTATION`)
 
 The bone rotates around its origin. The rotation angle can be limited with `Max Degrees` to a certain value but has an upper limit of 90° relative to the original pose.
 
-`Dislocation`
+#### Dislocation (`WiggleProperties.Mode.DISLOCATION`)
 
 The bone moves relative to its origin but without rotating. The distance can be limited to a certain value with `Max Distance`
 
-## Constant Force (`Const Force`)
+## Constant Force (`const_force`)
 
-This applies a global constant force additionally to the gravity already set in **WiggleProperties** but per bone. This can be used to apply an impluse when only set for one frame.
+This applies a global constant force additionally to the gravity already set in **WiggleProperties**.
+
+## Constant Local Force (`const_force_local`)
+
+This applies a global constant force additionally to the gravity already set in **WiggleProperties** but relative to the bone's current pose.
 
 ## Functions
 
-### `set_const_force(force: Vector3)`
-
-Sets an additional global constant force.
-
 ### `apply_impulse(impulse: Vector3, global: bool = true)`
 
-Adds a single impulse force for the next frame.
+Adds a single impulse force for the next frame. If `global` is `false`, the force is relative to the bone's pose.
 
 ### `reset()`
 

@@ -142,10 +142,9 @@ func _solve(global_to_local: Basis, acceleration: Vector3, delta: float) -> void
 			local_force = project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
 			local_acc = project_to_vector_plane(Vector3.ZERO, mass_distance, local_acc)
 
-	_point_mass.p += local_acc * delta
+	_point_mass.accelerate(local_acc, delta)
 	_point_mass.apply_force(local_force)
-	_point_mass.inertia(delta, properties.damping)
-	_point_mass.solve_constraint(Vector3.ZERO, properties.stiffness)
+	_point_mass.solve(properties.stiffness, properties.damping, delta)
 
 func _pose() -> Transform:
 	var pose: = Transform()
@@ -224,24 +223,25 @@ static func smin(a: float, b: float, k: float) -> float:
 
 class PointMass:
 	var p: = Vector3.ZERO
-	var pp: = Vector3.ZERO
+	var v: = Vector3.ZERO
 	var a: = Vector3.ZERO
 
-	func inertia(delta: float, damping: float) -> void:
-		var v: = (p - pp) * (1.0 - damping)
-		var pn: = p + v + a * delta
-
-		pp = p
-		p = pn
+	func solve(stiffness: float, damping: float, delta: float) -> void:
+		# inertia
+		v = v * (1.0 - damping) + a * delta
+		p += v
 		a = Vector3.ZERO
 
-	func solve_constraint(target: Vector3, stiffness: float) -> void:
-		p += (target - p) * stiffness
+		# constraint
+		v -= p * stiffness
+
+	func accelerate(a: Vector3, delta: float) -> void:
+		v += a * delta
 
 	func apply_force(force: Vector3) -> void:
 		a += force
 
 	func reset(position: Vector3) -> void:
 		p = position
-		pp = position
+		v = position
 		a = Vector3.ZERO
