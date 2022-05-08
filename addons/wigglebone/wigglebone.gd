@@ -3,6 +3,7 @@ extends BoneAttachment
 class_name WiggleBone
 
 const ACCELERATION_WEIGHT: = 0.5
+const SOFT_LIMIT_FACTOR: = 0.5
 
 var enabled: = true setget set_enabled
 func set_enabled(value: bool) -> void:
@@ -148,9 +149,9 @@ func _pose() -> Transform:
 			var mass_distance: = properties.mass_center.length()
 			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
 			var angular_limit: = angular_offset * mass_distance
-			var mass_constrained: = clamp_length(point_mass.p, 0.0, angular_limit)
+			var k: = angular_limit * SOFT_LIMIT_FACTOR
+			var mass_constrained: = clamp_length_soft(point_mass.p, 0.0, angular_limit, k)
 
-			# TODO: soft limit
 			var mass_local: = properties.mass_center + mass_constrained
 			var axis_x: = Vector3.RIGHT
 			var basis: = create_bone_look_at(mass_local, axis_x)
@@ -158,8 +159,8 @@ func _pose() -> Transform:
 			pose.basis = basis
 
 		WiggleProperties.Mode.DISLOCATION:
-			# TODO: soft limit
-			var mass_constrained: = clamp_length(point_mass.p, 0.0, properties.max_distance)
+			var k: = properties.max_distance * SOFT_LIMIT_FACTOR
+			var mass_constrained: = clamp_length_soft(point_mass.p, 0.0, properties.max_distance, k)
 			var mass_local: = properties.mass_center + mass_constrained
 
 			pose.origin = mass_local
@@ -211,8 +212,12 @@ static func create_bone_look_at(axis_y: Vector3, pose_axis_x: Vector3) -> Basis:
 static func project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
 	return Plane(vector.normalized(), length).project(point)
 
-static func clamp_length(v: Vector3, min_length: float, max_length: float) -> Vector3:
-	return v.normalized() * clamp(v.length(), min_length, max_length)
+static func clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
+	return v.normalized() * smin(max(min_length, v.length()), max_length, k)
+
+static func smin(a: float, b: float, k: float) -> float:
+	var h: = max(0.0, k - abs(a - b))
+	return min(a, b) - h * h / (4.0 * k)
 
 class PointMass:
 	var p: = Vector3.ZERO
