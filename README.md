@@ -1,54 +1,48 @@
 # WiggleBone Plugin for Godot Engine
 
-Add jiggle physics to your **Skeleton**. The node is used like a **BoneAttachment** but influences the bones custom pose to react to (animated or global) motion of the **Skeleton**.
+Adds jiggle physics to bones of a **Skeleton**. The node inherits from **BoneAttachment** and can be used as such. It reacts to animated or global motion and uses the bone's custom pose property to apply the wiggle motion.
 
-## Enabled (`enabled`)
+It only reacts to acceleration; bones of constantly moving objects will not "lag behind" and have a more realistic behaviour.
 
-Enables or disables wiggling. When disabled, the bone returns to it's normal pose.
+See the [example](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone) directory for some examples.
 
-## Bone Name (`bone_name`)
+![Editor Example](images/editor.gif)
 
-Selects which bone should be used.
+## Node Properties
 
-## Properties (`properties`)
+Title | Name | Description
+---|---|---
+Enabled | `enabled` | Enables or disables wiggling. When disabled, the bone returns to it's current pose.
+Properties | `properties` | Properties are stored in a separate [**WiggleProperties**](#wiggleproperties-resource) resource type.
+Constant Force | `const_force` | This applies a global constant force additionally to the gravity already set in [**WiggleProperties**](#wiggleproperties-resource).
+Constant Local Force | `const_force_local` | This applies a global constant force additionally to the gravity already set in [**WiggleProperties**](#wiggleproperties-resource) but relative to the bone's current pose.
+Bone Name | `bone_name ` | Inherited from **BoneAttachment**. Selects which bone should be used.
 
-Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused and shared between multiple bones.
+## WiggleProperties Resource
 
-### Mass Center (`mass_center`)
+Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused and shared between multiple bones, for example, when bones are symetric.
 
-The mass center is attached to the bone's end and determines how motion and gravity influences the motion. As there is no way to get the bone length automatically, this point has to be set manually. Usually its along the Y-axis of the bone.
+Title | Name | Description
+---|---|---
+Mass Center | `mass_center` | The mass center is attached to the bone's end and determines how motion and gravity influences the motion. As there is no way to get the bone length automatically, this point has to be set manually (usually along its Y-axis).
+Gravity | `gravity` | The force pulling at the mass center.
+Stiffness | `stiffness` | This is the bones tendency to return to its original pose. The higher the value the stronger the pull.
+Damping | `damping` | Reduces the bones motion. The higher the value the slower it moves in general.
+Mode | `mode` | Two different [pose modes](#pose-modes) are supported: `Rotation` and `Dislocation`.
+Max Degrees | `max_degrees` | Available when using `Rotation` pose mode.
+Max Distance | `max_distance` | Available when using `Dislocation` pose mode.
 
-### Gravity (`gravity`)
+## Pose Modes
 
-The force pulling at the mass center.
+Two different pose-modes are supported.
 
-### Stiffness (`stiffness`)
+### Rotation (`WiggleProperties.Mode.ROTATION`)
 
-This is the bones tendency to return to its original pose. The higher the value the stronger the pull.
+The bone rotates around its origin. The rotation angle can be limited with *Max Degrees* (`max_degrees`) to a certain value but has an upper limit of 90° relative to the original pose. All values have a soft limit.
 
-### Damping (`damping`)
+### Dislocation (`WiggleProperties.Mode.DISLOCATION`)
 
-Reduces the bones motion. The higher the value the slower it moves in general.
-
-### Mode (`mode`)
-
-Two different pose modes are supported:
-
-#### Rotation (`WiggleProperties.Mode.ROTATION`)
-
-The bone rotates around its origin. The rotation angle can be limited with `Max Degrees` to a certain value but has an upper limit of 90° relative to the original pose.
-
-#### Dislocation (`WiggleProperties.Mode.DISLOCATION`)
-
-The bone moves relative to its origin but without rotating. The distance can be limited to a certain value with `Max Distance`
-
-## Constant Force (`const_force`)
-
-This applies a global constant force additionally to the gravity already set in **WiggleProperties**.
-
-## Constant Local Force (`const_force_local`)
-
-This applies a global constant force additionally to the gravity already set in **WiggleProperties** but relative to the bone's current pose.
+The bone moves relative to its origin but without rotating. The distance can be limited to a certain value with *Max Distance* (`max_distance`). All values have a soft limit.
 
 ## Functions
 
