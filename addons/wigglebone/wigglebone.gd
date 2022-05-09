@@ -8,13 +8,12 @@ const SOFT_LIMIT_FACTOR: = 0.5
 var enabled: = true setget set_enabled
 func set_enabled(value: bool) -> void:
 	enabled = value
-	if not enabled and is_inside_tree():
-		reset()
+	reset()
 	_update_enabled()
 
 func set_bone_name(value: String) -> void:
 	.set_bone_name(value)
-	_should_reset = true
+	reset()
 	_fetch_bone()
 	update_configuration_warning()
 
@@ -25,7 +24,7 @@ func set_properties(value: WiggleProperties) -> void:
 	properties = value
 	if properties:
 		properties.connect("changed", self, "_properties_changed")
-	_should_reset = true
+	reset()
 	_update_enabled()
 	update_configuration_warning()
 
@@ -189,18 +188,9 @@ func apply_impulse(impulse: Vector3, global: = false) -> void:
 
 func reset() -> void:
 	_point_mass.reset()
-	_skeleton.set_bone_custom_pose(_bone_idx, Transform())
+	if _skeleton:
+		_skeleton.set_bone_custom_pose(_bone_idx, Transform())
 	_should_reset = true
-
-static func sorted_bone_names(skeleton: Skeleton) -> Array:
-	var bone_names: = []
-	if skeleton:
-		for i in skeleton.get_bone_count():
-			var bone_name: = skeleton.get_bone_name(i)
-			bone_names.append(bone_name)
-	bone_names.sort()
-
-	return bone_names
 
 static func create_bone_look_at(axis_y: Vector3) -> Basis:
 	axis_y = axis_y.normalized()
@@ -216,6 +206,7 @@ static func project_to_vector_plane(vector: Vector3, length: float, point: Vecto
 static func clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
 	return v.normalized() * smin(max(min_length, v.length()), max_length, k)
 
+# https://iquilezles.org/articles/smin/
 static func smin(a: float, b: float, k: float) -> float:
 	var h: = max(0.0, k - abs(a - b))
 	return min(a, b) - h * h / (4.0 * k)
