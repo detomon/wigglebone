@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://examples/wigglebone/simple/dislocation.tres" type="Resource" id=1]
+[ext_resource path="res://examples/wigglebone/simple/simple.gd" type="Script" id=2]
+[ext_resource path="res://examples/wigglebone/bone.obj" type="ArrayMesh" id=3]
+[ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=4]
+
+[node name="Dislocation" type="Spatial"]
+script = ExtResource( 2 )
+
+[node name="Skeleton" type="Skeleton" parent="."]
+bones/0/name = "bone1"
+bones/0/parent = -1
+bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+bones/0/enabled = true
+bones/0/bound_children = [ NodePath("WiggleBone") ]
+bones/1/name = "end"
+bones/1/parent = 0
+bones/1/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
+bones/1/enabled = true
+bones/1/bound_children = [  ]
+
+[node name="WiggleBone" type="BoneAttachment" parent="Skeleton"]
+process_priority = -1
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1.96134e-17, -0.092596, 8.84248e-05 )
+bone_name = "bone1"
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_group_": true
+}
+enabled = true
+properties = ExtResource( 1 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone"]
+transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
+mesh = ExtResource( 3 )
+skeleton = NodePath("")
+material/0 = null
