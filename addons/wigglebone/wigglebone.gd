@@ -8,7 +8,8 @@ const SOFT_LIMIT_FACTOR: = 0.5
 var enabled: = true setget set_enabled
 func set_enabled(value: bool) -> void:
 	enabled = value
-	_should_reset = true
+	if not enabled and is_inside_tree():
+		reset()
 	_update_enabled()
 
 func set_bone_name(value: String) -> void:
@@ -119,13 +120,10 @@ func _update_acceleration(global_bone_pose: Transform, delta: float) -> Vector3:
 
 	var global_velocity: = delta_mass_center / delta
 	_acceleration = global_velocity - _prev_velocity
-
 	_prev_velocity = global_velocity
 
 	if _should_reset:
-		_prev_velocity = global_velocity
 		_acceleration = Vector3.ZERO
-		_point_mass.reset(Vector3.ZERO)
 		_should_reset = false
 
 	return _acceleration
@@ -192,6 +190,8 @@ func apply_impulse(impulse: Vector3, global: = false) -> void:
 	_point_mass.apply_force(impulse)
 
 func reset() -> void:
+	_point_mass.reset()
+	_skeleton.set_bone_custom_pose(_bone_idx, Transform())
 	_should_reset = true
 
 static func sorted_bone_names(skeleton: Skeleton) -> Array:
@@ -241,7 +241,7 @@ class PointMass:
 	func apply_force(force: Vector3) -> void:
 		a += force
 
-	func reset(position: Vector3) -> void:
-		p = position
-		v = position
+	func reset() -> void:
+		p = Vector3.ZERO
+		v = Vector3.ZERO
 		a = Vector3.ZERO
