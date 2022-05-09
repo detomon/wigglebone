@@ -164,9 +164,8 @@ func _pose() -> Transform:
 		WiggleProperties.Mode.DISLOCATION:
 			var k: = properties.max_distance * SOFT_LIMIT_FACTOR
 			var mass_constrained: = clamp_length_soft(_point_mass.p, 0.0, properties.max_distance, k)
-			var mass_local: = properties.mass_center + mass_constrained
 
-			pose.origin = mass_local
+			pose.origin = mass_constrained
 
 	return pose
 

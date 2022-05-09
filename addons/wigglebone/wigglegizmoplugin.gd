@@ -35,7 +35,7 @@ func get_handle_value(gizmo: EditorSpatialGizmo, index: int):
 func set_handle(gizmo: EditorSpatialGizmo, index: int, camera: Camera, point: Vector2) -> void:
 	var bone: WiggleBone = gizmo.get_spatial_node()
 	var handle_position: = bone.global_transform * get_handle_position(bone.properties)
-	var depth: = (handle_position - camera.global_transform.origin).length()
+	var depth: = handle_position.distance_to(camera.global_transform.origin)
 
 	handle_position = camera.project_position(point, depth)
 
