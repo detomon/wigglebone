@@ -41,13 +41,13 @@ func set_mass_center(value: Vector3) -> void:
 	mass_center = value
 	emit_changed()
 
-# maximum distance the bone root will be dislodged from its pose position
+# maximum distance the bone can move around its pose position
 var max_distance: = 0.1 setget set_max_distance
 func set_max_distance(value: float) -> void:
 	max_distance = value
 	emit_changed()
 
-# maximum rotation relstive to pose position
+# maximum rotation relative to pose position
 var max_degrees: = 60.0 setget set_max_degrees
 func set_max_degrees(value: float) -> void:
 	max_degrees = value

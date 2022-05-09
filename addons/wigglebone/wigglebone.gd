@@ -156,8 +156,7 @@ func _pose() -> Transform:
 			var mass_constrained: = clamp_length_soft(_point_mass.p, 0.0, angular_limit, k)
 
 			var mass_local: = properties.mass_center + mass_constrained
-			var axis_x: = Vector3.RIGHT
-			var basis: = create_bone_look_at(mass_local, axis_x)
+			var basis: = create_bone_look_at(mass_local)
 
 			pose.basis = basis
 
@@ -203,10 +202,11 @@ static func sorted_bone_names(skeleton: Skeleton) -> Array:
 
 	return bone_names
 
-static func create_bone_look_at(axis_y: Vector3, pose_axis_x: Vector3) -> Basis:
+static func create_bone_look_at(axis_y: Vector3) -> Basis:
 	axis_y = axis_y.normalized()
-	var axis_z: = pose_axis_x.cross(axis_y).normalized()
-	var axis_x: = axis_y.cross(axis_z)
+	var axis_x: = Vector3.RIGHT
+	var axis_z: = axis_x.cross(axis_y).normalized()
+	axis_x = axis_y.cross(axis_z)
 
 	return Basis(axis_x, axis_y, axis_z)
 

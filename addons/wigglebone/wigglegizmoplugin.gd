@@ -66,10 +66,10 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 				var angle: = deg2rad(properties.max_degrees)
 				var scale_x: = sin(angle)
 				var scale_y: = cos(angle)
-				var scale: = Vector3(scale_x, scale_y, scale_x)
+				var scale: = Vector3(scale_x, scale_y, scale_x) * length * 0.75
 
-				var bone_look_at: = WiggleBone.create_bone_look_at(properties.mass_center, Vector3.RIGHT)
-				var transform: = Transform(bone_look_at.scaled(scale * length * 0.75), Vector3.ZERO)
+				var bone_look_at: = WiggleBone.create_bone_look_at(properties.mass_center)
+				var transform: = Transform(bone_look_at, Vector3.ZERO).scaled(scale)
 
 				var lines: PoolVector3Array = transform.xform(cone_lines)
 				lines.append(Vector3.ZERO)
