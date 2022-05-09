@@ -96,7 +96,7 @@ func _process(delta: float) -> void:
 		delta = 1.0 / float(Engine.iterations_per_second)
 
 	var custom_pose_inv: = _skeleton.get_bone_custom_pose(_bone_idx).inverse()
-	# global pose including nomal pose but without custom pose
+	# global pose including normal pose but without custom pose
 	var global_bone_pose: = global_transform * custom_pose_inv
 	_global_to_pose = global_bone_pose.basis.inverse()
 
