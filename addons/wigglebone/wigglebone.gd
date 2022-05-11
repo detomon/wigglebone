@@ -110,7 +110,13 @@ func _physics_process(delta: float) -> void:
 	_solve(_global_to_pose, _acceleration, delta)
 
 func _update_acceleration(global_bone_pose: Transform, delta: float) -> Vector3:
-	var mass_center: = global_bone_pose * properties.mass_center
+	var mass_center: = Vector3.ZERO
+
+	match properties.mode:
+		WiggleProperties.Mode.ROTATION:
+			mass_center = properties.mass_center
+
+	mass_center = global_bone_pose * mass_center
 	var delta_mass_center: = _prev_mass_center - mass_center
 	_prev_mass_center = mass_center
 
