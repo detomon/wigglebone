@@ -59,23 +59,23 @@ func _get_property_list() -> Array:
 		type = TYPE_INT,
 		hint = PROPERTY_HINT_ENUM,
 		hint_string = "Rotation,Dislocation",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "stiffness",
 		type = TYPE_REAL,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0,1",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "damping",
 		type = TYPE_REAL,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0.01,1",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "gravity",
 		type = TYPE_VECTOR3,
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
+		usage = PROPERTY_VISIBLE,
 	}, {
 		name = "mass_center",
 		type = TYPE_VECTOR3,
