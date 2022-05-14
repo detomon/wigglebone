@@ -56,6 +56,7 @@ func _ready() -> void:
 func _enter_tree() -> void:
 	_skeleton = get_parent() as Skeleton
 	_fetch_bone()
+	reset()
 
 func _exit_tree() -> void:
 	_skeleton = null
