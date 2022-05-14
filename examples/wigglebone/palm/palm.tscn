@@ -1,0 +1,110 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://examples/wigglebone/palm/palm.gltf" type="PackedScene" id=1]
+[ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=2]
+[ext_resource path="res://examples/wigglebone/palm/leave.tres" type="Resource" id=3]
+[ext_resource path="res://examples/wigglebone/palm/trunk.tres" type="Resource" id=4]
+
+[node name="Palm" instance=ExtResource( 1 )]
+
+[node name="Skeleton" parent="Armature" index="0"]
+bones/3/bound_children = [ NodePath("BoneTrunk") ]
+bones/5/bound_children = [ NodePath("BoneLeave0") ]
+bones/6/bound_children = [ NodePath("BoneLeave3") ]
+bones/7/bound_children = [ NodePath("BoneLeave1") ]
+bones/8/bound_children = [ NodePath("BoneLeave5") ]
+bones/9/bound_children = [ NodePath("BoneLeave6") ]
+bones/10/bound_children = [ NodePath("BoneLeave8") ]
+bones/11/bound_children = [ NodePath("BoneLeave2") ]
+bones/12/bound_children = [ NodePath("BoneLeave7") ]
+bones/13/bound_children = [ NodePath("BoneLeave4") ]
+
+[node name="BoneTrunk" type="BoneAttachment" parent="Armature/Skeleton" index="2"]
+transform = Transform( 1, 1.93455e-06, 0, -1.93455e-06, 1, 2.85777e-06, 5.52849e-12, -2.85777e-06, 1, 0, 2.3782, 0 )
+bone_name = "trunk.004"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 4 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave0" type="BoneAttachment" parent="Armature/Skeleton" index="3"]
+transform = Transform( -0.107706, -0.871573, -0.478287, -0.492147, -0.371263, 0.787373, -0.863823, 0.320192, -0.388955, -0.0552586, 3.58206, -0.0336905 )
+bone_name = "leave.000"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave1" type="BoneAttachment" parent="Armature/Skeleton" index="4"]
+transform = Transform( 0.958338, -0.285046, 0.0183309, -0.0801837, -0.206876, 0.975076, -0.274149, -0.935923, -0.221113, -0.0552589, 3.56063, -0.0336904 )
+bone_name = "leave.001"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave2" type="BoneAttachment" parent="Armature/Skeleton" index="5"]
+transform = Transform( -0.704031, -0.653938, 0.276958, 0.32711, 0.04755, 0.943789, -0.630349, 0.755052, 0.180433, -0.00715518, 3.84572, 0.0350277 )
+bone_name = "leave.002"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave3" type="BoneAttachment" parent="Armature/Skeleton" index="6"]
+transform = Transform( -0.493233, 0.727323, 0.477202, 0.467845, -0.240688, 0.850406, 0.733377, 0.642705, -0.221559, -0.0552589, 3.51753, -0.0336901 )
+bone_name = "leave.003"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave4" type="BoneAttachment" parent="Armature/Skeleton" index="7"]
+transform = Transform( 0.57778, 0.135617, 0.804846, 0.794926, -0.317134, -0.517222, 0.1851, 0.938634, -0.291039, 0.0272042, 3.86988, 0.0487713 )
+bone_name = "leave.004"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave5" type="BoneAttachment" parent="Armature/Skeleton" index="8"]
+transform = Transform( 0.501409, 0.843314, 0.193419, 0.172015, -0.316252, 0.93295, 0.847939, -0.434519, -0.303634, 0.0272042, 3.86988, 0.0487713 )
+bone_name = "leave.005"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave6" type="BoneAttachment" parent="Armature/Skeleton" index="9"]
+transform = Transform( 0.974805, 0.174531, -0.138901, 0.153812, -0.0749724, 0.985252, 0.161543, -0.981793, -0.0999286, -0.0208989, 3.84572, -0.0611786 )
+bone_name = "leave.006"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave7" type="BoneAttachment" parent="Armature/Skeleton" index="10"]
+transform = Transform( -0.335508, 0.937351, -0.0938407, -0.164294, 0.0398654, 0.985605, 0.9276, 0.346096, 0.140626, 0.0478199, 3.84572, -0.0474348 )
+bone_name = "leave.007"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )
+
+[node name="BoneLeave8" type="BoneAttachment" parent="Armature/Skeleton" index="11"]
+transform = Transform( 0.147794, -0.936972, -0.316608, -0.205558, -0.342234, 0.916854, -0.967421, -0.0704241, -0.243182, -0.0552582, 3.84572, -0.033691 )
+bone_name = "leave"
+script = ExtResource( 2 )
+enabled = true
+properties = ExtResource( 3 )
+const_force = Vector3( 0, 0, 0 )
+const_force_local = Vector3( 0, 0, 0 )

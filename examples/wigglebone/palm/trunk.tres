@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://addons/wigglebone/wiggleproperties.gd" type="Script" id=1]
+
+[resource]
+resource_name = "Trunk"
+script = ExtResource( 1 )
+mode = 0
+stiffness = 0.2
+damping = 0.3
+gravity = Vector3( 0, 0, 0 )
+mass_center = Vector3( 0, 1, 0 )
+max_degrees = 30.0
+max_distance = 0.1
