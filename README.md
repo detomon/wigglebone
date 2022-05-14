@@ -6,7 +6,7 @@ The node inherits from **BoneAttachment** and can also be used as such. It uses 
 
 See the [example](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone) directory for some examples.
 
-![Editor Example](images/editor.gif)
+![Editor Example](images/palm.gif)
 
 ## Node Properties
 
