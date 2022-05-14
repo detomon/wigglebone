@@ -12,10 +12,17 @@ func set_enabled(value: bool) -> void:
 	_update_enabled()
 
 func set_bone_name(value: String) -> void:
-	.set_bone_name(value)
-	reset()
-	_fetch_bone()
-	update_configuration_warning()
+	self.bone_name = value
+
+func _set(property: String, value) -> bool:
+	if property == "bone_name":
+		reset()
+		.set_bone_name(value)
+		_fetch_bone()
+		reset()
+		update_configuration_warning()
+
+	return false
 
 var properties: WiggleProperties setget set_properties
 func set_properties(value: WiggleProperties) -> void:
@@ -27,6 +34,7 @@ func set_properties(value: WiggleProperties) -> void:
 	reset()
 	_update_enabled()
 	update_configuration_warning()
+	update_gizmo()
 
 var const_force: = Vector3.ZERO # global force
 var const_force_local: = Vector3.ZERO # local force relative to bone pose
@@ -84,8 +92,6 @@ func _get_property_list() -> Array:
 func _get_configuration_warning() -> String:
 	if not _skeleton:
 		return "Parent must be Skeleton"
-	elif _bone_idx < 0:
-		return "Bone name '%s' not found" % bone_name
 	elif not properties:
 		return "WiggleProperties resource is required"
 	return ""
