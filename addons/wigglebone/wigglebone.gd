@@ -110,6 +110,11 @@ func _process(delta: float) -> void:
 	var new_acceleration: = _update_acceleration(global_bone_pose, delta)
 	_acceleration = _acceleration.linear_interpolate(new_acceleration, ACCELERATION_WEIGHT)
 
+	# adjust for varying framerates
+	# this is only an approximation
+	var delta_factor: = log(delta * 60.0) / log(2.0) + 1.0
+	_acceleration /= delta_factor
+
 	var pose: = _pose()
 	_skeleton.set_bone_custom_pose(_bone_idx, pose)
 
