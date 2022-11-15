@@ -33,7 +33,7 @@ Gravity | `gravity` | The force pulling at the tip or origin.
 
 Title | Name | Description
 ---|---|---
-Mass Center | `mass_center` | Tihs defines the bone's center of mass and is the point at which gravity and forces are pulling at. As there is no way to get the bone length automatically, this point has to be set manually (usually along its Y-axis).
+Mass Center | `mass_center` | This defines the bone's center of mass and is the point at which gravity and forces are pulling at. As there is no way to get the bone length automatically, this point has to be set manually (usually along its Y-axis).
 Max Degrees | `max_degrees` | The maximum number of degrees the bone can rotate around it's pose.
 
 ### Additional properties when using pose mode `Dislocation`
