@@ -1,4 +1,4 @@
-tool
+@tool
 class_name WiggleProperties
 extends Resource
 
@@ -11,19 +11,26 @@ enum Mode {
 }
 
 # wiggle mode
-var mode: int = Mode.ROTATION setget set_mode
+var mode: int = Mode.ROTATION:
+	set = set_mode
 # tendency of bone to return to pose position
-var stiffness: = 0.1 setget set_stiffness
+var stiffness: = 0.1:
+	set = set_stiffness
 # reduction of motion
-var damping: = 0.1 setget set_damping
+var damping: = 0.1:
+	set = set_damping
 # gravity pulling at mass center
-var gravity: = Vector3.DOWN * 0.5 setget set_gravity
+var gravity: = Vector3.DOWN * 0.5:
+	set = set_gravity
 # distance of mass center to bone root in pose space
-var mass_center: = Vector3.UP * 0.5 setget set_mass_center
+var mass_center: = Vector3.UP * 0.5:
+	set = set_mass_center
 # maximum distance the bone can move around its pose position
-var max_distance: = 0.1 setget set_max_distance
+var max_distance: = 0.1:
+	set = set_max_distance
 # maximum rotation relative to pose position
-var max_degrees: = 60.0 setget set_max_degrees
+var max_degrees: = 60.0:
+	set = set_max_degrees
 
 
 func _get_property_list() -> Array:
@@ -35,13 +42,13 @@ func _get_property_list() -> Array:
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}, {
 		name = "stiffness",
-		type = TYPE_REAL,
+		type = TYPE_FLOAT,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0,1",
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
 	}, {
 		name = "damping",
-		type = TYPE_REAL,
+		type = TYPE_FLOAT,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0.01,1",
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
@@ -55,13 +62,13 @@ func _get_property_list() -> Array:
 		usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN,
 	}, {
 		name = "max_degrees",
-		type = TYPE_REAL,
+		type = TYPE_FLOAT,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0,90",
 		usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN,
 	}, {
 		name = "max_distance",
-		type = TYPE_REAL,
+		type = TYPE_FLOAT,
 		hint = PROPERTY_HINT_RANGE,
 		hint_string = "0,1,or_greater",
 		usage = PROPERTY_VISIBLE if mode == Mode.DISLOCATION else PROPERTY_HIDDEN,
@@ -70,7 +77,7 @@ func _get_property_list() -> Array:
 
 func set_mode(value: int) -> void:
 	mode = value
-	property_list_changed_notify()
+	notify_property_list_changed()
 	emit_changed()
 
 

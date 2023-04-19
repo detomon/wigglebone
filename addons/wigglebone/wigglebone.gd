@@ -1,16 +1,18 @@
-tool
+@tool
 class_name WiggleBone
-extends BoneAttachment
+extends BoneAttachment3D
 
 const ACCELERATION_WEIGHT: = 0.5
 const SOFT_LIMIT_FACTOR: = 0.5
 
-var enabled: = true setget set_enabled
-var properties: WiggleProperties setget set_properties
+var enabled: = true:
+	set = set_enabled
+var properties: WiggleProperties:
+	set = set_properties
 var const_force: = Vector3.ZERO # global force
 var const_force_local: = Vector3.ZERO # local force relative to bone pose
 
-var _skeleton: Skeleton
+var _skeleton: Skeleton3D
 var _bone_idx: = -1
 var _point_mass: = PointMass.new()
 var _global_to_pose: = Basis()
@@ -25,7 +27,7 @@ func _ready() -> void:
 
 
 func _enter_tree() -> void:
-	_skeleton = get_parent() as Skeleton
+	_skeleton = get_parent() as Skeleton3D
 	_fetch_bone()
 	reset()
 
@@ -35,13 +37,13 @@ func _exit_tree() -> void:
 	_fetch_bone()
 
 
-func _set(property: String, value) -> bool:
+func _set(property, value) -> bool:
 	if property == "bone_name":
 		reset()
-		.set_bone_name(value)
+		set_bone_name(value)
 		_fetch_bone()
 		reset()
-		update_configuration_warning()
+		update_configuration_warnings()
 
 	return false
 
@@ -83,15 +85,15 @@ func _get_configuration_warning() -> String:
 func _process(delta: float) -> void:
 	# may be 0.0 in editor on first frame
 	if delta == 0.0:
-		delta = 1.0 / float(Engine.iterations_per_second)
+		delta = 1.0 / float(60.0)
 
-	var custom_pose_inv: = _skeleton.get_bone_custom_pose(_bone_idx).inverse()
+	var custom_pose_inv = _skeleton.get_bone_global_pose_override(_bone_idx).inverse()
 	# global pose including normal pose but without custom pose
-	var global_bone_pose: = global_transform * custom_pose_inv
+	var global_bone_pose = global_transform * custom_pose_inv
 	_global_to_pose = global_bone_pose.basis.inverse()
 
 	var new_acceleration: = _update_acceleration(global_bone_pose, delta)
-	_acceleration = _acceleration.linear_interpolate(new_acceleration, ACCELERATION_WEIGHT)
+	_acceleration = _acceleration.lerp(new_acceleration, ACCELERATION_WEIGHT)
 
 	# adjust for varying framerates
 	# this is only an approximation
@@ -99,7 +101,7 @@ func _process(delta: float) -> void:
 	_acceleration /= clamp(delta_factor, 1.0, 3.0) # TODO: adjust for rates higher than 60 fps
 
 	var pose: = _pose()
-	_skeleton.set_bone_custom_pose(_bone_idx, pose)
+	_skeleton.set_bone_global_pose_override(_bone_idx, pose, 1.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -119,15 +121,15 @@ func set_enabled(value: bool) -> void:
 
 func set_properties(value: WiggleProperties) -> void:
 	if properties:
-		properties.disconnect("changed", self, "_properties_changed")
+		properties.disconnect("changed", Callable(self, "_properties_changed"))
 	properties = value
 	if properties:
-		properties.connect("changed", self, "_properties_changed")
+		properties.connect("changed", Callable(self, "_properties_changed"))
 
 	reset()
 	_update_enabled()
-	update_configuration_warning()
-	update_gizmo()
+	update_configuration_warnings()
+	update_gizmos()
 
 
 func apply_impulse(impulse: Vector3, global: = false) -> void:
@@ -140,7 +142,7 @@ func apply_impulse(impulse: Vector3, global: = false) -> void:
 func reset() -> void:
 	_point_mass.reset()
 	if _skeleton:
-		_skeleton.set_bone_custom_pose(_bone_idx, Transform())
+		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 1.0)
 	_should_reset = true
 
 
@@ -154,10 +156,10 @@ static func create_bone_look_at(axis_y: Vector3) -> Basis:
 
 
 func _properties_changed() -> void:
-	update_gizmo()
+	update_gizmos()
 
 
-func _update_acceleration(global_bone_pose: Transform, delta: float) -> Vector3:
+func _update_acceleration(global_bone_pose: Transform3D, delta: float) -> Vector3:
 	var mass_center: = Vector3.ZERO
 
 	match properties.mode:
@@ -199,13 +201,13 @@ func _solve(global_to_local: Basis, acceleration: Vector3, delta: float) -> void
 	_point_mass.solve(properties.stiffness, properties.damping, delta)
 
 
-func _pose() -> Transform:
-	var pose: = Transform()
+func _pose() -> Transform3D:
+	var pose: = Transform3D()
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
 			var mass_distance: = properties.mass_center.length()
-			var angular_offset: = Vector2.RIGHT.rotated(deg2rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
+			var angular_offset: = Vector2.RIGHT.rotated(deg_to_rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
 			var angular_limit: = angular_offset * mass_distance
 			var k: = angular_limit * SOFT_LIMIT_FACTOR
 			var mass_constrained: = _clamp_length_soft(_point_mass.p, 0.0, angular_limit, k)
@@ -231,7 +233,7 @@ func _update_enabled() -> void:
 	set_process(active)
 
 	if valid and not enabled:
-		_skeleton.set_bone_custom_pose(_bone_idx, Transform())
+		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 1.0)
 
 
 func _fetch_bone() -> void:

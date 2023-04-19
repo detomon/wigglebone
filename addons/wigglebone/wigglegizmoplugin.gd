@@ -1,5 +1,5 @@
-tool
-extends EditorSpatialGizmoPlugin
+@tool
+extends EditorNode3DGizmoPlugin
 
 var _handle_init_position: = Vector3.ZERO
 var _handle_position: = Vector3.ZERO
@@ -9,7 +9,7 @@ var _sphere_lines: = _generate_sphere_lines()
 
 
 func _init() -> void:
-	create_material("main", Color.red, false)
+	create_material("main", Color.RED, false)
 	create_handle_material("handles")
 
 
@@ -17,11 +17,11 @@ func get_name() -> String:
 	return "WiggleBone"
 
 
-func has_gizmo(spatial: Spatial) -> bool:
+func has_gizmo(spatial: Node3D) -> bool:
 	return spatial is WiggleBone
 
 
-func get_handle_name(gizmo: EditorSpatialGizmo, index: int) -> String:
+func get_handle_name(gizmo: EditorNode3DGizmo, index: int) -> String:
 	match index:
 		0:
 			return "Force"
@@ -29,7 +29,7 @@ func get_handle_name(gizmo: EditorSpatialGizmo, index: int) -> String:
 			return ""
 
 
-func get_handle_value(gizmo: EditorSpatialGizmo, index: int):
+func get_handle_value(gizmo: EditorNode3DGizmo, index: int):
 	match index:
 		0:
 			return _handle_position - _handle_init_position
@@ -37,7 +37,7 @@ func get_handle_value(gizmo: EditorSpatialGizmo, index: int):
 			return Vector3.ZERO
 
 
-func set_handle(gizmo: EditorSpatialGizmo, index: int, camera: Camera, point: Vector2) -> void:
+func set_handle(gizmo: EditorNode3DGizmo, index: int, camera: Camera3D, point: Vector2) -> void:
 	var bone: WiggleBone = gizmo.get_spatial_node()
 	var handle_position: = bone.global_transform * _get_handle_position(bone.properties)
 	var depth: = handle_position.distance_to(camera.global_transform.origin)
@@ -52,7 +52,7 @@ func set_handle(gizmo: EditorSpatialGizmo, index: int, camera: Camera, point: Ve
 	bone.const_force = handle_position - _handle_init_position
 
 
-func commit_handle(gizmo: EditorSpatialGizmo, index: int, restore, cancel: bool = false) -> void:
+func commit_handle(gizmo: EditorNode3DGizmo, index: int, restore, cancel: bool = false) -> void:
 	var bone: WiggleBone = gizmo.get_spatial_node()
 	bone.const_force = Vector3.ZERO
 
@@ -61,7 +61,7 @@ func commit_handle(gizmo: EditorSpatialGizmo, index: int, restore, cancel: bool 
 	_handle_dragging = false
 
 
-func redraw(gizmo: EditorSpatialGizmo) -> void:
+func redraw(gizmo: EditorNode3DGizmo) -> void:
 	var wigglebone: WiggleBone = gizmo.get_spatial_node()
 	var properties: = wigglebone.properties
 
@@ -71,15 +71,15 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 		match properties.mode:
 			WiggleProperties.Mode.ROTATION:
 				var length: = properties.mass_center.length()
-				var angle: = deg2rad(properties.max_degrees)
+				var angle: = deg_to_rad(properties.max_degrees)
 				var scale_x: = sin(angle)
 				var scale_y: = cos(angle)
 				var scale: = Vector3(scale_x, scale_y, scale_x) * length * 0.75
 
 				var bone_look_at: = WiggleBone.create_bone_look_at(properties.mass_center)
-				var transform: = Transform(bone_look_at, Vector3.ZERO).scaled(scale)
+				var transform: = Transform3D(bone_look_at, Vector3.ZERO).scaled(scale)
 
-				var lines: PoolVector3Array = transform.xform(_cone_lines)
+				var lines: PackedVector3Array = transform * _cone_lines
 				lines.append(Vector3.ZERO)
 				lines.append(properties.mass_center)
 				gizmo.add_lines(lines, get_material("main", gizmo), false)
@@ -87,13 +87,13 @@ func redraw(gizmo: EditorSpatialGizmo) -> void:
 			WiggleProperties.Mode.DISLOCATION:
 				var max_distance: = properties.max_distance
 				var scale: = Vector3.ONE * max_distance
-				var transform: = Transform().scaled(scale)
+				var transform: = Transform3D().scaled(scale)
 
-				var lines: PoolVector3Array = transform.xform(_sphere_lines)
+				var lines: PackedVector3Array = transform * _sphere_lines
 				gizmo.add_lines(lines, get_material("main", gizmo), true)
 
 		var handle: = _get_handle_position(properties)
-		gizmo.add_handles([handle], get_material("handles"), false)
+		#gizmo.add_handles([handle], get_material("handles"))
 
 
 static func _get_handle_position(properties: WiggleProperties) -> Vector3:
@@ -108,14 +108,14 @@ static func _get_handle_position(properties: WiggleProperties) -> Vector3:
 	return Vector3.ZERO
 
 
-static func _generate_cone_lines() -> PoolVector3Array:
+static func _generate_cone_lines() -> PackedVector3Array:
 	var count: = 32
-	var points: = PoolVector3Array()
+	var points: = PackedVector3Array()
 
 	for i in count:
 		points.append(Vector3(1, 1, 0).rotated(Vector3.UP, i * TAU / count))
 
-	var lines: = PoolVector3Array()
+	var lines: = PackedVector3Array()
 
 	for i in len(points) - 1:
 		lines.append(points[i])
@@ -131,22 +131,22 @@ static func _generate_cone_lines() -> PoolVector3Array:
 	return lines
 
 
-static func _generate_sphere_lines() -> PoolVector3Array:
+static func _generate_sphere_lines() -> PackedVector3Array:
 	var count: = 24
-	var points: = PoolVector3Array()
+	var points: = PackedVector3Array()
 
 	for i in count:
 		points.append(Vector3.RIGHT.rotated(Vector3.UP, i * TAU / count))
 
-	var lines: = PoolVector3Array()
+	var lines: = PackedVector3Array()
 	var rotations: = [
-		Transform(),
-		Transform().rotated(Vector3.RIGHT, PI * 0.5),
-		Transform().rotated(Vector3.BACK, PI * 0.5),
+		Transform3D(),
+		Transform3D().rotated(Vector3.RIGHT, PI * 0.5),
+		Transform3D().rotated(Vector3.BACK, PI * 0.5),
 	]
 
 	for transform in rotations:
-		var new_lines: PoolVector3Array = transform.xform(points)
+		var new_lines: PackedVector3Array = transform.xform(points)
 
 		for i in len(new_lines) - 1:
 			lines.append(new_lines[i])
