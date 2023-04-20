@@ -1,14 +1,14 @@
-[gd_resource type="Resource" load_steps=2 format=2]
+[gd_resource type="Resource" script_class="WiggleProperties" load_steps=2 format=3 uid="uid://w6m3ec6wrn42"]
 
-[ext_resource path="res://addons/wigglebone/wiggleproperties.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_properties.gd" id="1"]
 
 [resource]
 resource_name = "Leave"
-script = ExtResource( 1 )
+script = ExtResource("1")
 mode = 0
 stiffness = 0.1
 damping = 0.2
-gravity = Vector3( 0, -0.5, 0 )
-mass_center = Vector3( 0, 1.5, 0 )
+gravity = Vector3(0, 0, 0)
+length = 1.5
 max_degrees = 30.0
 max_distance = 0.1

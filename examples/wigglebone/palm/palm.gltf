@@ -1,523 +1,534 @@
 {
-    "asset" : {
-        "generator" : "Khronos glTF Blender I/O v1.8.19",
-        "version" : "2.0"
-    },
-    "scene" : 0,
-    "scenes" : [
-        {
-            "name" : "Scene",
-            "nodes" : [
-                16
-            ]
-        }
-    ],
-    "nodes" : [
-        {
-            "name" : "leave.000",
-            "rotation" : [
-                -0.6286422610282898,
-                0.5554378628730774,
-                0.5101178884506226,
-                0.18994081020355225
-            ],
-            "scale" : [
-                0.9999998807907104,
-                0.9999997019767761,
-                1
-            ],
-            "translation" : [
-                -0.05526094138622284,
-                0.41112998127937317,
-                -0.03368707373738289
-            ]
-        },
-        {
-            "name" : "leave.003",
-            "rotation" : [
-                -0.4791586399078369,
-                -0.6329402327537537,
-                -0.5981540679931641,
-                0.1095697209239006
-            ],
-            "scale" : [
-                0.9999998807907104,
-                0.9999995231628418,
-                0.9999998807907104
-            ],
-            "translation" : [
-                -0.055261120200157166,
-                0.34659624099731445,
-                -0.03368687629699707
-            ]
-        },
-        {
-            "name" : "leave.001",
-            "rotation" : [
-                -0.7505951523780823,
-                0.12326183915138245,
-                0.08045947551727295,
-                0.6441581845283508
-            ],
-            "scale" : [
-                0.9999998807907104,
-                0.9999999403953552,
-                1
-            ],
-            "translation" : [
-                -0.05526115000247955,
-                0.3896946609020233,
-                -0.03368697687983513
-            ]
-        },
-        {
-            "name" : "leave.005",
-            "rotation" : [
-                -0.7105275988578796,
-                -0.36451250314712524,
-                -0.34868642687797546,
-                0.49061089754104614
-            ],
-            "scale" : [
-                1.0000001192092896,
-                1,
-                0.9999999403953552
-            ],
-            "translation" : [
-                0.027201306074857712,
-                0.6989455223083496,
-                0.048775553703308105
-            ]
-        },
-        {
-            "name" : "leave.006",
-            "rotation" : [
-                -0.7089795470237732,
-                -0.11617649346590042,
-                -0.007284422405064106,
-                0.6955558657646179
-            ],
-            "scale" : [
-                1,
-                1,
-                0.9999999403953552
-            ],
-            "translation" : [
-                -0.02090178243815899,
-                0.6747922897338867,
-                -0.06117435544729233
-            ]
-        },
-        {
-            "name" : "leave",
-            "rotation" : [
-                -0.6429616808891296,
-                0.45404326915740967,
-                0.4761921167373657,
-                0.39202824234962463
-            ],
-            "scale" : [
-                1.0000001192092896,
-                1,
-                1
-            ],
-            "translation" : [
-                -0.05526108667254448,
-                0.6747920513153076,
-                -0.03368682414293289
-            ]
-        },
-        {
-            "name" : "leave.002",
-            "rotation" : [
-                -0.12532174587249756,
-                0.646836519241333,
-                0.6527963876724243,
-                0.3738367259502411
-            ],
-            "scale" : [
-                1,
-                0.9999997019767761,
-                0.9999998807907104
-            ],
-            "translation" : [
-                -0.0071580191142857075,
-                0.6747925281524658,
-                0.03503191098570824
-            ]
-        },
-        {
-            "name" : "leave.007",
-            "rotation" : [
-                -0.3347981870174408,
-                -0.5738347172737122,
-                -0.5773270726203918,
-                0.47467613220214844
-            ],
-            "scale" : [
-                0.9999998211860657,
-                0.9999998807907104,
-                0.9999999403953552
-            ],
-            "translation" : [
-                0.047817032784223557,
-                0.6747920513153076,
-                -0.0474306121468544
-            ]
-        },
-        {
-            "name" : "leave.004",
-            "rotation" : [
-                0.7211756110191345,
-                0.32905566692352295,
-                0.32710137963294983,
-                0.5144246816635132
-            ],
-            "scale" : [
-                0.9999999403953552,
-                0.9999998807907104,
-                0.9999998807907104
-            ],
-            "translation" : [
-                0.02720131352543831,
-                0.6989455223083496,
-                0.04877560958266258
-            ]
-        },
-        {
-            "children" : [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8
-            ],
-            "name" : "trunk.005",
-            "translation" : [
-                0,
-                0.7927327156066895,
-                0
-            ]
-        },
-        {
-            "children" : [
-                9
-            ],
-            "name" : "trunk.004",
-            "translation" : [
-                0,
-                0.7927327156066895,
-                0
-            ]
-        },
-        {
-            "children" : [
-                10
-            ],
-            "name" : "trunk.003",
-            "translation" : [
-                0,
-                0.7927325963973999,
-                0
-            ]
-        },
-        {
-            "children" : [
-                11
-            ],
-            "name" : "trunk.002",
-            "translation" : [
-                0,
-                0.7927325963973999,
-                0
-            ]
-        },
-        {
-            "children" : [
-                12
-            ],
-            "name" : "trunk.001"
-        },
-        {
-            "mesh" : 0,
-            "name" : "Leaves",
-            "skin" : 0
-        },
-        {
-            "mesh" : 1,
-            "name" : "Trunk",
-            "skin" : 0
-        },
-        {
-            "children" : [
-                14,
-                15,
-                13
-            ],
-            "name" : "Armature"
-        }
-    ],
-    "materials" : [
-        {
-            "doubleSided" : true,
-            "name" : "leave",
-            "pbrMetallicRoughness" : {
-                "baseColorFactor" : [
-                    0.02001146413385868,
-                    0.13758304715156555,
-                    0.04883498698472977,
-                    1
-                ],
-                "metallicFactor" : 0,
-                "roughnessFactor" : 0.5
-            }
-        },
-        {
-            "doubleSided" : true,
-            "name" : "wood",
-            "pbrMetallicRoughness" : {
-                "baseColorFactor" : [
-                    0.1574333906173706,
-                    0.03768753632903099,
-                    0.014255078509449959,
-                    1
-                ],
-                "metallicFactor" : 0,
-                "roughnessFactor" : 0.800000011920929
-            }
-        }
-    ],
-    "meshes" : [
-        {
-            "name" : "Plane.002",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "POSITION" : 0,
-                        "NORMAL" : 1,
-                        "TEXCOORD_0" : 2,
-                        "JOINTS_0" : 3,
-                        "WEIGHTS_0" : 4
-                    },
-                    "indices" : 5,
-                    "material" : 0
-                }
-            ]
-        },
-        {
-            "name" : "Cylinder.001",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "POSITION" : 7,
-                        "NORMAL" : 8,
-                        "TEXCOORD_0" : 9,
-                        "JOINTS_0" : 10,
-                        "WEIGHTS_0" : 11
-                    },
-                    "indices" : 12,
-                    "material" : 1
-                }
-            ]
-        }
-    ],
-    "skins" : [
-        {
-            "inverseBindMatrices" : 6,
-            "joints" : [
-                13,
-                12,
-                11,
-                10,
-                9,
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8
-            ],
-            "name" : "Armature"
-        }
-    ],
-    "accessors" : [
-        {
-            "bufferView" : 0,
-            "componentType" : 5126,
-            "count" : 495,
-            "max" : [
-                1.7447912693023682,
-                4.170638561248779,
-                1.7751387357711792
-            ],
-            "min" : [
-                -1.9634116888046265,
-                2.9890832901000977,
-                -2.0592148303985596
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 1,
-            "componentType" : 5126,
-            "count" : 495,
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 2,
-            "componentType" : 5126,
-            "count" : 495,
-            "type" : "VEC2"
-        },
-        {
-            "bufferView" : 3,
-            "componentType" : 5121,
-            "count" : 495,
-            "type" : "VEC4"
-        },
-        {
-            "bufferView" : 4,
-            "componentType" : 5126,
-            "count" : 495,
-            "type" : "VEC4"
-        },
-        {
-            "bufferView" : 5,
-            "componentType" : 5123,
-            "count" : 2268,
-            "type" : "SCALAR"
-        },
-        {
-            "bufferView" : 6,
-            "componentType" : 5126,
-            "count" : 14,
-            "type" : "MAT4"
-        },
-        {
-            "bufferView" : 7,
-            "componentType" : 5126,
-            "count" : 754,
-            "max" : [
-                0.19826990365982056,
-                3.8778738975524902,
-                0.19826990365982056
-            ],
-            "min" : [
-                -0.19826990365982056,
-                0,
-                -0.19826990365982056
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 8,
-            "componentType" : 5126,
-            "count" : 754,
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 9,
-            "componentType" : 5126,
-            "count" : 754,
-            "type" : "VEC2"
-        },
-        {
-            "bufferView" : 10,
-            "componentType" : 5121,
-            "count" : 754,
-            "type" : "VEC4"
-        },
-        {
-            "bufferView" : 11,
-            "componentType" : 5126,
-            "count" : 754,
-            "type" : "VEC4"
-        },
-        {
-            "bufferView" : 12,
-            "componentType" : 5123,
-            "count" : 2292,
-            "type" : "SCALAR"
-        }
-    ],
-    "bufferViews" : [
-        {
-            "buffer" : 0,
-            "byteLength" : 5940,
-            "byteOffset" : 0
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 5940,
-            "byteOffset" : 5940
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 3960,
-            "byteOffset" : 11880
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 1980,
-            "byteOffset" : 15840
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 7920,
-            "byteOffset" : 17820
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 4536,
-            "byteOffset" : 25740
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 896,
-            "byteOffset" : 30276
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 9048,
-            "byteOffset" : 31172
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 9048,
-            "byteOffset" : 40220
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 6032,
-            "byteOffset" : 49268
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 3016,
-            "byteOffset" : 55300
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 12064,
-            "byteOffset" : 58316
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 4584,
-            "byteOffset" : 70380
-        }
-    ],
-    "buffers" : [
-        {
-            "byteLength" : 74964,
-            "uri" : "palm.bin"
-        }
-    ]
+	"asset":{
+		"generator":"Khronos glTF Blender I/O v3.5.30",
+		"version":"2.0"
+	},
+	"scene":0,
+	"scenes":[
+		{
+			"name":"Scene",
+			"nodes":[
+				16
+			]
+		}
+	],
+	"nodes":[
+		{
+			"name":"leave.000",
+			"rotation":[
+				-0.6198933720588684,
+				0.557945728302002,
+				0.5333854556083679,
+				0.14116942882537842
+			],
+			"scale":[
+				0.9999999403953552,
+				0.9999998211860657,
+				1
+			],
+			"translation":[
+				-0.055261120200157166,
+				0.4111299514770508,
+				-0.03368687629699707
+			]
+		},
+		{
+			"name":"leave.003",
+			"rotation":[
+				-0.4791586995124817,
+				-0.6329401731491089,
+				-0.5981540083885193,
+				0.10956977307796478
+			],
+			"scale":[
+				0.9999998807907104,
+				0.9999995231628418,
+				0.9999998211860657
+			],
+			"translation":[
+				-0.055261120200157166,
+				0.34659624099731445,
+				-0.03368687629699707
+			]
+		},
+		{
+			"name":"leave.001",
+			"rotation":[
+				-0.7612459659576416,
+				0.14011122286319733,
+				0.13730764389038086,
+				0.6180776953697205
+			],
+			"scale":[
+				0.9999998807907104,
+				0.9999998807907104,
+				0.9999999403953552
+			],
+			"translation":[
+				-0.055261120200157166,
+				0.3896944522857666,
+				-0.03368687629699707
+			]
+		},
+		{
+			"name":"leave.005",
+			"rotation":[
+				-0.7105276584625244,
+				-0.36451247334480286,
+				-0.3486863672733307,
+				0.49061086773872375
+			],
+			"scale":[
+				1.0000001192092896,
+				1,
+				1
+			],
+			"translation":[
+				0.027201306074857712,
+				0.6989455223083496,
+				0.048775553703308105
+			]
+		},
+		{
+			"name":"leave.006",
+			"rotation":[
+				-0.668422520160675,
+				-0.16446956992149353,
+				-0.1653360277414322,
+				0.7062755823135376
+			],
+			"scale":[
+				1,
+				1.0000001192092896,
+				0.9999999403953552
+			],
+			"translation":[
+				-0.020901774987578392,
+				0.6747922897338867,
+				-0.06117435172200203
+			]
+		},
+		{
+			"name":"leave",
+			"rotation":[
+				-0.6486631035804749,
+				0.43240824341773987,
+				0.42244455218315125,
+				0.4623850882053375
+			],
+			"scale":[
+				1.0000001192092896,
+				1.000000238418579,
+				1
+			],
+			"translation":[
+				-0.055261120200157166,
+				0.6747922897338867,
+				-0.03368687629699707
+			]
+		},
+		{
+			"name":"leave.002",
+			"rotation":[
+				-0.12532168626785278,
+				0.6468364596366882,
+				0.6527965068817139,
+				0.3738367557525635
+			],
+			"scale":[
+				1,
+				0.9999997019767761,
+				0.9999998807907104
+			],
+			"translation":[
+				-0.0071580372750759125,
+				0.6747922897338867,
+				0.03503181412816048
+			]
+		},
+		{
+			"name":"leave.007",
+			"rotation":[
+				-0.33479824662208557,
+				-0.5738346576690674,
+				-0.5773271322250366,
+				0.4746761620044708
+			],
+			"scale":[
+				0.9999998211860657,
+				0.9999998211860657,
+				0.9999999403953552
+			],
+			"translation":[
+				0.04781690984964371,
+				0.6747922897338867,
+				-0.0474306158721447
+			]
+		},
+		{
+			"name":"leave.004",
+			"rotation":[
+				0.7211756110191345,
+				0.3290557563304901,
+				0.3271014094352722,
+				0.5144246816635132
+			],
+			"scale":[
+				0.9999999403953552,
+				0.9999998807907104,
+				0.9999998807907104
+			],
+			"translation":[
+				0.027201306074857712,
+				0.6989455223083496,
+				0.048775553703308105
+			]
+		},
+		{
+			"children":[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8
+			],
+			"name":"trunk.005",
+			"translation":[
+				0,
+				0.7927327156066895,
+				0
+			]
+		},
+		{
+			"children":[
+				9
+			],
+			"name":"trunk.004",
+			"translation":[
+				0,
+				0.7927327156066895,
+				0
+			]
+		},
+		{
+			"children":[
+				10
+			],
+			"name":"trunk.003",
+			"translation":[
+				0,
+				0.7927325963973999,
+				0
+			]
+		},
+		{
+			"children":[
+				11
+			],
+			"name":"trunk.002",
+			"translation":[
+				0,
+				0.7927325963973999,
+				0
+			]
+		},
+		{
+			"children":[
+				12
+			],
+			"name":"trunk.001"
+		},
+		{
+			"mesh":0,
+			"name":"Leaves",
+			"skin":0
+		},
+		{
+			"mesh":1,
+			"name":"Trunk",
+			"skin":0
+		},
+		{
+			"children":[
+				14,
+				15,
+				13
+			],
+			"name":"Armature"
+		}
+	],
+	"materials":[
+		{
+			"doubleSided":true,
+			"name":"leave",
+			"pbrMetallicRoughness":{
+				"baseColorFactor":[
+					0.02001146413385868,
+					0.13758304715156555,
+					0.04883498698472977,
+					1
+				],
+				"metallicFactor":0,
+				"roughnessFactor":0.5
+			}
+		},
+		{
+			"name":"wood",
+			"pbrMetallicRoughness":{
+				"baseColorFactor":[
+					0.1574333906173706,
+					0.03768753632903099,
+					0.014255078509449959,
+					1
+				],
+				"metallicFactor":0,
+				"roughnessFactor":0.800000011920929
+			}
+		}
+	],
+	"meshes":[
+		{
+			"name":"Plane.002",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":0,
+						"TEXCOORD_0":1,
+						"NORMAL":2,
+						"JOINTS_0":3,
+						"WEIGHTS_0":4
+					},
+					"indices":5,
+					"material":0
+				}
+			]
+		},
+		{
+			"name":"Cylinder.001",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":7,
+						"TEXCOORD_0":8,
+						"NORMAL":9,
+						"JOINTS_0":10,
+						"WEIGHTS_0":11
+					},
+					"indices":12,
+					"material":1
+				}
+			]
+		}
+	],
+	"skins":[
+		{
+			"inverseBindMatrices":6,
+			"joints":[
+				13,
+				12,
+				11,
+				10,
+				9,
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8
+			],
+			"name":"Armature"
+		}
+	],
+	"accessors":[
+		{
+			"bufferView":0,
+			"componentType":5126,
+			"count":495,
+			"max":[
+				1.7447912693023682,
+				4.170638561248779,
+				1.7751387357711792
+			],
+			"min":[
+				-1.9634116888046265,
+				2.9890832901000977,
+				-2.0592148303985596
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":1,
+			"componentType":5126,
+			"count":495,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":2,
+			"componentType":5126,
+			"count":495,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":3,
+			"componentType":5121,
+			"count":495,
+			"type":"VEC4"
+		},
+		{
+			"bufferView":4,
+			"componentType":5126,
+			"count":495,
+			"type":"VEC4"
+		},
+		{
+			"bufferView":5,
+			"componentType":5123,
+			"count":2268,
+			"type":"SCALAR"
+		},
+		{
+			"bufferView":6,
+			"componentType":5126,
+			"count":14,
+			"type":"MAT4"
+		},
+		{
+			"bufferView":7,
+			"componentType":5126,
+			"count":754,
+			"max":[
+				0.19826990365982056,
+				3.8778738975524902,
+				0.19826990365982056
+			],
+			"min":[
+				-0.19826990365982056,
+				0,
+				-0.19826990365982056
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":8,
+			"componentType":5126,
+			"count":754,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":9,
+			"componentType":5126,
+			"count":754,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":10,
+			"componentType":5121,
+			"count":754,
+			"type":"VEC4"
+		},
+		{
+			"bufferView":11,
+			"componentType":5126,
+			"count":754,
+			"type":"VEC4"
+		},
+		{
+			"bufferView":12,
+			"componentType":5123,
+			"count":2292,
+			"type":"SCALAR"
+		}
+	],
+	"bufferViews":[
+		{
+			"buffer":0,
+			"byteLength":5940,
+			"byteOffset":0,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":3960,
+			"byteOffset":5940,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":5940,
+			"byteOffset":9900,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":1980,
+			"byteOffset":15840,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":7920,
+			"byteOffset":17820,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":4536,
+			"byteOffset":25740,
+			"target":34963
+		},
+		{
+			"buffer":0,
+			"byteLength":896,
+			"byteOffset":30276
+		},
+		{
+			"buffer":0,
+			"byteLength":9048,
+			"byteOffset":31172,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":6032,
+			"byteOffset":40220,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":9048,
+			"byteOffset":46252,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":3016,
+			"byteOffset":55300,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":12064,
+			"byteOffset":58316,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":4584,
+			"byteOffset":70380,
+			"target":34963
+		}
+	],
+	"buffers":[
+		{
+			"byteLength":74964,
+			"uri":"palm.bin"
+		}
+	]
 }

@@ -1,40 +1,36 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=5 format=3 uid="uid://cdcdd11qpdyq7"]
 
-[ext_resource path="res://examples/wigglebone/simple/rotation.tres" type="Resource" id=1]
-[ext_resource path="res://examples/wigglebone/simple/simple.gd" type="Script" id=2]
-[ext_resource path="res://examples/wigglebone/bone.obj" type="ArrayMesh" id=3]
-[ext_resource path="res://addons/wigglebone/wigglebone.gd" type="Script" id=4]
+[ext_resource type="Resource" uid="uid://b7pewnrh8oi3" path="res://examples/wigglebone/simple/rotation.tres" id="1"]
+[ext_resource type="Script" path="res://examples/wigglebone/simple/skeleton.gd" id="1_s6cld"]
+[ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="3"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_bone.gd" id="4"]
 
-[node name="Rotation" type="Spatial"]
-script = ExtResource( 2 )
+[node name="Rotation" type="Node3D"]
 
-[node name="Skeleton" type="Skeleton" parent="."]
+[node name="Skeleton3D" type="Skeleton3D" parent="."]
 bones/0/name = "bone1"
 bones/0/parent = -1
-bones/0/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 bones/0/enabled = true
-bones/0/bound_children = [ NodePath("WiggleBone") ]
+bones/0/position = Vector3(0, 0, 0)
+bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/scale = Vector3(1, 1, 1)
 bones/1/name = "end"
 bones/1/parent = 0
-bones/1/rest = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
+bones/1/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 bones/1/enabled = true
-bones/1/bound_children = [  ]
+bones/1/position = Vector3(0, 0.5, 0)
+bones/1/rotation = Quaternion(0, 0, 0, 1)
+bones/1/scale = Vector3(1, 1, 1)
+script = ExtResource("1_s6cld")
 
-[node name="WiggleBone" type="BoneAttachment" parent="Skeleton"]
-process_priority = -1
-transform = Transform( 1, -1.76889e-37, 0, 1.76889e-37, 1, -6.05595e-30, 0, 6.05595e-30, 1, 0, 0, 0 )
+[node name="WiggleBone" type="BoneAttachment3D" parent="Skeleton3D"]
 bone_name = "bone1"
-script = ExtResource( 4 )
-__meta__ = {
-"_edit_group_": true
-}
-enabled = true
-properties = ExtResource( 1 )
-const_force = Vector3( 0, 0, 0 )
-const_force_local = Vector3( 0, 0, 0 )
+bone_idx = 0
+script = ExtResource("4")
+properties = ExtResource("1")
 
-[node name="bone" type="MeshInstance" parent="Skeleton/WiggleBone"]
-transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
-mesh = ExtResource( 3 )
-skeleton = NodePath("")
-material/0 = null
+[node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleBone"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = ExtResource("3")
+metadata/_edit_lock_ = true
