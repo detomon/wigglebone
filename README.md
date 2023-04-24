@@ -69,11 +69,11 @@ The bone moves around its origin relative to its pose without rotating. The dist
 
 This functions can be called on the **WiggleBone** node.
 
-### `void apply_impulse(impulse: Vector3, global := true)`
+### `apply_impulse(impulse: Vector3, global := true) -> void`
 
 Adds a single impulse force for the next frame. If `global` is `false`, the force is relative to the bone's pose.
 
-### `reset()`
+### `reset() -> void`
 
 Resets movement and resets the bone to its pose. Can be used, for example, after "teleporting" the character (moving instantaneously a long distance) to prevent overshooting.
 
