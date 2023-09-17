@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a bug
+body:
+
+- type: markdown
+  attributes:
+    value: |
+      - Please provide the required information when reporting a bug.
+      - Use [Discussions](https://github.com/detomon/wigglebone/discussions) for ideas and feature requests.
+      - *The project is generally not tested in Godot development releases as features may change.*
+
+- type: input
+  attributes:
+    label: Godot version
+    description: |
+      Specify the Godot version you are using. The version can be copied by clicking the version shown in the editor (bottom bar) or in the project manager (top bar).
+    placeholder: v4.1.1.stable.official
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Issue description
+    description: |
+      Describe what doesn't work, and how do you expect it to work instead.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Steps to reproduce
+    description: |
+      Steps and/or sample code to reproduce the issue.
+  validations:
+    required: true
