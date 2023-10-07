@@ -1,2 +1,5 @@
-.DS_Store
+# Godot
 .godot
+
+# macOS
+.DS_Store
