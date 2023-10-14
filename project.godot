@@ -12,7 +12,7 @@ config_version=5
 
 config/name="WiggleBone"
 config/description="Adds jiggle physics to bones of a Skeleton3D. It reacts to animated or global motion as if it's connected with a rubber band to its initial position."
-config/features=PackedStringArray("4.0")
+config/features=PackedStringArray("4.1")
 config/icon="res://icon.svg"
 
 [editor_plugins]

@@ -13,7 +13,7 @@ enum Mode {
 	DISLOCATION, ## Moves the bone around its origin.
 }
 
-const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
+const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
 const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
 	mode = Mode.ROTATION,
@@ -26,63 +26,19 @@ const DEFAULT_VALUES := {
 }
 
 ## The wiggle mode.
-var mode: int = Mode.ROTATION: set = set_mode
+@export_enum("Rotation", "Dislocation") var mode: int = Mode.ROTATION: set = set_mode
 ## Rendency of bone to return to pose position.
-var stiffness := 0.1: set = set_stiffness
+@export_range(0, 1, 0.01) var stiffness := DEFAULT_VALUES.stiffness: set = set_stiffness
 ## Reduction of motion.
-var damping := 0.1: set = set_damping
+@export_range(0.01, 1, 0.01) var damping := DEFAULT_VALUES.damping: set = set_damping
 ## Gravity pulling at mass center.
-var gravity := Vector3.ZERO: set = set_gravity
+@export var gravity := DEFAULT_VALUES.gravity: set = set_gravity
 ## The bone length.
-var length := 0.1: set = set_length
+@export_range(0.01, 1, 0.01, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length: set = set_length
 ## Maximum distance the bone can move around its pose position.
-var max_distance := 0.1: set = set_max_distance
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance: set = set_max_distance
 ## Maximum rotation relative to pose position.
-var max_degrees := 60.0: set = set_max_degrees
-
-
-func _get_property_list() -> Array[Dictionary]:
-	return [{
-		name = "mode",
-		type = TYPE_INT,
-		hint = PROPERTY_HINT_ENUM,
-		hint_string = "Rotation,Dislocation",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
-		name = "stiffness",
-		type = TYPE_FLOAT,
-		hint = PROPERTY_HINT_RANGE,
-		hint_string = "0,1",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
-		name = "damping",
-		type = TYPE_FLOAT,
-		hint = PROPERTY_HINT_RANGE,
-		hint_string = "0.01,1",
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
-		name = "gravity",
-		type = TYPE_VECTOR3,
-		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-	}, {
-		name = "length",
-		type = TYPE_FLOAT,
-		hint = PROPERTY_HINT_RANGE,
-		hint_string = "0.01,1.0,or_greater",
-		usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN,
-	}, {
-		name = "max_degrees",
-		type = TYPE_FLOAT,
-		hint = PROPERTY_HINT_RANGE,
-		hint_string = "0,90",
-		usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN,
-	}, {
-		name = "max_distance",
-		type = TYPE_FLOAT,
-		hint = PROPERTY_HINT_RANGE,
-		hint_string = "0,1,or_greater",
-		usage = PROPERTY_VISIBLE if mode == Mode.DISLOCATION else PROPERTY_HIDDEN,
-	}]
+@export_range(0, 90, 0.1, "suffix:°") var max_degrees := DEFAULT_VALUES.max_degrees: set = set_max_degrees
 
 
 func _property_can_revert(property: StringName) -> bool:
@@ -91,6 +47,15 @@ func _property_can_revert(property: StringName) -> bool:
 
 func _property_get_revert(property: StringName) -> Variant:
 	return DEFAULT_VALUES.get(property)
+
+
+func _validate_property(property: Dictionary) -> void:
+	match property.name:
+		&"max_distance":
+			property.usage = PROPERTY_VISIBLE if mode == Mode.DISLOCATION else PROPERTY_HIDDEN
+
+		&"max_degrees":
+			property.usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN
 
 
 func set_mode(value: int) -> void:
