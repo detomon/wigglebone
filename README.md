@@ -6,6 +6,8 @@ The node inherits from **BoneAttachment3D** and can also be used as such. It ove
 
 See the [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone) directory for some examples.
 
+- [Installation](#installation)
+- [Usage](#usage)
 - [Node Properties](#node-properties)
 - [WiggleProperties Resource](#wiggleproperties-resource)
 - [Pose Modes](#pose-modes)
@@ -13,9 +15,26 @@ See the [examples](https://github.com/detomon/wigglebone/tree/master/examples/wi
 - [Testing in Editor](#testing-in-editor)
 - [Breaking Changes from the Godot 3.x Version](#breaking-changes-from-the-godot-3x-version)
 
+> **Note**
 > Requires Godot 4.x. For Godot 3.x, see the [3.x branch](https://github.com/detomon/wigglebone/tree/godot-3.x).
 
 ![Editor Example](images/palm.gif)
+
+## Installation
+
+1. Search for `wigglebone` in the `AssetLib` editor tab
+2. Download and install the plugin
+3. Enable the plugin in the project settings via the `Plugins` tab
+
+or...
+
+1. Clone this repository or download the archive
+2. Copy the folder `addons/wigglebone` to your project's `addons` folder (create it if needed)
+3. Enable the plugin in the project settings via the `Plugins` tab
+
+## Usage
+
+You can now add **WiggleBone** nodes to a **Skeleton3D**. See the example scenes in [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone).
 
 ## Node Properties
 
@@ -27,6 +46,7 @@ See the [examples](https://github.com/detomon/wigglebone/tree/master/examples/wi
 | Constant local force | `const_force_local` | This applies a constant force relative to the bone's pose. |
 | Bone Name | `bone_name ` | Inherited from **BoneAttachment3D**. Selects which bone should be used. |
 
+> **Warning**
 > Should work when `BoneAttachment3D.override_pose` is `true`. Using `BoneAttachment3D.use_external_skeleton` is not supported yet.
 
 ## WiggleProperties Resource
