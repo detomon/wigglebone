@@ -93,7 +93,7 @@ func _process(delta: float) -> void:
 	# adjust for varying framerates
 	# this is only an approximation
 	var delta_factor := log(delta * 60.0) / log(2.0) + 1.0
-	_acceleration /= clamp(delta_factor, 1.0, 3.0) # TODO: adjust for rates higher than 60 fps
+	_acceleration /= clampf(delta_factor, 1.0, 3.0) # TODO: adjust for rates higher than 60 fps
 
 	var pose := bone_pose * _pose()
 
@@ -244,13 +244,13 @@ static func _project_to_vector_plane(vector: Vector3, length: float, point: Vect
 
 
 static func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
-	return v.normalized() * _smin(max(min_length, v.length()), max_length, k)
+	return v.normalized() * _smin(maxf(min_length, v.length()), max_length, k)
 
 
 # https://iquilezles.org/articles/smin/
 static func _smin(a: float, b: float, k: float) -> float:
-	var h := max(0.0, k - abs(a - b))
-	return min(a, b) - h * h / (4.0 * k)
+	var h := maxf(0.0, k - absf(a - b))
+	return minf(a, b) - h * h / (4.0 * k)
 
 
 class PointMass:
