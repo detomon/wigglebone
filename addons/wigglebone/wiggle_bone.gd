@@ -239,16 +239,16 @@ func _on_behaviour_changed() -> void:
 	reset()
 
 
-static func _project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
+func _project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
 	return Plane(vector.normalized(), length).project(point)
 
 
-static func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
+func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
 	return v.normalized() * _smin(maxf(min_length, v.length()), max_length, k)
 
 
 # https://iquilezles.org/articles/smin/
-static func _smin(a: float, b: float, k: float) -> float:
+func _smin(a: float, b: float, k: float) -> float:
 	var h := maxf(0.0, k - absf(a - b))
 	return minf(a, b) - h * h / (4.0 * k)
 
