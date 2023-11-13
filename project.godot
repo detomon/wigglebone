@@ -15,6 +15,10 @@ config/description="Adds jiggle physics to bones of a Skeleton3D. It reacts to a
 config/features=PackedStringArray("4.1")
 config/icon="res://icon.svg"
 
+[debug]
+
+gdscript/warnings/exclude_addons=false
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/wigglebone/plugin.cfg")
