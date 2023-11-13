@@ -267,8 +267,8 @@ class PointMass:
 		# constraint
 		v -= p * stiffness
 
-	func accelerate(a: Vector3, delta: float) -> void:
-		v += a * delta
+	func accelerate(acc: Vector3, delta: float) -> void:
+		v += acc * delta
 
 	func apply_force(force: Vector3) -> void:
 		a += force
