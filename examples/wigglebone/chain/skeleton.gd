@@ -7,7 +7,7 @@ extends Skeleton3D
 func set_create_bones(value: bool) -> void:
 	if not value:
 		return
-	
+
 	clear_bones()
 
 	var idx1 := get_bone_count()
