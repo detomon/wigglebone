@@ -85,7 +85,6 @@ bone_name = "bone1"
 bone_idx = 0
 script = ExtResource("3")
 properties = SubResource("Resource_t0m81")
-impulse = null
 
 [node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleBone1"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
@@ -99,7 +98,6 @@ bone_idx = 1
 script = ExtResource("3")
 enabled = false
 properties = SubResource("Resource_t0m81")
-impulse = null
 
 [node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleBone2"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)

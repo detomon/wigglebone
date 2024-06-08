@@ -8,8 +8,8 @@ extends BoneAttachment3D
 ## band to its initial position. As it reacts to acceleration instead of velocity,
 ## bones of constantly moving objects will not "lag behind" and have a more realistic behaviour.
 
-const ACCELERATION_WEIGHT := 0.5
-const SOFT_LIMIT_FACTOR := 0.5
+#const ACCELERATION_WEIGHT := 0.5
+#const SOFT_LIMIT_FACTOR := 0.5
 
 ## Enable WiggleBone.
 @export var enabled := true: set = set_enabled
@@ -28,15 +28,20 @@ var _skeleton: Skeleton3D
 var _bone_idx := -1
 var _bone_parent_idx := -1
 #var _global_to_pose := Basis()
-var _should_reset := true
 var _bone_rest := Transform3D()
 var _bone_rest_inv := Transform3D()
 var _bone_rest_rotation := Quaternion()
 var _bone_tail_global := Vector3.ZERO
 var _bone_tail_global_prev := Vector3.ZERO
+var _impulse := Vector3.ZERO
+var _should_reset := true
+
+#var _velocity_rotation := Quaternion()
+#var _velocity_speed := 0.0
+
+var _velocity_local := Vector3.ZERO
 var _velocity_global_prev := Vector3.ZERO
-var _impulse_global := Vector3.ZERO
-var _impulse_local := Vector3.ZERO
+
 #var _velocity_global_inc := Vector3.ZERO
 #var _velocity_local := Vector3.ZERO
 #var _velocity_local_prev := Vector3.ZERO
@@ -93,7 +98,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 #var _time := 0.0
-#@export var time_delta := 1.0 / 60.0
+#@export var time_delta := 1.0 / 30.0
 
 func _process(delta: float) -> void:
 	# Test stability for varying frame rates.
@@ -108,7 +113,7 @@ func _process(delta: float) -> void:
 
 @export var impulse := false:
 	set(value):
-		apply_impulse(Vector3(0.01, 0.0, 0.0))
+		apply_impulse(Vector3(1.0, 0.0, 0.0))
 
 
 # TEST
@@ -138,22 +143,35 @@ func _process_delta(delta: float) -> void:
 	var velocity_global := (bone_tail_global_new - _bone_tail_global_prev) / delta
 	_bone_tail_global_prev = bone_tail_global_new
 
+	var velocity_local := global_to_parent.basis * velocity_global
+	#var velocity_local := _velocity_local
+
+	#var acceleration_global := (_velocity_global_prev - velocity_global) / delta
+	#velocity_local += (global_to_parent.basis * acceleration_global) * delta
+
+	#print(velocity_local)
+
+	#print(velocity_local)
+
 	# Apply forces (m/s²).
 	var force_global := properties.gravity + const_force_global + const_force_gizmo
-	force_global += parent_to_global.basis * const_force_local
-	velocity_global += force_global * delta
+	var force_local := const_force_local
+	force_local += global_to_parent.basis * force_global
+	velocity_local += force_local * delta
 
 	# Frame rate independent lerp.
 	var velocity_decay := remap(properties.damping, 0.0, 1.0, 0.0, 25.0)
-	velocity_global = lerp(velocity_global, Vector3.ZERO, 1.0 - exp(-velocity_decay * delta))
+	velocity_local = lerp(velocity_local, Vector3.ZERO, 1.0 - exp(-velocity_decay * delta))
 
-	if _impulse_global:
-		velocity_global += _impulse_global / delta
-		_impulse_global = Vector3.ZERO
+	if _impulse:
+		# TODO: Make independent from frame rate.
+		velocity_local += _bone_rest_rotation * _impulse
+		_impulse = Vector3.ZERO
 
-	if _impulse_local:
-		velocity_global += _impulse_local / delta
-		_impulse_local = Vector3.ZERO
+	_velocity_local = velocity_local
+
+	velocity_global = parent_to_global.basis * velocity_local
+	_velocity_global_prev = velocity_global
 
 	bone_tail_global_new += velocity_global * delta
 	_bone_tail_global = bone_tail_global_new
@@ -254,10 +272,18 @@ func set_properties(value: WiggleProperties) -> void:
 
 
 func apply_impulse(impulse: Vector3, global := false) -> void:
+	# TODO: Calculate once per frame.
+	var parent_to_skeleton := _skeleton.get_bone_global_pose(_bone_parent_idx) \
+		if _bone_parent_idx >= 0 \
+		else Transform3D()
+	var parent_to_global := _skeleton.global_transform * parent_to_skeleton
+	var global_to_parent := parent_to_global.affine_inverse()
+
 	if global:
-		_impulse_global = impulse
-	else:
-		_impulse_local = impulse
+		# Make force local to bone parent.
+		impulse = global_to_parent * impulse
+
+	_impulse = impulse
 
 
 func reset() -> void:
