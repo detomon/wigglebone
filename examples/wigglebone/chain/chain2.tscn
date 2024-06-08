@@ -10,7 +10,7 @@ resource_name = "Chain"
 script = ExtResource("3_y0gca")
 mode = 0
 stiffness = 0.1
-damping = 0.0
+damping = 0.1
 gravity = Vector3(0, 10, 0)
 length = 0.5
 max_distance = 0.1
@@ -62,7 +62,7 @@ bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 bones/0/enabled = true
 bones/0/position = Vector3(0, 0, 0)
-bones/0/rotation = Quaternion(0, 0, -0.0417856, 0.999127)
+bones/0/rotation = Quaternion(0, 0, 0, 1)
 bones/0/scale = Vector3(1, 1, 1)
 bones/1/name = "bone2"
 bones/1/parent = 0
@@ -81,12 +81,11 @@ bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_xk8lt")
 
 [node name="WiggleBone1" type="BoneAttachment3D" parent="Skeleton3D"]
-transform = Transform3D(0.996508, 0.0834981, 0, -0.0834981, 0.996508, 0, 0, 0, 1, 0, 0, 0)
 bone_name = "bone1"
 bone_idx = 0
 script = ExtResource("3")
 properties = SubResource("Resource_t0m81")
-time_delta = 0.016
+impulse = null
 
 [node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleBone1"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
@@ -94,13 +93,13 @@ mesh = ExtResource("2")
 metadata/_edit_lock_ = true
 
 [node name="WiggleBone2" type="BoneAttachment3D" parent="Skeleton3D"]
-transform = Transform3D(0.996508, 0.0834981, 0, -0.0834981, 0.996508, 0, 0, 0, 1, 0.0417491, 0.498254, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 bone_name = "bone2"
 bone_idx = 1
 script = ExtResource("3")
 enabled = false
 properties = SubResource("Resource_t0m81")
-time_delta = 0.016
+impulse = null
 
 [node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleBone2"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)

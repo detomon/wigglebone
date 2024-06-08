@@ -54,12 +54,12 @@ func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, came
 		_handle_dragging = true
 
 	var force_global := handle_position - _handle_init_position
-	bone.const_force_global = force_global
+	bone.const_force_gizmo = force_global * 10.0
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, restore: Variant, cancel: bool) -> void:
 	var bone: WiggleBone = gizmo.get_node_3d()
-	bone.const_force_global = Vector3.ZERO
+	bone.const_force_gizmo = Vector3.ZERO
 
 	_handle_init_position = Vector3.ZERO
 	_handle_position = Vector3.ZERO
