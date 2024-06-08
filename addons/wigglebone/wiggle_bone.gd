@@ -31,24 +31,23 @@ var _bone_rest := Transform3D()
 var _bone_rest_inv := Transform3D()
 var _bone_rest_rotation := Quaternion()
 var _global_position_prev := Vector3.ZERO
-var _position_global := Vector3.ZERO
+var _bone_tail_global := Vector3.ZERO
 var _velocity_global_prev := Vector3.ZERO
 #var _velocity_global_inc := Vector3.ZERO
 var _velocity_local := Vector3.ZERO
 var _velocity_local_prev := Vector3.ZERO
 
-var _debug_mesh := MeshInstance3D.new()
+#var _debug_mesh := MeshInstance3D.new()
 
 
 func _ready() -> void:
 	set_enabled(enabled)
 
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(0.4, 0.4, 0.4)
-	_debug_mesh.mesh = mesh
-	_debug_mesh.top_level = true
-
-	add_child(_debug_mesh)
+	#var mesh := BoxMesh.new()
+	#mesh.size = Vector3(0.4, 0.4, 0.4)
+	#_debug_mesh.mesh = mesh
+	#_debug_mesh.top_level = true
+	#add_child(_debug_mesh)
 
 
 func _enter_tree() -> void:
@@ -91,7 +90,12 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 func _process(delta: float) -> void:
 	# Test stability for varying frame rates.
-	_process_delta(randf_range(delta * 0.5, delta * 2.0))
+	#_process_delta(randf_range(delta * 0.5, delta * 2.0))
+
+	_process_delta(delta)
+
+	#if get_tree().get_frame() % 2 == 0:
+		#_process_delta(delta * 2.0)
 
 
 # TEST
@@ -105,10 +109,10 @@ func _process_delta(delta: float) -> void:
 
 	if _should_reset:
 		var bone_tail := _bone_rest * (Vector3.UP * properties.length)
-		_position_global = parent_to_global * bone_tail
+		_bone_tail_global = parent_to_global * bone_tail
 
 	var bone_head_global := parent_to_global * _bone_rest.origin
-	var bone_head_to_pos_global := _position_global - bone_head_global
+	var bone_head_to_pos_global := _bone_tail_global - bone_head_global
 	var bone_dir_global := bone_head_to_pos_global.normalized()
 	var position_global_new := bone_head_global + bone_dir_global * properties.length
 
@@ -123,25 +127,26 @@ func _process_delta(delta: float) -> void:
 	_global_position_prev = position_global_new
 
 	# Apply forces.
-	velocity_global += properties.gravity + const_force_global
-	velocity_global += parent_to_global.basis * const_force_local
+	var force_global := properties.gravity + const_force_global
+	force_global += parent_to_global.basis * const_force_local
+	velocity_global += force_global
 
 	# Frame rate independent lerp.
 	var decay := remap(properties.damping, 0.0, 1.0, 0.0, 50.0)
 	velocity_global = lerp(velocity_global, Vector3.ZERO, 1.0 - exp(-decay * delta))
 
 	position_global_new += velocity_global * delta
-	_position_global = position_global_new
+	_bone_tail_global = position_global_new
 
 	#var velocity_local := global_to_parent * velocity_global
 
 	#print(velocity_global)
 
-	# Constrain position to bone length.
-	_position_global = bone_head_global + (_position_global - bone_head_global).normalized() * properties.length
+	# Constrain bone tail to bone length.
+	_bone_tail_global = bone_head_global + (_bone_tail_global - bone_head_global).normalized() * properties.length
 
-	var position_local := (_bone_rest_inv * global_to_parent) * _position_global
-	var bone_forward := position_local.normalized()
+	var bone_tail_local := (_bone_rest_inv * global_to_parent) * _bone_tail_global
+	var bone_forward := bone_tail_local.normalized()
 
 	# Rotate to target point relative to bone up vector.
 	var bone_rotation := Quaternion(Vector3.UP, bone_forward) \
@@ -162,7 +167,7 @@ func _process_delta(delta: float) -> void:
 	#var global_to_parent := parent_to_global.affine_inverse()
 #
 	#var bone_head_global := parent_to_global * _bone_rest.origin
-	#var bone_head_to_pos_global := _position_global - bone_head_global
+	#var bone_head_to_pos_global := _bone_tail_global - bone_head_global
 	#bone_head_to_pos_global = bone_head_to_pos_global.normalized() * properties.length
 #
 	#var position_global := bone_head_global + bone_head_to_pos_global
@@ -190,11 +195,11 @@ func _process_delta(delta: float) -> void:
 	#position_global += velocity_global * delta
 	##position_global += _velocity_global_inc * delta
 #
-	#_position_global = position_global
+	#_bone_tail_global = position_global
 	## Constrain position to bone length.
-	#_position_global = bone_head_global + (_position_global - bone_head_global).normalized() * properties.length
+	#_bone_tail_global = bone_head_global + (_bone_tail_global - bone_head_global).normalized() * properties.length
 #
-	#var position_local := global_to_parent * _position_global - _bone_rest.origin
+	#var position_local := global_to_parent * _bone_tail_global - _bone_rest.origin
 	#var bone_forward := position_local.normalized()
 #
 	#var bone_rotation := Quaternion(Vector3.UP, bone_forward) \

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://x6el1eaqxsy8"]
+[gd_scene load_steps=9 format=3 uid="uid://x6el1eaqxsy8"]
 
 [ext_resource type="Script" path="res://examples/wigglebone/chain/skeleton.gd" id="1_xk8lt"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="2"]
@@ -10,17 +10,11 @@ resource_name = "Chain"
 script = ExtResource("3_y0gca")
 mode = 0
 stiffness = 0.1
-damping = 0.33
+damping = 0.2
 gravity = Vector3(0, 1, 0)
 length = 0.5
 max_distance = 0.1
 max_degrees = 60.0
-
-[sub_resource type="SphereMesh" id="SphereMesh_hd6u4"]
-radius = 0.05
-height = 0.1
-radial_segments = 16
-rings = 8
 
 [sub_resource type="Animation" id="Animation_qopi5"]
 length = 0.001
@@ -68,14 +62,14 @@ bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 bones/0/enabled = true
 bones/0/position = Vector3(0, 0, 0)
-bones/0/rotation = Quaternion(9.80909e-44, 0, -0.0251904, 0.999683)
+bones/0/rotation = Quaternion(0, 0, 3.43725e-16, 1)
 bones/0/scale = Vector3(1, 1, 1)
 bones/1/name = "bone2"
 bones/1/parent = 0
 bones/1/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 bones/1/enabled = true
 bones/1/position = Vector3(0, 0.5, 0)
-bones/1/rotation = Quaternion(6.70507e-41, 0, 0.44601, 0.895028)
+bones/1/rotation = Quaternion(0, 0, -6.34058e-14, 1)
 bones/1/scale = Vector3(1, 1, 1)
 bones/2/name = "end"
 bones/2/parent = 1
@@ -87,7 +81,7 @@ bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_xk8lt")
 
 [node name="WiggleBone1" type="BoneAttachment3D" parent="Skeleton3D"]
-transform = Transform3D(0.998731, 0.0503648, -5.60519e-45, -0.0503648, 0.998731, -1.96182e-43, -5.60519e-45, 1.96182e-43, 1, 0, 0, 0)
+transform = Transform3D(1, -6.87451e-16, 0, 6.87451e-16, 1, 0, 0, 0, 1, 0, 0, 0)
 bone_name = "bone1"
 bone_idx = 0
 script = ExtResource("3")
@@ -99,7 +93,7 @@ mesh = ExtResource("2")
 metadata/_edit_lock_ = true
 
 [node name="WiggleBone2" type="BoneAttachment3D" parent="Skeleton3D"]
-transform = Transform3D(0.641596, -0.767043, 5.36837e-41, 0.767043, 0.641596, -1.2308e-40, 5.99644e-41, 1.20146e-40, 1, 0.0251824, 0.499365, 9.80909e-44)
+transform = Transform3D(1, 1.26124e-13, 0, -1.26124e-13, 1, 0, 0, 0, 1, -3.43725e-16, 0.5, 0)
 bone_name = "bone2"
 bone_idx = 1
 script = ExtResource("3")
@@ -109,11 +103,6 @@ properties = SubResource("Resource_t0m81")
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("2")
 metadata/_edit_lock_ = true
-
-[node name="Global" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0342004, 1, -0.039799)
-visible = false
-mesh = SubResource("SphereMesh_hd6u4")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
