@@ -24,18 +24,18 @@ const SOFT_LIMIT_FACTOR := 0.5
 
 var _skeleton: Skeleton3D
 var _bone_idx := -1
-var _parent_bone_idx := -1
+var _bone_parent_idx := -1
 #var _global_to_pose := Basis()
 var _should_reset := true
 var _bone_rest := Transform3D()
 var _bone_rest_inv := Transform3D()
 var _bone_rest_rotation := Quaternion()
-var _global_position_prev := Vector3.ZERO
 var _bone_tail_global := Vector3.ZERO
+var _bone_tail_global_prev := Vector3.ZERO
 var _velocity_global_prev := Vector3.ZERO
 #var _velocity_global_inc := Vector3.ZERO
-var _velocity_local := Vector3.ZERO
-var _velocity_local_prev := Vector3.ZERO
+#var _velocity_local := Vector3.ZERO
+#var _velocity_local_prev := Vector3.ZERO
 
 #var _debug_mesh := MeshInstance3D.new()
 
@@ -88,20 +88,23 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
+var _time := 0.0
+@export var time_delta := 1.0 / 60.0
+
 func _process(delta: float) -> void:
 	# Test stability for varying frame rates.
 	#_process_delta(randf_range(delta * 0.5, delta * 2.0))
 
-	_process_delta(delta)
-
-	#if get_tree().get_frame() % 2 == 0:
-		#_process_delta(delta * 2.0)
+	_time += delta
+	while _time >= time_delta:
+		_process_delta(time_delta)
+		_time -= time_delta
 
 
 # TEST
 func _process_delta(delta: float) -> void:
-	var parent_to_skeleton := _skeleton.get_bone_global_pose(_parent_bone_idx) \
-		if _parent_bone_idx >= 0 \
+	var parent_to_skeleton := _skeleton.get_bone_global_pose(_bone_parent_idx) \
+		if _bone_parent_idx >= 0 \
 		else Transform3D()
 
 	var parent_to_global := _skeleton.global_transform * parent_to_skeleton
@@ -114,33 +117,30 @@ func _process_delta(delta: float) -> void:
 	var bone_head_global := parent_to_global * _bone_rest.origin
 	var bone_head_to_pos_global := _bone_tail_global - bone_head_global
 	var bone_dir_global := bone_head_to_pos_global.normalized()
-	var position_global_new := bone_head_global + bone_dir_global * properties.length
+	var bone_tail_global := bone_head_global + bone_dir_global * properties.length
 
 	#_debug_mesh.global_transform = parent_to_global
 	#_debug_mesh.global_position = bone_head_global
 
 	if _should_reset:
-		_global_position_prev = position_global_new
+		_bone_tail_global_prev = bone_tail_global
 		_should_reset = false
 
-	var velocity_global := (position_global_new - _global_position_prev) / delta
-	_global_position_prev = position_global_new
+	# Global velocity (m/s).
+	var velocity_global := (bone_tail_global - _bone_tail_global_prev) / delta
+	_bone_tail_global_prev = bone_tail_global
 
-	# Apply forces.
+	# Apply forces (m/s²).
 	var force_global := properties.gravity + const_force_global
 	force_global += parent_to_global.basis * const_force_local
-	velocity_global += force_global
+	velocity_global += force_global * delta
 
 	# Frame rate independent lerp.
-	var decay := remap(properties.damping, 0.0, 1.0, 0.0, 50.0)
-	velocity_global = lerp(velocity_global, Vector3.ZERO, 1.0 - exp(-decay * delta))
+	var velocity_decay := remap(properties.damping, 0.0, 1.0, 0.0, 25.0)
+	velocity_global = lerp(velocity_global, Vector3.ZERO, 1.0 - exp(-velocity_decay * delta))
 
-	position_global_new += velocity_global * delta
-	_bone_tail_global = position_global_new
-
-	#var velocity_local := global_to_parent * velocity_global
-
-	#print(velocity_global)
+	bone_tail_global += velocity_global * delta
+	_bone_tail_global = bone_tail_global
 
 	# Constrain bone tail to bone length.
 	_bone_tail_global = bone_head_global + (_bone_tail_global - bone_head_global).normalized() * properties.length
@@ -159,8 +159,8 @@ func _process_delta(delta: float) -> void:
 
 
 #func _process_delta(delta: float) -> void:
-	#var parent_to_skeleton := _skeleton.get_bone_global_pose(_parent_bone_idx) \
-		#if _parent_bone_idx >= 0 \
+	#var parent_to_skeleton := _skeleton.get_bone_global_pose(_bone_parent_idx) \
+		#if _bone_parent_idx >= 0 \
 		#else Transform3D()
 #
 	#var parent_to_global := _skeleton.global_transform * parent_to_skeleton
@@ -173,11 +173,11 @@ func _process_delta(delta: float) -> void:
 	#var position_global := bone_head_global + bone_head_to_pos_global
 #
 	#if _should_reset:
-		#_global_position_prev = position_global
+		#_bone_tail_global_prev = position_global
 		#_should_reset = false
 #
-	#var velocity_global := (position_global - _global_position_prev) / delta
-	#_global_position_prev = position_global
+	#var velocity_global := (position_global - _bone_tail_global_prev) / delta
+	#_bone_tail_global_prev = position_global
 #
 	#velocity_global += properties.gravity + const_force_global
 #
@@ -335,7 +335,7 @@ func _update_enabled() -> void:
 func _fetch_bone() -> void:
 	if _skeleton:
 		_bone_idx = _skeleton.find_bone(bone_name) if _skeleton else -1
-		_parent_bone_idx = _skeleton.get_bone_parent(_bone_idx) if _bone_idx >= 0 else -1
+		_bone_parent_idx = _skeleton.get_bone_parent(_bone_idx) if _bone_idx >= 0 else -1
 		_bone_rest = _skeleton.get_bone_rest(_bone_idx)
 		_bone_rest_inv = _bone_rest.affine_inverse()
 		_bone_rest_rotation = _bone_rest.basis.get_rotation_quaternion()

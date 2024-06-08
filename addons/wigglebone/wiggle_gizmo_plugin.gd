@@ -53,7 +53,8 @@ func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, came
 		_handle_init_position = handle_position
 		_handle_dragging = true
 
-	bone.const_force_global = handle_position - _handle_init_position
+	var force_global := handle_position - _handle_init_position
+	bone.const_force_global = force_global
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, restore: Variant, cancel: bool) -> void:

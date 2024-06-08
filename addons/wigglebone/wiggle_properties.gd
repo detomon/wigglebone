@@ -30,7 +30,7 @@ const DEFAULT_VALUES := {
 ## Rendency of bone to return to pose position.
 @export_range(0, 1, 0.01) var stiffness := DEFAULT_VALUES.stiffness: set = set_stiffness
 ## Reduction of motion.
-@export_range(0.01, 1, 0.01) var damping := DEFAULT_VALUES.damping: set = set_damping
+@export_range(0, 1, 0.01) var damping := DEFAULT_VALUES.damping: set = set_damping
 ## Gravity pulling at mass center.
 @export var gravity := DEFAULT_VALUES.gravity: set = set_gravity
 ## The bone length.
