@@ -10,5 +10,5 @@ stiffness = 0.1
 damping = 0.2
 gravity = Vector3(0, 0, 0)
 length = 1.5
-max_degrees = 30.0
 max_distance = 0.1
+max_degrees = 30.0
