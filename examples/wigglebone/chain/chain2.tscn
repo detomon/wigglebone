@@ -57,12 +57,13 @@ _data = {
 [node name="Chain" type="Node3D"]
 
 [node name="Skeleton3D" type="Skeleton3D" parent="."]
+transform = Transform3D(0.999743, -0.0226699, 0, 0.0226699, 0.999743, 0, 0, 0, 1, 0, 0, 0)
 bones/0/name = "bone1"
 bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 bones/0/enabled = true
 bones/0/position = Vector3(0, 0, 0)
-bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/rotation = Quaternion(0, 0, -0.33477, 0.9423)
 bones/0/scale = Vector3(1, 1, 1)
 bones/1/name = "bone2"
 bones/1/parent = 0
@@ -81,6 +82,7 @@ bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_xk8lt")
 
 [node name="WiggleBone1" type="BoneAttachment3D" parent="Skeleton3D"]
+transform = Transform3D(0.775858, 0.630908, 0, -0.630908, 0.775858, 0, 0, 0, 1, 0, 0, 0)
 bone_name = "bone1"
 bone_idx = 0
 script = ExtResource("3")
@@ -92,7 +94,7 @@ mesh = ExtResource("2")
 metadata/_edit_lock_ = true
 
 [node name="WiggleBone2" type="BoneAttachment3D" parent="Skeleton3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(0.775858, 0.630908, 0, -0.630908, 0.775858, 0, 0, 0, 1, 0.315454, 0.387929, 0)
 bone_name = "bone2"
 bone_idx = 1
 script = ExtResource("3")
@@ -105,7 +107,7 @@ mesh = ExtResource("2")
 metadata/_edit_lock_ = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+autoplay = "move"
 libraries = {
 "": SubResource("AnimationLibrary_6s8xh")
 }
-autoplay = "move"

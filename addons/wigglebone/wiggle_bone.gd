@@ -8,9 +8,6 @@ extends BoneAttachment3D
 ## band to its initial position. As it reacts to acceleration instead of velocity,
 ## bones of constantly moving objects will not "lag behind" and have a more realistic behaviour.
 
-#const ACCELERATION_WEIGHT := 0.5
-#const SOFT_LIMIT_FACTOR := 0.5
-
 ## Enable WiggleBone.
 @export var enabled := true: set = set_enabled
 ## The properties used to move the bone.
@@ -18,45 +15,29 @@ extends BoneAttachment3D
 
 @export_group("Const Force", "const_force")
 ## A constant global force.
-@export var const_force_global := Vector3.ZERO # global force
+@export var const_force_global := Vector3.ZERO
 ## A constant local force relative to the bone's rest pose.
-@export var const_force_local := Vector3.ZERO # local force relative to bone pose
+@export var const_force_local := Vector3.ZERO
 
 var const_force_gizmo := Vector3.ZERO
 
 var _skeleton: Skeleton3D
 var _bone_idx := -1
 var _bone_parent_idx := -1
-#var _global_to_pose := Basis()
 var _bone_rest := Transform3D()
 var _bone_rest_inv := Transform3D()
 var _bone_rest_rotation := Quaternion()
-var _bone_tail_global := Vector3.ZERO
-var _bone_tail_global_prev := Vector3.ZERO
+
+var _position_local := Vector3.ZERO
+var _position_local_prev := Vector3.ZERO
+var _rest_to_global_prev := Transform3D()
+
 var _impulse := Vector3.ZERO
 var _should_reset := true
-
-#var _velocity_rotation := Quaternion()
-#var _velocity_speed := 0.0
-
-var _velocity_local := Vector3.ZERO
-var _velocity_global_prev := Vector3.ZERO
-
-#var _velocity_global_inc := Vector3.ZERO
-#var _velocity_local := Vector3.ZERO
-#var _velocity_local_prev := Vector3.ZERO
-
-#var _debug_mesh := MeshInstance3D.new()
 
 
 func _ready() -> void:
 	set_enabled(enabled)
-
-	#var mesh := BoxMesh.new()
-	#mesh.size = Vector3(0.4, 0.4, 0.4)
-	#_debug_mesh.mesh = mesh
-	#_debug_mesh.top_level = true
-	#add_child(_debug_mesh)
 
 
 func _enter_tree() -> void:
@@ -68,20 +49,20 @@ func _enter_tree() -> void:
 	else:
 		_skeleton = get_parent()
 
-	_fetch_bone()
+	_fetch_bone(bone_name)
 	reset()
 
 
 func _exit_tree() -> void:
 	_skeleton = null
-	_fetch_bone()
+	_bone_idx = -1
+	_bone_parent_idx = -1
 
 
 func _set(property: StringName, value: Variant) -> bool:
 	if property == &"bone_name":
 		reset()
-		set_bone_name(value)
-		_fetch_bone()
+		_fetch_bone(value)
 		reset()
 		update_configuration_warnings()
 
@@ -111,141 +92,56 @@ func _process(delta: float) -> void:
 		#_process_delta(time_delta)
 		#_time -= time_delta
 
+
 @export var impulse := false:
 	set(value):
 		apply_impulse(Vector3(1.0, 0.0, 0.0))
 
 
-# TEST
 func _process_delta(delta: float) -> void:
 	var parent_to_skeleton := _skeleton.get_bone_global_pose(_bone_parent_idx) \
 		if _bone_parent_idx >= 0 \
 		else Transform3D()
 
 	var parent_to_global := _skeleton.global_transform * parent_to_skeleton
-	var global_to_parent := parent_to_global.affine_inverse()
-	var bone_length := properties.length
+	var rest_to_global := parent_to_global * _bone_rest
 
 	if _should_reset:
-		var bone_tail := _bone_rest * (Vector3.UP * bone_length)
-		_bone_tail_global = parent_to_global * bone_tail
+		_rest_to_global_prev = rest_to_global
 
-	var bone_head_global := parent_to_global * _bone_rest.origin
-	var bone_head_to_pos_global := _bone_tail_global - bone_head_global
-	var bone_dir_global := bone_head_to_pos_global.normalized()
-	var bone_tail_global_new := bone_head_global + bone_dir_global * bone_length
+	var transform_local_relative := _rest_to_global_prev.affine_inverse() * rest_to_global
+	_rest_to_global_prev = rest_to_global
 
 	if _should_reset:
-		_bone_tail_global_prev = bone_tail_global_new
+		_position_local = Vector3.UP * properties.length
+		_position_local_prev = _position_local
 		_should_reset = false
 
-	# Global velocity (m/s).
-	var velocity_global := (bone_tail_global_new - _bone_tail_global_prev) / delta
-	_bone_tail_global_prev = bone_tail_global_new
+	var position_new := transform_local_relative * _position_local
+	var position_relative := position_new - _position_local
 
-	var velocity_local := global_to_parent.basis * velocity_global
-	#var velocity_local := _velocity_local
+	_position_local -= position_relative
 
-	#var acceleration_global := (_velocity_global_prev - velocity_global) / delta
-	#velocity_local += (global_to_parent.basis * acceleration_global) * delta
+	var velocity := (_position_local - _position_local_prev) / delta
+	_position_local_prev = _position_local
 
-	#print(velocity_local)
-
-	#print(velocity_local)
-
-	# Apply forces (m/s²).
-	var force_global := properties.gravity + const_force_global + const_force_gizmo
-	var force_local := const_force_local
-	force_local += global_to_parent.basis * force_global
-	velocity_local += force_local * delta
-
-	# Frame rate independent lerp.
 	var velocity_decay := remap(properties.damping, 0.0, 1.0, 0.0, 25.0)
-	velocity_local = lerp(velocity_local, Vector3.ZERO, 1.0 - exp(-velocity_decay * delta))
+	velocity = lerp(velocity, Vector3.ZERO, 1.0 - exp(-velocity_decay * delta))
 
-	if _impulse:
-		# TODO: Make independent from frame rate.
-		velocity_local += _bone_rest_rotation * _impulse
-		_impulse = Vector3.ZERO
+	_position_local += velocity * delta
 
-	_velocity_local = velocity_local
+	var bone_forward := _position_local.normalized()
+	_position_local = bone_forward * properties.length
 
-	velocity_global = parent_to_global.basis * velocity_local
-	_velocity_global_prev = velocity_global
+	# Rotate to target point relative to bone up vector.
+	var bone_rotation_relative := Quaternion(Vector3.UP, bone_forward) \
+		# Check if rotation is exactly 180°.
+		if not is_equal_approx(bone_forward.dot(Vector3.DOWN), 1.0) \
+		# Rotate 180° around X axis when on opposite side.
+		else Quaternion(1, 0, 0, 0)
 
-	bone_tail_global_new += velocity_global * delta
-	_bone_tail_global = bone_tail_global_new
-
-	match properties.mode:
-		WiggleProperties.Mode.ROTATION:
-			# Constrain bone tail to bone length.
-			_bone_tail_global = bone_head_global + (_bone_tail_global - bone_head_global).normalized() * bone_length
-
-			var bone_tail_local := (_bone_rest_inv * global_to_parent) * _bone_tail_global
-			var bone_forward := bone_tail_local.normalized()
-
-			# Rotate to target point relative to bone up vector.
-			var bone_rotation := Quaternion(Vector3.UP, bone_forward) \
-				# Check if rotation is exactly 180°.
-				if not is_equal_approx(bone_forward.dot(Vector3.DOWN), 1.0) \
-				# Rotate 180° around X axis when exactly on opposite side.
-				else Quaternion(1, 0, 0, 0)
-
-			_skeleton.set_bone_pose_rotation(_bone_idx, _bone_rest_rotation * bone_rotation)
-
-		WiggleProperties.Mode.DISLOCATION:
-			pass
-
-
-#func _process_delta(delta: float) -> void:
-	#var parent_to_skeleton := _skeleton.get_bone_global_pose(_bone_parent_idx) \
-		#if _bone_parent_idx >= 0 \
-		#else Transform3D()
-#
-	#var parent_to_global := _skeleton.global_transform * parent_to_skeleton
-	#var global_to_parent := parent_to_global.affine_inverse()
-#
-	#var bone_head_global := parent_to_global * _bone_rest.origin
-	#var bone_head_to_pos_global := _bone_tail_global - bone_head_global
-	#bone_head_to_pos_global = bone_head_to_pos_global.normalized() * properties.length
-#
-	#var position_global := bone_head_global + bone_head_to_pos_global
-#
-	#if _should_reset:
-		#_bone_tail_global_prev = position_global
-		#_should_reset = false
-#
-	#var velocity_global := (position_global - _bone_tail_global_prev) / delta
-	#_bone_tail_global_prev = position_global
-#
-	#velocity_global += properties.gravity + const_force_global
-#
-	#var acceleration := (velocity_global - _velocity_global_prev) / delta
-	#_velocity_global_prev = velocity_global
-	##_velocity_global_inc += acceleration * delta
-	##_velocity_global_inc += properties.gravity + const_force_global
-	##var decay_2 := remap(1.0, 0.0, 1.0, 0.0, 50.0)
-	##_velocity_global_inc = lerp(_velocity_global_inc, Vector3.ZERO, 1.0 - exp(-decay_2 * delta))
-#
-	#var decay := remap(properties.damping, 0.0, 1.0, 0.0, 50.0)
-	## Frame rate independent lerp.
-	#velocity_global = lerp(velocity_global, Vector3.ZERO, 1.0 - exp(-decay * delta))
-#
-	#position_global += velocity_global * delta
-	##position_global += _velocity_global_inc * delta
-#
-	#_bone_tail_global = position_global
-	## Constrain position to bone length.
-	#_bone_tail_global = bone_head_global + (_bone_tail_global - bone_head_global).normalized() * properties.length
-#
-	#var position_local := global_to_parent * _bone_tail_global - _bone_rest.origin
-	#var bone_forward := position_local.normalized()
-#
-	#var bone_rotation := Quaternion(Vector3.UP, bone_forward) \
-		#if not is_equal_approx(bone_forward.dot(Vector3.DOWN), 1.0) \
-		#else Quaternion(1, 0, 0, 0) # 180°
-#
-	#_skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
+	var bone_rotation := _bone_rest_rotation * bone_rotation_relative
+	_skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
 
 
 func set_enabled(value: bool) -> void:
@@ -301,11 +197,11 @@ func _update_enabled() -> void:
 	set_process(active)
 
 
-func _fetch_bone() -> void:
+func _fetch_bone(new_name: String) -> void:
 	if not _skeleton:
 		return
 
-	_bone_idx = _skeleton.find_bone(bone_name) if _skeleton else -1
+	_bone_idx = _skeleton.find_bone(new_name) if _skeleton else -1
 	_bone_parent_idx = _skeleton.get_bone_parent(_bone_idx) if _bone_idx >= 0 else -1
 	_bone_rest = _skeleton.get_bone_rest(_bone_idx)
 	_bone_rest_inv = _bone_rest.affine_inverse()
@@ -320,17 +216,3 @@ func _on_properties_changed() -> void:
 
 func _on_behaviour_changed() -> void:
 	reset()
-
-
-func _project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
-	return Plane(vector.normalized(), length).project(point)
-
-
-func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
-	return v.normalized() * _smin(maxf(min_length, v.length()), max_length, k)
-
-
-# https://iquilezles.org/articles/smin/
-func _smin(a: float, b: float, k: float) -> float:
-	var h := maxf(0.0, k - absf(a - b))
-	return minf(a, b) - h * h / (4.0 * k)
