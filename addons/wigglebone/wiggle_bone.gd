@@ -19,6 +19,17 @@ extends BoneAttachment3D
 ## A constant local force relative to the bone's rest pose.
 @export var const_force_local := Vector3.ZERO
 
+@export_group("Spring", "spring")
+
+@export_range(0.0, 1.0) var spring_damping := 0.1
+@export_range(0.0, 10.0, 0.01, "or_greater") var spring_frequency := 2.0
+
+@export_group("Time")
+
+## Sets the number of frames per second to make updates. If [code]0[/code],
+## the actual frame time us used.
+@export var fixed_fps := 0: set = set_fixed_fps
+
 var const_force_gizmo := Vector3.ZERO
 
 var _skeleton: Skeleton3D
@@ -32,6 +43,13 @@ var _position_local := Vector3.ZERO
 var _position_local_prev := Vector3.ZERO
 var _rest_to_global_prev := Transform3D()
 
+# Current rotation.
+var _rotation_local := Quaternion()
+# Rotation per second.
+var _velocity_local := Quaternion()
+
+var _frame_time := 0.0
+var _frame_delta := 0.0
 var _impulse := Vector3.ZERO
 var _should_reset := true
 
@@ -78,27 +96,21 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-#var _time := 0.0
-#@export var time_delta := 1.0 / 30.0
+func _validate_property(property: Dictionary) -> void:
+	match property.name:
+		&"fixed_fps":
+			property.hint_string = "0,60,1,suffix:FPS"
+
 
 func _process(delta: float) -> void:
-	# Test stability for varying frame rates.
-	#var time := Time.get_ticks_usec()
-	_process_delta(randf_range(delta * 0.5, delta * 2.0))
-	#print("%fsec" % (float(Time.get_ticks_usec() - time) / 1_000_000.0))
+	if fixed_fps:
+		_frame_time += delta
+		delta = _frame_time
+		if _frame_time >= _frame_delta:
+			_frame_time = wrapf(_frame_delta, 0.0, _frame_delta)
+		else:
+			return
 
-	#_time += delta
-	#while _time >= time_delta:
-		#_process_delta(time_delta)
-		#_time -= time_delta
-
-
-@export var impulse := false:
-	set(value):
-		apply_impulse(Vector3(1.0, 0.0, 0.0))
-
-
-func _process_delta(delta: float) -> void:
 	var parent_to_skeleton := _skeleton.get_bone_global_pose(_bone_parent_idx) \
 		if _bone_parent_idx >= 0 \
 		else Transform3D()
@@ -108,40 +120,107 @@ func _process_delta(delta: float) -> void:
 
 	if _should_reset:
 		_rest_to_global_prev = rest_to_global
+		_should_reset = false
 
 	var transform_local_relative := _rest_to_global_prev.affine_inverse() * rest_to_global
 	_rest_to_global_prev = rest_to_global
 
-	if _should_reset:
-		_position_local = Vector3.UP * properties.length
-		_position_local_prev = _position_local
-		_should_reset = false
+	# Test stability for varying frame rates.
+	#var time := Time.get_ticks_usec()
 
-	var position_new := transform_local_relative * _position_local
-	var position_relative := position_new - _position_local
+	#var delta_test := randf_range(delta * 0.5, delta * 2.0)
+	_process_rotation(transform_local_relative, delta)
 
-	_position_local -= position_relative
+	#if not Engine.is_editor_hint():
+	#print("%fsec" % (float(Time.get_ticks_usec() - time) / 1_000_000.0))
 
-	var velocity := (_position_local - _position_local_prev) / delta
-	_position_local_prev = _position_local
+	#_time += delta
+	#while _time >= time_delta:
+		#_process_delta(time_delta)
+		#_time -= time_delta
+
+
+func set_fixed_fps(value: int) -> void:
+	fixed_fps = value
+	_frame_time = 0.0
+	_frame_delta = 1.0 / float(fixed_fps)
+
+
+@export var impulse := false:
+	set(value):
+		_velocity_local = Quaternion.from_euler(Vector3(PI, 0.0, 0.0))
+
+
+func _process_rotation(transform_local_relative: Transform3D, delta: float) -> void:
+	#var position_new := transform_local_relative * _position_local
+	#var position_relative := position_new - _position_local
+
+	#_position_local -= position_relative
+	#_position_local_prev = _position_local
+
+	# .
+	#var bone_forward := _position_local.normalized()
+	#_position_local = bone_forward * properties.length
+
+	## Rotate to target point relative to bone up vector.
+	#var bone_rotation_relative := Quaternion(Vector3.UP, bone_forward) \
+		## Check if rotation is exactly 180°.
+		#if not is_equal_approx(bone_forward.dot(Vector3.DOWN), 1.0) \
+		## Rotate 180° around X axis when on opposite side.
+		#else Quaternion(1, 0, 0, 0)
+
+	#_velocity_local = _rotation_local.inverse() * bone_rotation_relative
+	#_velocity_local = Quaternion().slerp(_velocity_local, 1.0 / delta).normalized()
+	#_rotation_local = bone_rotation_relative
+
+	var bone_head_shift := transform_local_relative.origin
+	var bone_tail := _rotation_local * (Vector3.UP * properties.length)
+	var bone_tail_shift := (bone_tail + bone_head_shift).normalized() * properties.length
+	var proj_position := Plane(bone_tail.normalized(), properties.length).project(bone_tail_shift)
+
+	var acceleration := Quaternion(proj_position.normalized(), _rotation_local * Vector3.UP)
+	_velocity_local *= acceleration
 
 	var velocity_decay := remap(properties.damping, 0.0, 1.0, 0.0, 25.0)
-	velocity = lerp(velocity, Vector3.ZERO, 1.0 - exp(-velocity_decay * delta))
+	_velocity_local = _velocity_local.slerp(Quaternion(), 1.0 - exp(-velocity_decay * delta)).normalized()
 
-	_position_local += velocity * delta
+	var stiffness_decay := remap(properties.stiffness, 0.0, 1.0, 0.0, 25.0)
+	var rotation_target := _rotation_local.slerp(Quaternion(), 1.0 - exp(-stiffness_decay * delta)).normalized()
+	_velocity_local *= (_rotation_local.inverse() * rotation_target)
 
-	var bone_forward := _position_local.normalized()
-	_position_local = bone_forward * properties.length
+	_rotation_local *= Quaternion().slerp(_velocity_local, delta)
+	_rotation_local = _rotation_local.normalized()
 
-	# Rotate to target point relative to bone up vector.
-	var bone_rotation_relative := Quaternion(Vector3.UP, bone_forward) \
-		# Check if rotation is exactly 180°.
-		if not is_equal_approx(bone_forward.dot(Vector3.DOWN), 1.0) \
-		# Rotate 180° around X axis when on opposite side.
-		else Quaternion(1, 0, 0, 0)
-
-	var bone_rotation := _bone_rest_rotation * bone_rotation_relative
+	var bone_rotation := _bone_rest_rotation * _rotation_local
 	_skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
+
+	#_spring(position, Vector3.ZERO, position, delta)
+
+
+# Spring
+#
+# zeta = damping ratio
+# omega = angular frequency
+func _spring(value: Vector3, target: Vector3, velocity: Vector3, delta: float, zeta := 0.9, omega := 0.1) -> Array[Vector3]:
+	if zeta >= 1.0:
+		return [target, velocity]
+
+	if zeta < 0.0:
+		zeta = 0.0
+
+	var x0 := value - target
+	var omega_zeta := omega * zeta
+	# TODO: Only calculate if omega or zeta changes.
+	var alpha := omega * sqrt(1.0 - zeta * zeta)
+	var exp := exp(-delta * omega_zeta)
+	var cos := cos(delta * alpha)
+	var sin := sin(delta * alpha)
+	var c2 := (velocity + x0 * omega_zeta) / alpha
+
+	var pos := target + exp * (x0 * cos + c2 * sin)
+	var vel := -exp * ((x0 * omega_zeta - c2 * alpha) * cos + (x0 * alpha + c2 * omega_zeta) * sin)
+
+	return [pos, vel]
 
 
 func set_enabled(value: bool) -> void:
@@ -183,6 +262,8 @@ func apply_impulse(impulse: Vector3, global := false) -> void:
 
 
 func reset() -> void:
+	_rotation_local = Quaternion()
+	_velocity_local = Quaternion()
 	_should_reset = true
 
 	if _skeleton:
@@ -193,7 +274,6 @@ func _update_enabled() -> void:
 	var valid := _skeleton != null and _bone_idx >= 0 and properties != null
 	var active := enabled and valid
 
-	set_physics_process(active)
 	set_process(active)
 
 
