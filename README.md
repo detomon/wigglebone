@@ -1,6 +1,6 @@
 # WiggleBone Plugin for Godot Engine (4.x)
 
-Adds jiggle physics to bones of a **Skeleton3D**. It reacts to animated or global motion as if it's connected with a rubber band to its initial position. As it reacts to acceleration instead of velocity, bones of constantly moving objects will not "lag behind" and have a more realistic behaviour.
+Adds jiggle physics to bones of a **Skeleton3D**. It reacts to animated or global motion as if it's connected with a rubber band to its initial position.
 
 The node inherits from **BoneAttachment3D** and can also be used as such. It overrides the bone's global pose respecting the current pose, so the bone pose still be animated.
 
