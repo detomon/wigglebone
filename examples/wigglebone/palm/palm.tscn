@@ -1,13 +1,27 @@
-[gd_scene load_steps=5 format=3 uid="uid://c7007qk1iob7y"]
+[gd_scene load_steps=8 format=3 uid="uid://c7007qk1iob7y"]
 
 [ext_resource type="PackedScene" uid="uid://f8xayu7qvbjy" path="res://examples/wigglebone/palm/palm.gltf" id="1"]
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_bone.gd" id="2"]
 [ext_resource type="Resource" uid="uid://w6m3ec6wrn42" path="res://examples/wigglebone/palm/leave.tres" id="3"]
 [ext_resource type="Resource" uid="uid://cwabaw2vr7rl" path="res://examples/wigglebone/palm/trunk.tres" id="4"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_bone_modifier.gd" id="5_ug00p"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_properties.gd" id="6_by6wv"]
+
+[sub_resource type="Resource" id="Resource_0dwhu"]
+script = ExtResource("6_by6wv")
+mode = 0
+stiffness = 0.1
+damping = 0.1
+gravity = Vector3(0, 0, 0)
+length = 0.1
+max_distance = 0.1
+max_degrees = 60.0
 
 [node name="Palm" instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0914259, 0, -0.0354893)
 
 [node name="Skeleton3D" parent="Armature" index="0"]
+modifier_callback_mode_process = 0
 bones/5/rotation = Quaternion(0.619893, -0.557946, -0.533385, -0.141169)
 bones/5/scale = Vector3(1, 1, 1)
 bones/6/rotation = Quaternion(0.479159, 0.63294, 0.598154, -0.10957)
@@ -28,6 +42,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3782, 0)
 bone_name = "trunk.004"
 bone_idx = 3
 script = ExtResource("2")
+enabled = false
 properties = ExtResource("4")
 
 [node name="BoneLeave0" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="3"]
@@ -92,3 +107,25 @@ bone_name = "leave"
 bone_idx = 10
 script = ExtResource("2")
 properties = ExtResource("3")
+
+[node name="WiggleBoneModifier" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="12"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3782, 0)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("5_ug00p")
+bone_name = "trunk.004"
+properties = SubResource("Resource_0dwhu")

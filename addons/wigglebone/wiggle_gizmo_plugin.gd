@@ -18,7 +18,7 @@ func _init() -> void:
 
 
 func _has_gizmo(spatial: Node3D) -> bool:
-	return spatial is WiggleBone
+	return spatial is WiggleBone or spatial is WiggleBoneModifier
 
 
 func _get_gizmo_name() -> String:
@@ -42,8 +42,9 @@ func _get_handle_value(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool
 
 
 func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, camera: Camera3D, point: Vector2) -> void:
-	var bone: WiggleBone = gizmo.get_node_3d()
-	var handle_position := bone.global_transform * _get_handle_position(bone.properties)
+	var bone: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
+	var properties: WiggleProperties = bone.properties
+	var handle_position := bone.global_transform * _get_handle_position(properties)
 	var depth := handle_position.distance_to(camera.global_transform.origin)
 
 	handle_position = camera.project_position(point, depth)
@@ -57,7 +58,8 @@ func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, came
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, restore: Variant, cancel: bool) -> void:
-	var bone: WiggleBone = gizmo.get_node_3d()
+	var bone: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
+	var properties: WiggleProperties = bone.properties
 	bone.const_force_global = Vector3.ZERO
 
 	_handle_init_position = Vector3.ZERO
@@ -66,8 +68,8 @@ func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, r
 
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
-	var wigglebone: WiggleBone = gizmo.get_node_3d()
-	var properties := wigglebone.properties
+	var bone: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
+	var properties: WiggleProperties = bone.properties
 
 	gizmo.clear()
 

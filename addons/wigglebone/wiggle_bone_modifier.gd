@@ -1,70 +1,46 @@
 @tool
 @icon("icon.svg")
-class_name WiggleBone
-extends BoneAttachment3D
+class_name WiggleBoneModifier
+extends SkeletonModifier3D
 
 ## Adds jiggle physics to the bone.
 ##
-## It reacts to animated or global motion as if it's connected with a rubber
-## band to its initial position.
+## It reacts to animated or global motion as if it's connected with a rubber band to its initial
+## position.
 
 const SOFT_LIMIT_FACTOR := 0.5
 
-## Enable WiggleBone.
-@export var enabled := true: set = set_enabled
+## The bone name to animate.
+@export var bone_name := "": set = set_bone_name
 ## The properties used to move the bone.
 @export var properties: WiggleProperties: set = set_properties
-## Defines how much the bone pose is influenced.
-@export_range(0.0, 1, 0.01) var influence := 1.0: set = set_influence
 
 @export_group("Const Force", "const_force")
 ## A constant global force.
-@export var const_force_global := Vector3.ZERO # global force
+@export var const_force_global := Vector3.ZERO
 ## A constant local force relative to the bone's rest pose.
-@export var const_force_local := Vector3.ZERO # local force relative to bone pose
+@export var const_force_local := Vector3.ZERO
 
-var _skeleton: Skeleton3D
 var _bone_idx := -1
-var _parent_bone_idx := -1
 var _point_mass := Vector3.ZERO
 var _point_mass_velocity := Vector3.ZERO
 var _point_mass_acceleration := Vector3.ZERO
 var _global_to_pose := Basis()
-var _should_reset := true
 var _prev_mass_center := Vector3.ZERO
-
-
-func _ready() -> void:
-	set_enabled(enabled)
+var _should_reset := true
 
 
 func _enter_tree() -> void:
-	if get_use_external_skeleton():
-		var skeleton_node := get_external_skeleton()
-		if skeleton_node:
-			_skeleton = get_node(skeleton_node)
-
-	else:
-		_skeleton = get_parent()
-
 	_fetch_bone()
 	reset()
 
 
-func _exit_tree() -> void:
-	_skeleton = null
-	_fetch_bone()
-
-
-func _set(property: StringName, value: Variant) -> bool:
-	if property == &"bone_name":
-		reset()
-		set_bone_name(value)
-		_fetch_bone()
-		reset()
-		update_configuration_warnings()
-
-	return false
+func _validate_property(property: Dictionary) -> void:
+	match property.name:
+		&"bone_name":
+			var bone_names = _get_sorted_skeleton_bone()
+			property.hint |= PROPERTY_HINT_ENUM
+			property.hint_string = ",".join(bone_names)
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -76,12 +52,31 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-func _physics_process(delta: float) -> void:
-	var bone_pose := _skeleton.get_bone_pose(_bone_idx)
-	if _parent_bone_idx >= 0:
-		bone_pose = _skeleton.get_bone_global_pose(_parent_bone_idx) * bone_pose
+func _process_modification() -> void:
+	if not properties or _bone_idx < 0:
+		return
 
-	var global_bone_pose := _skeleton.global_transform * bone_pose
+	var skeleton := get_skeleton()
+	var delta := 0.0
+
+	match skeleton.modifier_callback_mode_process:
+		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
+			delta = get_process_delta_time()
+
+		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_PHYSICS:
+			delta = get_physics_process_delta_time()
+
+	#prints(get_tree().get_frame(), delta)
+
+	var bone_pose := skeleton.get_bone_pose(_bone_idx)
+	var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
+	var parent_pose := Transform3D()
+
+	if parent_bone_idx >= 0:
+		parent_pose = skeleton.get_bone_global_pose(parent_bone_idx)
+		bone_pose = parent_pose * bone_pose
+
+	var global_bone_pose := skeleton.global_transform * bone_pose
 	_global_to_pose = global_bone_pose.basis.inverse()
 
 	var mass_center := Vector3.ZERO
@@ -96,9 +91,10 @@ func _physics_process(delta: float) -> void:
 
 	if _should_reset:
 		delta_mass_center = Vector3.ZERO
+		_prev_mass_center = Vector3.ZERO
 		_should_reset = false
 
-	var delta_limited := clampf(delta, 1.0 / 240.0, 1.0 / 30.0)
+	var delta_limited := clampf(delta, 0.001, 0.033333)
 	var global_velocity := delta_mass_center / delta_limited
 
 	var global_force := properties.gravity + const_force_global + global_velocity
@@ -120,7 +116,7 @@ func _physics_process(delta: float) -> void:
 	_point_mass_acceleration = Vector3.ZERO
 
 	var pose := Transform3D()
-	var point_mass = _point_mass * influence
+	var point_mass = _point_mass
 
 	match properties.mode:
 		WiggleProperties.Mode.ROTATION:
@@ -142,13 +138,15 @@ func _physics_process(delta: float) -> void:
 
 	pose = bone_pose * pose
 
-	_skeleton.set_bone_global_pose_override(_bone_idx, pose, 1.0, true)
+	global_transform = skeleton.global_transform * pose
 
+	var to_parent_pose := parent_pose.affine_inverse()
+	var local_pose := to_parent_pose * pose
 
-func set_enabled(value: bool) -> void:
-	enabled = value
-	reset()
-	_update_enabled()
+	# TODO: Set Rotation/Position.
+	skeleton.set_bone_pose(_bone_idx, local_pose)
+
+	#skeleton.set_bone_global_pose_override(_bone_idx, pose, 1.0, true)
 
 
 func set_properties(value: WiggleProperties) -> void:
@@ -163,13 +161,15 @@ func set_properties(value: WiggleProperties) -> void:
 		properties.behaviour_changed.connect(_on_behaviour_changed)
 
 	reset()
-	_update_enabled()
 	update_configuration_warnings()
 	update_gizmos()
 
 
-func set_influence(value: float) -> void:
-	influence = clampf(value, 0.0, 1.0)
+func set_bone_name(value: String) -> void:
+	bone_name = value
+	_fetch_bone()
+	reset()
+	update_gizmos()
 
 
 func apply_impulse(impulse: Vector3, global := false) -> void:
@@ -180,30 +180,17 @@ func apply_impulse(impulse: Vector3, global := false) -> void:
 
 
 func reset() -> void:
-	if _skeleton:
-		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 0.0)
-
 	_point_mass = Vector3.ZERO
 	_point_mass_velocity = Vector3.ZERO
 	_point_mass_acceleration = Vector3.ZERO
 	_should_reset = true
 
 
-func _update_enabled() -> void:
-	var valid := _skeleton != null and _bone_idx >= 0 and properties != null
-	var active := enabled and valid
-
-	set_physics_process(active)
-	set_process(active)
-
-	if valid and not enabled:
-		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 0.0)
-
-
 func _fetch_bone() -> void:
-	_bone_idx = _skeleton.find_bone(bone_name) if _skeleton else -1
-	_parent_bone_idx = _skeleton.get_bone_parent(_bone_idx) if _bone_idx >= 0 else -1
-	_update_enabled()
+	var skeleton := get_skeleton()
+	_bone_idx = skeleton.find_bone(bone_name) \
+		if skeleton \
+		else -1
 
 
 func _on_properties_changed() -> void:
@@ -226,3 +213,19 @@ func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: flo
 func _smin(a: float, b: float, k: float) -> float:
 	var h := maxf(0.0, k - absf(a - b))
 	return minf(a, b) - h * h / (4.0 * k)
+
+
+func _get_sorted_skeleton_bone() -> PackedStringArray:
+	var skeleton := get_skeleton()
+	if not skeleton:
+		return []
+
+	var bone_names = PackedStringArray()
+	var bone_count := skeleton.get_bone_count()
+
+	bone_names.resize(bone_count)
+	for i in bone_count:
+		bone_names[i] = skeleton.get_bone_name(i)
+	bone_names.sort()
+
+	return bone_names
