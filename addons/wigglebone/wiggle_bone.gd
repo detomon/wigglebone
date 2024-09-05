@@ -32,6 +32,8 @@ var _point_mass_acceleration := Vector3.ZERO
 var _global_to_pose := Basis()
 var _should_reset := true
 var _prev_mass_center := Vector3.ZERO
+var _bone_rest_rotation := Quaternion()
+var _bone_rest_position := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -77,7 +79,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _physics_process(delta: float) -> void:
-	var bone_pose := _skeleton.get_bone_pose(_bone_idx)
+	var bone_pose := _skeleton.get_bone_rest(_bone_idx)
 	if _parent_bone_idx >= 0:
 		bone_pose = _skeleton.get_bone_global_pose(_parent_bone_idx) * bone_pose
 
@@ -119,7 +121,6 @@ func _physics_process(delta: float) -> void:
 	_point_mass_velocity -= _point_mass * stiffness
 	_point_mass_acceleration = Vector3.ZERO
 
-	var pose := Transform3D()
 	var point_mass = _point_mass * influence
 
 	match properties.mode:
@@ -132,17 +133,15 @@ func _physics_process(delta: float) -> void:
 			var mass_local := (Vector3.UP * properties.length) + mass_constrained
 			var relative_rotation := Quaternion(Vector3.UP, mass_local.normalized())
 
-			pose.basis = Basis(relative_rotation)
+			var bone_rotation := _bone_rest_rotation * relative_rotation
+			_skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
 
 		WiggleProperties.Mode.DISLOCATION:
 			var k := properties.max_distance * SOFT_LIMIT_FACTOR
 			var mass_constrained := _clamp_length_soft(point_mass, 0.0, properties.max_distance, k)
 
-			pose.origin = mass_constrained
-
-	pose = bone_pose * pose
-
-	_skeleton.set_bone_global_pose_override(_bone_idx, pose, 1.0, true)
+			var bone_position := _bone_rest_position + _bone_rest_rotation * mass_constrained
+			_skeleton.set_bone_pose_position(_bone_idx, bone_position)
 
 
 func set_enabled(value: bool) -> void:
@@ -152,14 +151,18 @@ func set_enabled(value: bool) -> void:
 
 
 func set_properties(value: WiggleProperties) -> void:
+	var is_editor := Engine.is_editor_hint()
+
 	if properties:
-		properties.changed.disconnect(_on_properties_changed)
+		if is_editor:
+			properties.changed.disconnect(_on_properties_changed)
 		properties.behaviour_changed.disconnect(_on_behaviour_changed)
 
 	properties = value
 
-	if properties:
-		properties.changed.connect(_on_properties_changed)
+	if properties and is_editor:
+		if is_editor:
+			properties.changed.connect(_on_properties_changed)
 		properties.behaviour_changed.connect(_on_behaviour_changed)
 
 	reset()
@@ -181,7 +184,7 @@ func apply_impulse(impulse: Vector3, global := false) -> void:
 
 func reset() -> void:
 	if _skeleton:
-		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 0.0)
+		_skeleton.reset_bone_pose(_bone_idx)
 
 	_point_mass = Vector3.ZERO
 	_point_mass_velocity = Vector3.ZERO
@@ -194,15 +197,20 @@ func _update_enabled() -> void:
 	var active := enabled and valid
 
 	set_physics_process(active)
-	set_process(active)
 
 	if valid and not enabled:
-		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 0.0)
+		_skeleton.reset_bone_pose(_bone_idx)
 
 
 func _fetch_bone() -> void:
 	_bone_idx = _skeleton.find_bone(bone_name) if _skeleton else -1
 	_parent_bone_idx = _skeleton.get_bone_parent(_bone_idx) if _bone_idx >= 0 else -1
+
+	if _bone_idx >= 0:
+		var bone_rest := _skeleton.get_bone_rest(_bone_idx)
+		_bone_rest_rotation = bone_rest.basis.get_rotation_quaternion()
+		_bone_rest_position = bone_rest.origin
+
 	_update_enabled()
 
 
