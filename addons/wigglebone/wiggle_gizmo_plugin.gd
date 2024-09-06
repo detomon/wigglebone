@@ -5,6 +5,11 @@ enum HandleID {
 	FORCE,
 }
 
+enum Mode {
+	ROTATION,
+	DISLOCATION,
+}
+
 var _handle_init_position := Vector3.ZERO
 var _handle_position := Vector3.ZERO
 var _handle_dragging := false
@@ -25,7 +30,7 @@ func _get_gizmo_name() -> String:
 	return "WiggleBone"
 
 
-func _get_handle_name(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool) -> String:
+func _get_handle_name(_gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool) -> String:
 	match handle_id:
 		HandleID.FORCE:
 			return "Force"
@@ -33,7 +38,7 @@ func _get_handle_name(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool)
 			return ""
 
 
-func _get_handle_value(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool) -> Variant:
+func _get_handle_value(_gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool) -> Variant:
 	match handle_id:
 		HandleID.FORCE:
 			return _handle_position - _handle_init_position
@@ -41,10 +46,18 @@ func _get_handle_value(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool
 			return Vector3.ZERO
 
 
-func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, camera: Camera3D, point: Vector2) -> void:
-	var bone: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
-	var properties: WiggleProperties = bone.properties
-	var handle_position := bone.global_transform * _get_handle_position(properties)
+func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, camera: Camera3D, point: Vector2) -> void:
+	var node: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
+	var handle_position := Vector3.ZERO
+
+	if node is WiggleBone:
+		var properties: WiggleProperties = node.properties
+		handle_position = node.global_transform * _get_handle_position(properties)
+
+	elif node is WiggleBoneModifier:
+		var properties: WiggleModifierProperties = node.properties
+		handle_position = node.global_transform * _get_modifier_handle_position(properties)
+
 	var depth := handle_position.distance_to(camera.global_transform.origin)
 
 	handle_position = camera.project_position(point, depth)
@@ -54,13 +67,21 @@ func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, came
 		_handle_init_position = handle_position
 		_handle_dragging = true
 
-	bone.const_force_global = handle_position - _handle_init_position
+	if node is WiggleBone:
+		node.const_force_global = handle_position - _handle_init_position
+
+	elif node is WiggleBoneModifier:
+		node.force_global = handle_position - _handle_init_position
 
 
-func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, restore: Variant, cancel: bool) -> void:
-	var bone: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
-	var properties: WiggleProperties = bone.properties
-	bone.const_force_global = Vector3.ZERO
+func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
+	var node: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
+
+	if node is WiggleBone:
+		node.const_force_global = Vector3.ZERO
+
+	elif node is WiggleBoneModifier:
+		node.force_global = Vector3.ZERO
 
 	_handle_init_position = Vector3.ZERO
 	_handle_position = Vector3.ZERO
@@ -68,39 +89,85 @@ func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, r
 
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
-	var bone: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
-	var properties: WiggleProperties = bone.properties
+	var node: Node3D = gizmo.get_node_3d() # WiggleBone or WiggleBoneModifier
+	var length := 0.0
+	var max_degrees := 0.0
+	var max_distance := 0.0
+	var handle_position := Vector3.ZERO
+	var mode := Mode.ROTATION
 
 	gizmo.clear()
 
-	if properties:
+	if node is WiggleBone:
+		var properties: WiggleProperties = node.properties
+		if not properties:
+			return
+
 		match properties.mode:
 			WiggleProperties.Mode.ROTATION:
-				var length := properties.length
-				var angle := deg_to_rad(properties.max_degrees)
-				var scale_x := sin(angle)
-				var scale_y := cos(angle)
-				var scale := Vector3(scale_x, scale_y, scale_x) * length * 0.75
-				var transform := Transform3D().scaled(scale)
-
-				var lines: PackedVector3Array = transform * _cone_lines
-				lines.append(Vector3.ZERO)
-				lines.append(Vector3.UP * properties.length)
-				gizmo.add_lines(lines, get_material("main", gizmo), false)
+				mode = Mode.ROTATION
 
 			WiggleProperties.Mode.DISLOCATION:
-				var max_distance := properties.max_distance
-				var scale := Vector3.ONE * max_distance
-				var transform := Transform3D().scaled(scale)
+				mode = Mode.DISLOCATION
 
-				var lines: PackedVector3Array = transform * _sphere_lines
-				gizmo.add_lines(lines, get_material("main", gizmo), true)
+		length = properties.length
+		max_degrees = properties.max_degrees
+		max_distance = properties.max_distance
+		handle_position = _get_handle_position(properties)
 
-		var handle := _get_handle_position(properties)
-		gizmo.add_handles([handle], get_material("handles"), [HandleID.FORCE])
+	elif node is WiggleBoneModifier:
+		var properties: WiggleModifierProperties = node.properties
+		if not properties:
+			return
+
+		match properties.mode:
+			WiggleModifierProperties.Mode.ROTATION:
+				mode = Mode.ROTATION
+
+			WiggleModifierProperties.Mode.DISLOCATION:
+				mode = Mode.DISLOCATION
+
+		length = properties.length
+		max_degrees = properties.max_degrees
+		max_distance = properties.max_distance
+		handle_position = _get_modifier_handle_position(properties)
+
+	match mode:
+		Mode.ROTATION:
+			var angle := deg_to_rad(max_degrees)
+			var scale_x := sin(angle)
+			var scale_y := cos(angle)
+			var scale := Vector3(scale_x, scale_y, scale_x) * length * 0.75
+			var transform := Transform3D().scaled(scale)
+
+			var lines: PackedVector3Array = transform * _cone_lines
+			lines.append(Vector3.ZERO)
+			lines.append(Vector3.UP * length)
+			gizmo.add_lines(lines, get_material("main", gizmo), false)
+
+		Mode.DISLOCATION:
+			var scale := Vector3.ONE * max_distance
+			var transform := Transform3D().scaled(scale)
+
+			var lines: PackedVector3Array = transform * _sphere_lines
+			gizmo.add_lines(lines, get_material("main", gizmo), true)
+
+	gizmo.add_handles([handle_position], get_material("handles"), [HandleID.FORCE])
 
 
 static func _get_handle_position(properties: WiggleProperties) -> Vector3:
+	if properties:
+		match properties.mode:
+			WiggleProperties.Mode.ROTATION:
+				return Vector3.UP * properties.length
+
+			WiggleProperties.Mode.DISLOCATION:
+				return Vector3.ZERO
+
+	return Vector3.ZERO
+
+
+static func _get_modifier_handle_position(properties: WiggleModifierProperties) -> Vector3:
 	if properties:
 		match properties.mode:
 			WiggleProperties.Mode.ROTATION:

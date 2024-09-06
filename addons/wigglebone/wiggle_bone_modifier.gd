@@ -13,13 +13,13 @@ const SOFT_LIMIT_FACTOR := 0.5
 ## The bone name to animate.
 @export var bone_name := "": set = set_bone_name
 ## The properties used to move the bone.
-@export var properties: WiggleProperties: set = set_properties
+@export var properties: WiggleModifierProperties: set = set_properties
 
-@export_group("Const Force", "const_force")
+@export_group("Force", "force")
 ## A constant global force.
-@export var const_force_global := Vector3.ZERO
+@export var force_global := Vector3.ZERO
 ## A constant local force relative to the bone's rest pose.
-@export var const_force_local := Vector3.ZERO
+@export var force_local := Vector3.ZERO
 
 var _bone_idx := -1
 var _point_mass := Vector3.ZERO
@@ -40,7 +40,7 @@ func _enter_tree() -> void:
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
 		&"bone_name":
-			var bone_names = _get_sorted_skeleton_bone()
+			var bone_names = _get_sorted_skeleton_bones()
 			property.hint |= PROPERTY_HINT_ENUM
 			property.hint_string = ",".join(bone_names)
 
@@ -49,7 +49,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
 	if not properties:
-		warnings.append("WiggleProperties resource is required")
+		warnings.append("WiggleModifierProperties resource is required")
 
 	return warnings
 
@@ -82,7 +82,7 @@ func _process_modification() -> void:
 	var mass_center := Vector3.ZERO
 
 	match properties.mode:
-		WiggleProperties.Mode.ROTATION:
+		WiggleModifierProperties.Mode.ROTATION:
 			mass_center = Vector3.UP * properties.length
 
 	mass_center = global_bone_pose * mass_center
@@ -97,13 +97,12 @@ func _process_modification() -> void:
 	var delta_limited := clampf(delta, 0.001, 0.033333)
 	var global_velocity := delta_mass_center / delta_limited
 
-	var global_force := properties.gravity + const_force_global + global_velocity
-	var local_force := _global_to_pose * global_force + const_force_local
-
-	var mass_distance := properties.length
+	var global_force := properties.gravity + force_global + global_velocity
+	var local_force := _global_to_pose * global_force + force_local
 
 	match properties.mode:
-		WiggleProperties.Mode.ROTATION:
+		WiggleModifierProperties.Mode.ROTATION:
+			var mass_distance := properties.length
 			local_force = _project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
 
 	var damping := properties.damping
@@ -119,7 +118,8 @@ func _process_modification() -> void:
 	var point_mass = _point_mass
 
 	match properties.mode:
-		WiggleProperties.Mode.ROTATION:
+		WiggleModifierProperties.Mode.ROTATION:
+			var mass_distance := properties.length
 			var angular_offset := Vector2.RIGHT.rotated(deg_to_rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
 			var angular_limit := angular_offset * mass_distance
 			var k := angular_limit * SOFT_LIMIT_FACTOR
@@ -133,7 +133,7 @@ func _process_modification() -> void:
 
 			pose.basis = Basis(relative_rotation)
 
-		WiggleProperties.Mode.DISLOCATION:
+		WiggleModifierProperties.Mode.DISLOCATION:
 			var k := properties.max_distance * SOFT_LIMIT_FACTOR
 			var mass_constrained := _clamp_length_soft(point_mass, 0.0, properties.max_distance, k)
 
@@ -146,7 +146,7 @@ func _process_modification() -> void:
 	global_transform = skeleton.global_transform * pose
 
 
-func set_properties(value: WiggleProperties) -> void:
+func set_properties(value: WiggleModifierProperties) -> void:
 	var is_editor := Engine.is_editor_hint()
 
 	if properties:
@@ -222,17 +222,20 @@ func _smin(a: float, b: float, k: float) -> float:
 	return minf(a, b) - h * h / (4.0 * k)
 
 
-func _get_sorted_skeleton_bone() -> PackedStringArray:
+func _get_sorted_skeleton_bones() -> PackedStringArray:
 	var skeleton := get_skeleton()
 	if not skeleton:
 		return []
 
-	var bone_names = PackedStringArray()
+	var bone_names = []
 	var bone_count := skeleton.get_bone_count()
 
 	bone_names.resize(bone_count)
 	for i in bone_count:
 		bone_names[i] = skeleton.get_bone_name(i)
-	bone_names.sort()
+
+	bone_names.sort_custom(func (a: String, b: String) -> bool:
+		return a.naturalcasecmp_to(b) < 0
+	)
 
 	return bone_names

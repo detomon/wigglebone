@@ -1,5 +1,5 @@
 @tool
-class_name WiggleProperties
+class_name WiggleModifierProperties
 extends Resource
 
 ## Defines the properties used to move the bone.
