@@ -1,5 +1,5 @@
 @tool
-@icon("icon.svg")
+@icon("icons/node.svg")
 class_name WiggleBone
 extends BoneAttachment3D
 
@@ -7,6 +7,10 @@ extends BoneAttachment3D
 ##
 ## It reacts to animated or global motion as if it's connected with a rubber
 ## band to its initial position.
+## [br][br]
+## [b]Note:[/b] This class is deprecated. Use [WiggleModifier3D] instead.
+##
+## @deprecated
 
 const SOFT_LIMIT_FACTOR := 0.5
 

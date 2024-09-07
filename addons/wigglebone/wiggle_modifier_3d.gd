@@ -1,9 +1,9 @@
 @tool
-@icon("icon.svg")
-class_name WiggleBoneModifier
+@icon("icons/node.svg")
+class_name WiggleModifier3D
 extends SkeletonModifier3D
 
-## Adds jiggle physics to the bone.
+## Adds jiggle physics to a bone.
 ##
 ## It reacts to animated or global motion as if it's connected with a rubber band to its initial
 ## position.
@@ -13,7 +13,7 @@ const SOFT_LIMIT_FACTOR := 0.5
 ## The bone name to animate.
 @export var bone_name := "": set = set_bone_name
 ## The properties used to move the bone.
-@export var properties: WiggleModifierProperties: set = set_properties
+@export var properties: WiggleModifierProperties3D: set = set_properties
 
 @export_group("Force", "force")
 ## A constant global force.
@@ -49,7 +49,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
 	if not properties:
-		warnings.append("WiggleModifierProperties resource is required")
+		warnings.append("WiggleModifierProperties3D resource is required")
 
 	return warnings
 
@@ -82,7 +82,7 @@ func _process_modification() -> void:
 	var mass_center := Vector3.ZERO
 
 	match properties.mode:
-		WiggleModifierProperties.Mode.ROTATION:
+		WiggleModifierProperties3D.Mode.ROTATION:
 			mass_center = Vector3.UP * properties.length
 
 	mass_center = global_bone_pose * mass_center
@@ -101,7 +101,7 @@ func _process_modification() -> void:
 	var local_force := _global_to_pose * global_force + force_local
 
 	match properties.mode:
-		WiggleModifierProperties.Mode.ROTATION:
+		WiggleModifierProperties3D.Mode.ROTATION:
 			var mass_distance := properties.length
 			local_force = _project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
 
@@ -118,9 +118,9 @@ func _process_modification() -> void:
 	var point_mass = _point_mass
 
 	match properties.mode:
-		WiggleModifierProperties.Mode.ROTATION:
+		WiggleModifierProperties3D.Mode.ROTATION:
 			var mass_distance := properties.length
-			var angular_offset := Vector2.RIGHT.rotated(deg_to_rad(properties.max_degrees)).distance_to(Vector2.RIGHT)
+			var angular_offset := Vector2.RIGHT.rotated(properties.max_rotation).distance_to(Vector2.RIGHT)
 			var angular_limit := angular_offset * mass_distance
 			var k := angular_limit * SOFT_LIMIT_FACTOR
 			var mass_constrained := _clamp_length_soft(point_mass, 0.0, angular_limit, k)
@@ -133,7 +133,7 @@ func _process_modification() -> void:
 
 			pose.basis = Basis(relative_rotation)
 
-		WiggleModifierProperties.Mode.DISLOCATION:
+		WiggleModifierProperties3D.Mode.DISLOCATION:
 			var k := properties.max_distance * SOFT_LIMIT_FACTOR
 			var mass_constrained := _clamp_length_soft(point_mass, 0.0, properties.max_distance, k)
 
@@ -146,7 +146,7 @@ func _process_modification() -> void:
 	global_transform = skeleton.global_transform * pose
 
 
-func set_properties(value: WiggleModifierProperties) -> void:
+func set_properties(value: WiggleModifierProperties3D) -> void:
 	var is_editor := Engine.is_editor_hint()
 
 	if properties:

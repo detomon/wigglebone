@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="WiggleModifierProperties" load_steps=2 format=3 uid="uid://bmfyj215rtl0m"]
+[gd_resource type="Resource" script_class="WiggleModifierProperties3D" load_steps=2 format=3 uid="uid://bmfyj215rtl0m"]
 
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_properties.gd" id="1_kdy3q"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_properties_3d.gd" id="1_lrolf"]
 
 [resource]
 resource_name = "Trunk"
-script = ExtResource("1_kdy3q")
+script = ExtResource("1_lrolf")
 mode = 0
 stiffness = 0.2
 damping = 0.3
 gravity = Vector3(0, 0, 0)
 length = 1.5
 max_distance = 0.1
-max_degrees = 30.0
+max_rotation = 0.523599

@@ -1,8 +1,13 @@
 @tool
+@icon("icons/resource.svg")
 class_name WiggleProperties
 extends Resource
 
 ## Defines the properties used to move the bone.
+## [br][br]
+## [b]Note:[/b] [WiggleBone] and this resource class is deprecated. Use [WiggleModifier3D] instead.
+##
+## @deprecated
 
 ## Emitted when the behaviour changed.
 signal behaviour_changed()

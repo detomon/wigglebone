@@ -1,5 +1,6 @@
 @tool
-class_name WiggleModifierProperties
+@icon("icons/resource.svg")
+class_name WiggleModifierProperties3D
 extends Resource
 
 ## Defines the properties used to move the bone.
@@ -22,7 +23,7 @@ const DEFAULT_VALUES := {
 	gravity = Vector3.ZERO,
 	length = 0.1,
 	max_distance = 0.1,
-	max_degrees = 60.0,
+	max_rotation = 60.0 / 180.0 * PI,
 }
 
 ## The wiggle mode.
@@ -38,7 +39,7 @@ const DEFAULT_VALUES := {
 ## Maximum distance the bone can move around its pose position.
 @export_range(0, 1, 0.01, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance: set = set_max_distance
 ## Maximum rotation relative to pose position.
-@export_range(0, 90, 0.1, "suffix:°") var max_degrees := DEFAULT_VALUES.max_degrees: set = set_max_degrees
+@export_range(0.0, 90.0, 0.01, "radians") var max_rotation := DEFAULT_VALUES.max_rotation: set = set_max_rotation
 
 
 func _property_can_revert(property: StringName) -> bool:
@@ -57,7 +58,7 @@ func _validate_property(property: Dictionary) -> void:
 		&"max_distance":
 			property.usage = PROPERTY_VISIBLE if mode == Mode.DISLOCATION else PROPERTY_HIDDEN
 
-		&"max_degrees":
+		&"max_rotation":
 			property.usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN
 
 
@@ -94,6 +95,6 @@ func set_max_distance(value: float) -> void:
 	emit_changed()
 
 
-func set_max_degrees(value: float) -> void:
-	max_degrees = value
+func set_max_rotation(value: float) -> void:
+	max_rotation = value
 	emit_changed()
