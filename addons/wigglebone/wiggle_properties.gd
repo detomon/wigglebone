@@ -31,7 +31,7 @@ const DEFAULT_VALUES := {
 }
 
 ## The wiggle mode.
-@export_enum("Rotation", "Dislocation") var mode: int = Mode.ROTATION: set = set_mode
+@export var mode := Mode.ROTATION: set = set_mode
 ## Rendency of bone to return to pose position.
 @export_range(0, 1, 0.01) var stiffness := DEFAULT_VALUES.stiffness: set = set_stiffness
 ## Reduction of motion.
@@ -66,7 +66,7 @@ func _validate_property(property: Dictionary) -> void:
 			property.usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN
 
 
-func set_mode(value: int) -> void:
+func set_mode(value: Mode) -> void:
 	mode = value
 	notify_property_list_changed()
 	behaviour_changed.emit()
@@ -74,12 +74,12 @@ func set_mode(value: int) -> void:
 
 
 func set_stiffness(value: float) -> void:
-	stiffness = value
+	stiffness = clampf(value, 0.0, 1.0)
 	emit_changed()
 
 
 func set_damping(value: float) -> void:
-	damping = value
+	damping = clampf(value, 0.01, 1.0)
 	emit_changed()
 
 
@@ -95,10 +95,10 @@ func set_length(value: float) -> void:
 
 
 func set_max_distance(value: float) -> void:
-	max_distance = value
+	max_distance = maxf(0.0, value)
 	emit_changed()
 
 
 func set_max_degrees(value: float) -> void:
-	max_degrees = value
+	max_degrees = clampf(value, 0.0, 90.0)
 	emit_changed()

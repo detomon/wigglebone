@@ -27,13 +27,17 @@ var _point_mass_velocity := Vector3.ZERO
 var _point_mass_acceleration := Vector3.ZERO
 var _global_to_pose := Basis()
 var _prev_mass_center := Vector3.ZERO
-var _should_reset := true
 var _bone_rest_rotation := Quaternion()
 var _bone_rest_position := Vector3.ZERO
+var _should_reset := true
 
 
 func _enter_tree() -> void:
 	_fetch_bone()
+
+
+func _exit_tree() -> void:
+	_bone_idx = -1
 	reset()
 
 
@@ -44,14 +48,44 @@ func _validate_property(property: Dictionary) -> void:
 			property.hint |= PROPERTY_HINT_ENUM
 			property.hint_string = ",".join(bone_names)
 
+		&"force_global", &"force_local":
+			property.hint_string = &"suffix:m/s²"
+
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
 	if not properties:
-		warnings.append("WiggleModifierProperties3D resource is required")
+		warnings.append(tr(&"WiggleModifierProperties3D resource is required.", &"DMWB"))
 
 	return warnings
+
+
+"""
+Springs: From Hooke's law to a time based equation: https://www.youtube.com/watch?v=FZekwtIO0I4
+
+## zeta = damping ratio
+## omega = angular frequency
+static func vec3(value: Vector3, target: Vector3, velocity: Vector3, delta: float, zeta := 0.9, omega := 0.1) -> Array[Vector3]:
+	if zeta >= 1:
+		return [target, velocity]
+
+	if zeta < 0:
+		zeta = 0.0
+
+	var x0 := value - target
+	var omega_zeta := omega * zeta
+	var alpha := omega * sqrt(1.0 - zeta * zeta)
+	var _exp := exp(-delta * omega_zeta)
+	var _cos := cos(delta * alpha)
+	var _sin := sin(delta * alpha)
+	var c2 := (velocity + x0 * omega_zeta) / alpha
+
+	var position := target + _exp * (x0 * _cos + c2 * _sin)
+	var _velocity := -_exp * ((x0 * omega_zeta - c2 * alpha) * _cos + (x0 * alpha + c2 * omega_zeta) * _sin)
+
+	return [position, _velocity]
+"""
 
 
 func _process_modification() -> void:
@@ -97,7 +131,7 @@ func _process_modification() -> void:
 	var delta_limited := clampf(delta, 0.001, 0.033333)
 	var global_velocity := delta_mass_center / delta_limited
 
-	var global_force := properties.gravity + force_global + global_velocity
+	var global_force := properties.custom_gravity + force_global + global_velocity
 	var local_force := _global_to_pose * global_force + force_local
 
 	match properties.mode:
@@ -105,14 +139,14 @@ func _process_modification() -> void:
 			var mass_distance := properties.length
 			local_force = _project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
 
-	var damping := properties.damping
-	var stiffness := properties.stiffness
-
-	_point_mass_acceleration += local_force
-	_point_mass_velocity = _point_mass_velocity * (1.0 - damping) + _point_mass_acceleration * delta
-	_point_mass += _point_mass_velocity
-	_point_mass_velocity -= _point_mass * stiffness
-	_point_mass_acceleration = Vector3.ZERO
+	#var damping := properties.damping
+	#var stiffness := properties.stiffness
+#
+	#_point_mass_acceleration += local_force
+	#_point_mass_velocity = _point_mass_velocity * (1.0 - damping) + _point_mass_acceleration * delta
+	#_point_mass += _point_mass_velocity
+	#_point_mass_velocity -= _point_mass * stiffness
+	#_point_mass_acceleration = Vector3.ZERO
 
 	var pose := Transform3D()
 	var point_mass = _point_mass
@@ -200,28 +234,6 @@ func _fetch_bone() -> void:
 		_bone_rest_position = bone_rest.origin
 
 
-func _on_properties_changed() -> void:
-	update_gizmos()
-
-
-func _on_behaviour_changed() -> void:
-	reset()
-
-
-func _project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
-	return Plane(vector.normalized(), length).project(point)
-
-
-func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
-	return v.normalized() * _smin(maxf(min_length, v.length()), max_length, k)
-
-
-# https://iquilezles.org/articles/smin/
-func _smin(a: float, b: float, k: float) -> float:
-	var h := maxf(0.0, k - absf(a - b))
-	return minf(a, b) - h * h / (4.0 * k)
-
-
 func _get_sorted_skeleton_bones() -> PackedStringArray:
 	var skeleton := get_skeleton()
 	if not skeleton:
@@ -238,4 +250,26 @@ func _get_sorted_skeleton_bones() -> PackedStringArray:
 		return a.naturalcasecmp_to(b) < 0
 	)
 
-	return bone_names
+	return PackedStringArray(bone_names)
+
+
+func _project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
+	return Plane(vector.normalized(), length).project(point)
+
+
+func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
+	return v.normalized() * _smin(maxf(min_length, v.length()), max_length, k)
+
+
+# https://iquilezles.org/articles/smin/
+func _smin(a: float, b: float, k: float) -> float:
+	var h := maxf(0.0, k - absf(a - b))
+	return minf(a, b) - h * h / (4.0 * k)
+
+
+func _on_properties_changed() -> void:
+	update_gizmos()
+
+
+func _on_behaviour_changed() -> void:
+	reset()

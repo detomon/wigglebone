@@ -6,9 +6,10 @@
 resource_name = "Trunk"
 script = ExtResource("1_lrolf")
 mode = 0
-stiffness = 0.2
+frequency = 3.0
 damping = 0.3
-gravity = Vector3(0, 0, 0)
 length = 1.5
 max_distance = 0.1
 max_rotation = 0.523599
+use_global_gravity = false
+custom_gravity = Vector3(0, 0, 0)
