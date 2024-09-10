@@ -20,6 +20,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 	_handle_position = handle_position
 
 	if not _handle_dragging:
+		_force_global = node.force_global
 		_handle_init_position = handle_position
 		_handle_dragging = true
 
@@ -30,7 +31,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
 	var node: WiggleModifier3D = gizmo.get_node_3d()
 
-	node.force_global = Vector3.ZERO
+	node.force_global = _force_global
 	_handle_init_position = Vector3.ZERO
 	_handle_position = Vector3.ZERO
 	_handle_dragging = false

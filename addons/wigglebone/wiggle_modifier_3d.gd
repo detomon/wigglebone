@@ -22,14 +22,17 @@ const SOFT_LIMIT_FACTOR := 0.5
 @export var force_local := Vector3.ZERO
 
 var _bone_idx := -1
-var _point_mass := Vector3.ZERO
-var _point_mass_velocity := Vector3.ZERO
-var _point_mass_acceleration := Vector3.ZERO
+#var _point_mass := Vector3.ZERO
+#var _point_mass_velocity := Vector3.ZERO
+#var _point_mass_acceleration := Vector3.ZERO
 var _global_to_pose := Basis()
 var _prev_mass_center := Vector3.ZERO
 var _bone_rest_rotation := Quaternion()
 var _bone_rest_position := Vector3.ZERO
 var _should_reset := true
+
+var _rotation := Quaternion()
+var _velocity := Vector3.ZERO
 
 
 func _enter_tree() -> void:
@@ -62,29 +65,18 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 """
-Springs: From Hooke's law to a time based equation: https://www.youtube.com/watch?v=FZekwtIO0I4
-
-## zeta = damping ratio
-## omega = angular frequency
-static func vec3(value: Vector3, target: Vector3, velocity: Vector3, delta: float, zeta := 0.9, omega := 0.1) -> Array[Vector3]:
-	if zeta >= 1:
-		return [target, velocity]
-
-	if zeta < 0:
-		zeta = 0.0
-
+func _spring_no_damping(value: Vector3, target: Vector3, velocity: Vector3, delta: float, frequency: float) -> void:
 	var x0 := value - target
-	var omega_zeta := omega * zeta
-	var alpha := omega * sqrt(1.0 - zeta * zeta)
-	var _exp := exp(-delta * omega_zeta)
-	var _cos := cos(delta * alpha)
-	var _sin := sin(delta * alpha)
-	var c2 := (velocity + x0 * omega_zeta) / alpha
+	var alpha := frequency
+	var cos_ := cos(delta * alpha)
+	var sin_ := sin(delta * alpha)
+	var c2 := velocity / alpha
 
-	var position := target + _exp * (x0 * _cos + c2 * _sin)
-	var _velocity := -_exp * ((x0 * omega_zeta - c2 * alpha) * _cos + (x0 * alpha + c2 * omega_zeta) * _sin)
+	var pos := target + (x0 * cos_ + c2 * sin_)
+	var vel := (c2 * cos_ - x0 * sin_) * alpha
 
-	return [position, _velocity]
+	_position = pos
+	_velocity = vel
 """
 
 
@@ -92,8 +84,8 @@ func _process_modification() -> void:
 	if not properties or _bone_idx < 0:
 		return
 
-	var skeleton := get_skeleton()
 	var delta := 0.0
+	var skeleton := get_skeleton()
 
 	match skeleton.modifier_callback_mode_process:
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
@@ -101,6 +93,25 @@ func _process_modification() -> void:
 
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_PHYSICS:
 			delta = get_physics_process_delta_time()
+
+	var force := force_global + properties.get_gravity()
+	_velocity += force * delta
+
+	var mass := _rotation * Vector3.UP
+	var mass_next := (mass + _velocity).normalized()
+	var rotation_delta := Quaternion(mass, mass_next)
+
+	_rotation = Quaternion(Vector3.UP, mass_next)
+	_velocity = rotation_delta * _velocity
+	# Limit velocity.
+	_velocity = _velocity.limit_length(1.0)
+
+	var velocity_decay := remap(properties.damping, 0.0, 1.0, 0.0, 25.0)
+	_velocity *= exp(-velocity_decay * delta)
+
+	skeleton.set_bone_pose_rotation(_bone_idx, _rotation)
+
+	# ---
 
 	var bone_pose := skeleton.get_bone_pose(_bone_idx)
 	var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
@@ -110,74 +121,99 @@ func _process_modification() -> void:
 		parent_pose = skeleton.get_bone_global_pose(parent_bone_idx)
 		bone_pose = parent_pose * bone_pose
 
-	var global_bone_pose := skeleton.global_transform * bone_pose
-	_global_to_pose = global_bone_pose.basis.inverse()
+	global_transform = skeleton.global_transform * bone_pose
 
-	var mass_center := Vector3.ZERO
 
-	match properties.mode:
-		WiggleModifierProperties3D.Mode.ROTATION:
-			mass_center = Vector3.UP * properties.length
-
-	mass_center = global_bone_pose * mass_center
-	var delta_mass_center := _prev_mass_center - mass_center
-	_prev_mass_center = mass_center
-
-	if _should_reset:
-		delta_mass_center = Vector3.ZERO
-		_prev_mass_center = Vector3.ZERO
-		_should_reset = false
-
-	var delta_limited := clampf(delta, 0.001, 0.033333)
-	var global_velocity := delta_mass_center / delta_limited
-
-	var global_force := properties.custom_gravity + force_global + global_velocity
-	var local_force := _global_to_pose * global_force + force_local
-
-	match properties.mode:
-		WiggleModifierProperties3D.Mode.ROTATION:
-			var mass_distance := properties.length
-			local_force = _project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
-
-	#var damping := properties.damping
-	#var stiffness := properties.stiffness
+#func _process_modification() -> void:
+	#if not properties or _bone_idx < 0:
+		#return
 #
-	#_point_mass_acceleration += local_force
-	#_point_mass_velocity = _point_mass_velocity * (1.0 - damping) + _point_mass_acceleration * delta
-	#_point_mass += _point_mass_velocity
-	#_point_mass_velocity -= _point_mass * stiffness
-	#_point_mass_acceleration = Vector3.ZERO
-
-	var pose := Transform3D()
-	var point_mass = _point_mass
-
-	match properties.mode:
-		WiggleModifierProperties3D.Mode.ROTATION:
-			var mass_distance := properties.length
-			var angular_offset := Vector2.RIGHT.rotated(properties.max_rotation).distance_to(Vector2.RIGHT)
-			var angular_limit := angular_offset * mass_distance
-			var k := angular_limit * SOFT_LIMIT_FACTOR
-			var mass_constrained := _clamp_length_soft(point_mass, 0.0, angular_limit, k)
-
-			var mass_local := (Vector3.UP * properties.length) + mass_constrained
-			var relative_rotation := Quaternion(Vector3.UP, mass_local.normalized())
-
-			var bone_rotation := _bone_rest_rotation * relative_rotation
-			skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
-
-			pose.basis = Basis(relative_rotation)
-
-		WiggleModifierProperties3D.Mode.DISLOCATION:
-			var k := properties.max_distance * SOFT_LIMIT_FACTOR
-			var mass_constrained := _clamp_length_soft(point_mass, 0.0, properties.max_distance, k)
-
-			var bone_position := _bone_rest_position + _bone_rest_rotation * mass_constrained
-			skeleton.set_bone_pose_position(_bone_idx, bone_position)
-
-			pose.origin = bone_position
-
-	pose = bone_pose * pose
-	global_transform = skeleton.global_transform * pose
+	#var skeleton := get_skeleton()
+	#var delta := 0.0
+#
+	#match skeleton.modifier_callback_mode_process:
+		#Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
+			#delta = get_process_delta_time()
+#
+		#Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_PHYSICS:
+			#delta = get_physics_process_delta_time()
+#
+	#var bone_pose := skeleton.get_bone_pose(_bone_idx)
+	#var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
+	#var parent_pose := Transform3D()
+#
+	#if parent_bone_idx >= 0:
+		#parent_pose = skeleton.get_bone_global_pose(parent_bone_idx)
+		#bone_pose = parent_pose * bone_pose
+#
+	#var global_bone_pose := skeleton.global_transform * bone_pose
+	#_global_to_pose = global_bone_pose.basis.inverse()
+#
+	#var mass_center := Vector3.ZERO
+#
+	#match properties.mode:
+		#WiggleModifierProperties3D.Mode.ROTATION:
+			#mass_center = Vector3.UP * properties.length
+#
+	#mass_center = global_bone_pose * mass_center
+	#var delta_mass_center := _prev_mass_center - mass_center
+	#_prev_mass_center = mass_center
+#
+	#if _should_reset:
+		#delta_mass_center = Vector3.ZERO
+		#_prev_mass_center = Vector3.ZERO
+		#_should_reset = false
+#
+	#var delta_limited := clampf(delta, 0.001, 0.033333)
+	#var global_velocity := delta_mass_center / delta_limited
+#
+	#var global_force := properties.custom_gravity + force_global + global_velocity
+	#var local_force := _global_to_pose * global_force + force_local
+#
+	#match properties.mode:
+		#WiggleModifierProperties3D.Mode.ROTATION:
+			#var mass_distance := properties.length
+			#local_force = _project_to_vector_plane(Vector3.ZERO, mass_distance, local_force)
+#
+	##var damping := properties.damping
+	##var stiffness := properties.stiffness
+##
+	##_point_mass_acceleration += local_force
+	##_point_mass_velocity = _point_mass_velocity * (1.0 - damping) + _point_mass_acceleration * delta
+	##_point_mass += _point_mass_velocity
+	##_point_mass_velocity -= _point_mass * stiffness
+	##_point_mass_acceleration = Vector3.ZERO
+#
+	#var pose := Transform3D()
+	#var point_mass = _point_mass
+#
+	#match properties.mode:
+		#WiggleModifierProperties3D.Mode.ROTATION:
+			#var mass_distance := properties.length
+			#var angular_offset := Vector2.RIGHT.rotated(properties.max_rotation).distance_to(Vector2.RIGHT)
+			#var angular_limit := angular_offset * mass_distance
+			#var k := angular_limit * SOFT_LIMIT_FACTOR
+			#var mass_constrained := _clamp_length_soft(point_mass, 0.0, angular_limit, k)
+#
+			#var mass_local := (Vector3.UP * properties.length) + mass_constrained
+			#var relative_rotation := Quaternion(Vector3.UP, mass_local.normalized())
+#
+			#var bone_rotation := _bone_rest_rotation * relative_rotation
+			#skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
+#
+			#pose.basis = Basis(relative_rotation)
+#
+		#WiggleModifierProperties3D.Mode.DISLOCATION:
+			#var k := properties.max_distance * SOFT_LIMIT_FACTOR
+			#var mass_constrained := _clamp_length_soft(point_mass, 0.0, properties.max_distance, k)
+#
+			#var bone_position := _bone_rest_position + _bone_rest_rotation * mass_constrained
+			#skeleton.set_bone_pose_position(_bone_idx, bone_position)
+#
+			#pose.origin = bone_position
+#
+	#pose = bone_pose * pose
+	#global_transform = skeleton.global_transform * pose
 
 
 func set_properties(value: WiggleModifierProperties3D) -> void:
@@ -207,17 +243,17 @@ func set_bone_name(value: String) -> void:
 	update_gizmos()
 
 
-func apply_impulse(impulse: Vector3, global := false) -> void:
-	if global:
-		impulse = _global_to_pose * impulse
-
-	_point_mass_acceleration += impulse
+#func apply_impulse(impulse: Vector3, global := false) -> void:
+	#if global:
+		#impulse = _global_to_pose * impulse
+#
+	#_point_mass_acceleration += impulse
 
 
 func reset() -> void:
-	_point_mass = Vector3.ZERO
-	_point_mass_velocity = Vector3.ZERO
-	_point_mass_acceleration = Vector3.ZERO
+	#_point_mass = Vector3.ZERO
+	#_point_mass_velocity = Vector3.ZERO
+	#_point_mass_acceleration = Vector3.ZERO
 	_should_reset = true
 
 
@@ -251,20 +287,6 @@ func _get_sorted_skeleton_bones() -> PackedStringArray:
 	)
 
 	return PackedStringArray(bone_names)
-
-
-func _project_to_vector_plane(vector: Vector3, length: float, point: Vector3) -> Vector3:
-	return Plane(vector.normalized(), length).project(point)
-
-
-func _clamp_length_soft(v: Vector3, min_length: float, max_length: float, k: float) -> Vector3:
-	return v.normalized() * _smin(maxf(min_length, v.length()), max_length, k)
-
-
-# https://iquilezles.org/articles/smin/
-func _smin(a: float, b: float, k: float) -> float:
-	var h := maxf(0.0, k - absf(a - b))
-	return minf(a, b) - h * h / (4.0 * k)
 
 
 func _on_properties_changed() -> void:

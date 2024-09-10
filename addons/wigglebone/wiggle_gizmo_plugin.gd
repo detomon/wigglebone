@@ -10,6 +10,7 @@ var _handle_position := Vector3.ZERO
 var _handle_dragging := false
 var _cone_lines := _generate_cone_lines()
 var _sphere_lines := _generate_sphere_lines()
+var _force_global := Vector3.ZERO
 
 
 func _init() -> void:
@@ -53,6 +54,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 	_handle_position = handle_position
 
 	if not _handle_dragging:
+		_force_global = node.const_force_global
 		_handle_init_position = handle_position
 		_handle_dragging = true
 
@@ -63,7 +65,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
 	var node: WiggleBone = gizmo.get_node_3d()
 
-	node.const_force_global = Vector3.ZERO
+	node.const_force_global = _force_global
 	_handle_init_position = Vector3.ZERO
 	_handle_position = Vector3.ZERO
 	_handle_dragging = false

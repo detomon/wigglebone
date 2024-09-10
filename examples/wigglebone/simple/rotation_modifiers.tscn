@@ -1,0 +1,53 @@
+[gd_scene load_steps=5 format=3 uid="uid://bgf0pfeftthp5"]
+
+[ext_resource type="Script" path="res://examples/wigglebone/simple/skeleton.gd" id="1_tk6k5"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_3d.gd" id="2_rm3gx"]
+[ext_resource type="Resource" uid="uid://barqjxeafyjad" path="res://examples/wigglebone/simple/rotation_modifiers.tres" id="3_41hci"]
+[ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_r8r5v"]
+
+[node name="Rotation" type="Node3D"]
+
+[node name="Skeleton3D" type="Skeleton3D" parent="."]
+bones/0/name = "bone1"
+bones/0/parent = -1
+bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/0/enabled = true
+bones/0/position = Vector3(0, 0, 0)
+bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/scale = Vector3(1, 1, 1)
+bones/1/name = "end"
+bones/1/parent = 0
+bones/1/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+bones/1/enabled = true
+bones/1/position = Vector3(0, 0.5, 0)
+bones/1/rotation = Quaternion(0, 0, 0, 1)
+bones/1/scale = Vector3(1, 1, 1)
+script = ExtResource("1_tk6k5")
+
+[node name="WiggleModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(1, -9.14327e-11, -5.98966e-21, 9.14327e-11, 1, 1.31018e-10, -5.98966e-21, -1.31018e-10, 1, 0, 0, 0)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_rm3gx")
+bone_name = "bone1"
+properties = ExtResource("3_41hci")
+
+[node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleModifier"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = ExtResource("4_r8r5v")
+skeleton = NodePath("")
+metadata/_edit_lock_ = true

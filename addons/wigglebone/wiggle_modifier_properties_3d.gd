@@ -35,12 +35,12 @@ const DEFAULT_VALUES := {
 ## [br][br]
 ## [b]Note:[/b] Setting a damping factor near [code]0.0[/code] and having a [member frequency] near
 ## the process frequency may cause a resonance effect.
-@export_range(0.01, 1, 0.01) var damping := DEFAULT_VALUES.damping: set = set_damping
+@export_range(0.0, 1.0, 0.001) var damping := DEFAULT_VALUES.damping: set = set_damping
 ## The bone length.
-@export_range(0.01, 1, 0.01, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
+@export_range(0.01, 1, 0.001, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
 	set = set_length
 ## Maximum distance the bone can move around its pose position.
-@export_range(0, 1, 0.01, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance:
+@export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance:
 	set = set_max_distance
 ## Maximum rotation relative to the pose position.
 @export_range(0.0, 90.0, 0.01, "radians") var max_rotation := DEFAULT_VALUES.max_rotation:
