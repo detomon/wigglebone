@@ -1,18 +1,20 @@
 @tool
 extends "wiggle_gizmo_plugin.gd"
 
+const FORCE_MULTIPLIER := 50.0
+
 
 func _has_gizmo(spatial: Node3D) -> bool:
-	return spatial is WiggleModifier3D
+	return spatial is WiggleRotationModifier3D
 
 
 func _get_gizmo_name() -> String:
-	return "WiggleModifier"
+	return "WiggleRotationModifier3D"
 
 
 func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, camera: Camera3D, point: Vector2) -> void:
-	var node: WiggleModifier3D = gizmo.get_node_3d()
-	var properties: WiggleModifierProperties3D = node.properties
+	var node: WiggleRotationModifier3D = gizmo.get_node_3d()
+	var properties: WiggleRotationProperties3D = node.properties
 	var handle_position := _get_modifier_handle_position(properties)
 	var depth := handle_position.distance_to(camera.global_transform.origin)
 
@@ -25,11 +27,13 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 		_handle_dragging = true
 
 	var force := handle_position - _handle_init_position
-	node.force_global = force
+	var force_multiplier := properties.length * maxf(1.0, properties.frequency) * FORCE_MULTIPLIER
+
+	node.force_global = force * force_multiplier
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
-	var node: WiggleModifier3D = gizmo.get_node_3d()
+	var node: WiggleRotationModifier3D = gizmo.get_node_3d()
 
 	node.force_global = _force_global
 	_handle_init_position = Vector3.ZERO
@@ -38,31 +42,19 @@ func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool,
 
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
-	var node: WiggleModifier3D = gizmo.get_node_3d()
-	var properties: WiggleModifierProperties3D = node.properties
+	var node: WiggleRotationModifier3D = gizmo.get_node_3d()
+	var properties: WiggleRotationProperties3D = node.properties
 
 	gizmo.clear()
 
 	if not properties:
 		return
 
-	match properties.mode:
-		WiggleModifierProperties3D.Mode.ROTATION:
-			_draw_cone(gizmo, properties.max_rotation, properties.length)
-
-		WiggleModifierProperties3D.Mode.DISLOCATION:
-			_draw_sphere(gizmo, properties.max_distance)
+	_draw_cone(gizmo, properties.max_rotation, properties.length)
 
 	var handle_position := _get_modifier_handle_position(properties)
 	gizmo.add_handles([handle_position], get_material("handles"), [HandleID.FORCE])
 
 
-func _get_modifier_handle_position(properties: WiggleModifierProperties3D) -> Vector3:
-	match properties.mode:
-		WiggleModifierProperties3D.Mode.ROTATION:
-			return Vector3.UP * properties.length
-
-		WiggleModifierProperties3D.Mode.DISLOCATION:
-			return Vector3.ZERO
-
-	return Vector3.ZERO
+func _get_modifier_handle_position(properties: WiggleRotationProperties3D) -> Vector3:
+	return Vector3.UP * properties.length

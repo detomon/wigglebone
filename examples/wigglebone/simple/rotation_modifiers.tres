@@ -1,15 +1,13 @@
-[gd_resource type="Resource" script_class="WiggleModifierProperties3D" load_steps=2 format=3 uid="uid://barqjxeafyjad"]
+[gd_resource type="Resource" script_class="WiggleRotationProperties3D" load_steps=2 format=3 uid="uid://barqjxeafyjad"]
 
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_properties_3d.gd" id="1_3kjqh"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_properties_3d.gd" id="1_3kjqh"]
 
 [resource]
 resource_name = "Rotation"
 script = ExtResource("1_3kjqh")
-mode = 0
-frequency = 3.0
+frequency = 1.0
 damping = 0.1
-length = 0.5
-max_distance = 0.1
+length = 0.1
 max_rotation = 1.0472
 use_global_gravity = false
-custom_gravity = Vector3(0, 0.5, 0)
+custom_gravity = Vector3(0, 0, 0)

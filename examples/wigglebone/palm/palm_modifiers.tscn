@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://cnaxcfibm3xf8"]
 
 [ext_resource type="PackedScene" uid="uid://f8xayu7qvbjy" path="res://examples/wigglebone/palm/palm.gltf" id="1_agxe0"]
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_3d.gd" id="2_tjql0"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_tjql0"]
 [ext_resource type="Resource" uid="uid://bmfyj215rtl0m" path="res://examples/wigglebone/palm/trunk_modifier.tres" id="3_3ngce"]
 [ext_resource type="Resource" uid="uid://bw5j67uuj618u" path="res://examples/wigglebone/palm/leave_modifier.tres" id="4_12oac"]
 

@@ -1,47 +1,31 @@
 @tool
-@icon("icons/resource.svg")
-class_name WiggleModifierProperties3D
+@icon("icons/resource_spring.svg")
+class_name WiggleRotationProperties3D
 extends Resource
 
 ## Defines the properties used to move the bone.
 
-## Emitted when the behaviour changed.
-signal behaviour_changed()
-
-## The wiggle mode.
-enum Mode {
-	ROTATION,    ## Rotates the bone around its origin.
-	DISLOCATION, ## Moves the bone around its origin.
-}
-
 const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
 const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
-	mode = Mode.ROTATION,
 	frequency = 3.0,
 	damping = 0.1,
 	gravity = Vector3.ZERO,
 	length = 0.1,
-	max_distance = 0.1,
 	max_rotation = 60.0 / 180.0 * PI,
 }
 
-## The wiggle mode.
-@export var mode := Mode.ROTATION: set = set_mode
 ## Spring frequency without damping.
+## [br][br]
+## [b]Note:[/b] Setting a value above [code]15[/code] may cause a resonance effect with the process
+## frequency.
 @export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var frequency := DEFAULT_VALUES.frequency:
 	set = set_frequency
-## Damping factor.
-## [br][br]
-## [b]Note:[/b] Setting a damping factor near [code]0.0[/code] and having a [member frequency] near
-## the process frequency may cause a resonance effect.
-@export_range(0.0, 1.0, 0.001) var damping := DEFAULT_VALUES.damping: set = set_damping
-## The bone length.
+## Damping factor. Can be greater than [code]1.0[/code] to have even more influence.
+@export_range(0.0, 1.0, 0.001, "or_greater") var damping := DEFAULT_VALUES.damping: set = set_damping
+## The bone length. This influences, how much of the global movement is applied to the rotation.
 @export_range(0.01, 1, 0.001, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
 	set = set_length
-## Maximum distance the bone can move around its pose position.
-@export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance:
-	set = set_max_distance
 ## Maximum rotation relative to the pose position.
 @export_range(0.0, 90.0, 0.01, "radians") var max_rotation := DEFAULT_VALUES.max_rotation:
 	set = set_max_rotation
@@ -70,25 +54,12 @@ func _property_get_revert(property: StringName) -> Variant:
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
-		&"length":
-			property.usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN
-
-		&"max_distance":
-			property.usage = PROPERTY_VISIBLE if mode == Mode.DISLOCATION else PROPERTY_HIDDEN
-
-		&"max_rotation":
-			property.usage = PROPERTY_VISIBLE if mode == Mode.ROTATION else PROPERTY_HIDDEN
+		&"set_max_rotation":
+			property.usage = PROPERTY_HIDDEN
 
 		&"custom_gravity":
 			property.usage = PROPERTY_HIDDEN if use_global_gravity else PROPERTY_VISIBLE
 			property.hint_string = &"suffix:m/s²"
-
-
-func set_mode(value: Mode) -> void:
-	mode = value
-	behaviour_changed.emit()
-	emit_changed()
-	notify_property_list_changed()
 
 
 func set_frequency(value: float) -> void:
@@ -98,19 +69,13 @@ func set_frequency(value: float) -> void:
 
 
 func set_damping(value: float) -> void:
-	damping = clampf(value, 0.0, 1.0)
+	damping = maxf(0.0, value)
 	_update_values()
 	emit_changed()
 
 
 func set_length(value: float) -> void:
 	length = maxf(0.01, value)
-	behaviour_changed.emit()
-	emit_changed()
-
-
-func set_max_distance(value: float) -> void:
-	max_distance = value
 	emit_changed()
 
 
@@ -121,6 +86,7 @@ func set_max_rotation(value: float) -> void:
 
 func set_use_global_gravity(value: bool) -> void:
 	use_global_gravity = value
+	_update_gravity()
 	emit_changed()
 	notify_property_list_changed()
 

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="WiggleModifierProperties3D" load_steps=2 format=3 uid="uid://bw5j67uuj618u"]
 
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_properties_3d.gd" id="1_ommx4"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_properties_3d.gd" id="1_ommx4"]
 
 [resource]
 resource_name = "Leave"

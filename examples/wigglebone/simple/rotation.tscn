@@ -13,7 +13,7 @@ bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 bones/0/enabled = true
 bones/0/position = Vector3(0, 0, 0)
-bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/rotation = Quaternion(0, 0, -7.72642e-09, 1)
 bones/0/scale = Vector3(1, 1, 1)
 bones/1/name = "end"
 bones/1/parent = 0
@@ -25,6 +25,7 @@ bones/1/scale = Vector3(1, 1, 1)
 script = ExtResource("1_s6cld")
 
 [node name="WiggleBone" type="BoneAttachment3D" parent="Skeleton3D"]
+transform = Transform3D(1, 1.54528e-08, 0, -1.54528e-08, 1, 0, 0, 0, 1, 0, 0, 0)
 bone_name = "bone1"
 bone_idx = 0
 script = ExtResource("4")

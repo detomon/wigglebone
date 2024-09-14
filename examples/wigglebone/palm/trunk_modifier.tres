@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="WiggleModifierProperties3D" load_steps=2 format=3 uid="uid://bmfyj215rtl0m"]
 
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_modifier_properties_3d.gd" id="1_lrolf"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_properties_3d.gd" id="1_lrolf"]
 
 [resource]
 resource_name = "Trunk"

@@ -9,88 +9,89 @@
 
 [node name="Skeleton3D" parent="Armature" index="0"]
 modifier_callback_mode_process = 0
-bones/5/rotation = Quaternion(nan, nan, nan, nan)
+bones/3/rotation = Quaternion(3.11605e-06, 0, -3.65028e-06, 1)
+bones/5/rotation = Quaternion(0.61928, -0.558682, -0.533454, -0.140693)
 bones/5/scale = Vector3(1, 1, 1)
-bones/6/rotation = Quaternion(nan, nan, nan, nan)
+bones/6/rotation = Quaternion(0.479974, 0.631419, 0.599153, -0.109321)
 bones/6/scale = Vector3(1, 1, 1)
-bones/7/rotation = Quaternion(nan, nan, nan, nan)
+bones/7/rotation = Quaternion(-0.760162, 0.140032, 0.136777, 0.619546)
 bones/7/scale = Vector3(1, 1, 1)
-bones/8/rotation = Quaternion(nan, nan, nan, nan)
+bones/8/rotation = Quaternion(0.710611, 0.364987, 0.349651, -0.489449)
 bones/8/scale = Vector3(1, 1, 1)
-bones/9/rotation = Quaternion(nan, nan, nan, nan)
-bones/10/rotation = Quaternion(nan, nan, nan, nan)
-bones/11/rotation = Quaternion(nan, nan, nan, nan)
+bones/9/rotation = Quaternion(-0.667649, -0.165967, -0.166713, 0.706333)
+bones/10/rotation = Quaternion(0.647489, -0.433735, -0.422222, -0.46299)
+bones/11/rotation = Quaternion(-0.123647, 0.647552, 0.653179, 0.372486)
 bones/11/scale = Vector3(1, 1, 1)
-bones/12/rotation = Quaternion(nan, nan, nan, nan)
+bones/12/rotation = Quaternion(0.335214, 0.572901, 0.579194, -0.473233)
 bones/12/scale = Vector3(1, 1, 1)
-bones/13/rotation = Quaternion(nan, nan, nan, nan)
+bones/13/rotation = Quaternion(0.722242, 0.32906, 0.326943, 0.513025)
 bones/13/scale = Vector3(1, 1, 1)
 
 [node name="BoneTrunk" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3782, 0)
+transform = Transform3D(1, 7.30056e-06, -2.27489e-11, -7.30056e-06, 1, -6.23211e-06, -2.27489e-11, 6.23211e-06, 1, 0, 2.3782, 0)
 bone_name = "trunk.004"
 bone_idx = 3
 script = ExtResource("2")
 properties = ExtResource("4")
 
 [node name="BoneLeave0" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="3"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, -0.0552611, 3.58206, -0.0336869)
+transform = Transform3D(-0.1934, -0.842069, -0.503503, -0.541847, -0.336157, 0.770325, -0.817923, 0.421803, -0.391261, -0.0552523, 3.58206, -0.0336794)
 bone_name = "leave.000"
 bone_idx = 5
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave1" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="4"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, -0.0552611, 3.56063, -0.0336869)
+transform = Transform3D(0.923366, -0.382375, -0.0344263, -0.0434184, -0.193099, 0.980218, -0.381458, -0.903605, -0.194903, -0.0552525, 3.56063, -0.0336795)
 bone_name = "leave.001"
 bone_idx = 7
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave2" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="5"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, -0.00715804, 3.84572, 0.0350318)
+transform = Transform3D(-0.691929, -0.646735, 0.320887, 0.326473, 0.116138, 0.938044, -0.643933, 0.753821, 0.130783, -0.00714732, 3.84572, 0.035041)
 bone_name = "leave.002"
 bone_idx = 11
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave3" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="6"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, -0.0552611, 3.51753, -0.0336869)
+transform = Transform3D(-0.515344, 0.737128, 0.437107, 0.475129, -0.178728, 0.861573, 0.713214, 0.651688, -0.258124, -0.0552528, 3.51753, -0.0336798)
 bone_name = "leave.003"
 bone_idx = 6
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave4" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="7"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, 0.0272013, 3.86988, 0.0487756)
+transform = Transform3D(0.569661, 0.139861, 0.809892, 0.810777, -0.257057, -0.525892, 0.134637, 0.956222, -0.259831, 0.0272122, 3.86988, 0.0487848)
 bone_name = "leave.004"
 bone_idx = 13
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave5" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="8"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, 0.0272013, 3.86988, 0.0487756)
+transform = Transform3D(0.489059, 0.860998, 0.139654, 0.176446, -0.254453, 0.950853, 0.854218, -0.440381, -0.276362, 0.0272122, 3.86988, 0.0487848)
 bone_name = "leave.005"
 bone_idx = 8
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave6" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="9"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, -0.0209018, 3.84572, -0.0611744)
+transform = Transform3D(0.889324, 0.457125, -0.0118374, -0.0139034, 0.0529052, 0.998503, 0.457067, -0.887828, 0.0534054, -0.0208911, 3.84572, -0.0611652)
 bone_name = "leave.006"
 bone_idx = 9
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave7" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="10"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, 0.0478169, 3.84572, -0.0474306)
+transform = Transform3D(-0.327365, 0.932278, -0.153917, -0.164102, 0.104322, 0.980912, 0.930539, 0.346374, 0.118837, 0.0478276, 3.84572, -0.0474215)
 bone_name = "leave.007"
 bone_idx = 12
 script = ExtResource("2")
 properties = ExtResource("3")
 
 [node name="BoneLeave8" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="11"]
-transform = Transform3D(nan, nan, nan, nan, nan, nan, nan, nan, nan, -0.0552611, 3.84572, -0.0336869)
+transform = Transform3D(0.267203, -0.952649, -0.145131, -0.170704, -0.195019, 0.96583, -0.9484, -0.233298, -0.214731, -0.0552504, 3.84572, -0.0336777)
 bone_name = "leave"
 bone_idx = 10
 script = ExtResource("2")
