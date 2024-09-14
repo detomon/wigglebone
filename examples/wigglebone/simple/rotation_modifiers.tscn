@@ -8,20 +8,27 @@
 [node name="Rotation" type="Node3D"]
 
 [node name="Skeleton3D" type="Skeleton3D" parent="."]
-bones/0/name = "bone1"
+bones/0/name = "bone0"
 bones/0/parent = -1
-bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/0/rest = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -1)
 bones/0/enabled = true
-bones/0/position = Vector3(0, 0, 0)
-bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/position = Vector3(0, 0, -1)
+bones/0/rotation = Quaternion(0.707107, 0, 0, 0.707107)
 bones/0/scale = Vector3(1, 1, 1)
-bones/1/name = "end"
+bones/1/name = "bone1"
 bones/1/parent = 0
-bones/1/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+bones/1/rest = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 1, -4.37114e-08)
 bones/1/enabled = true
-bones/1/position = Vector3(0, 0.5, 0)
-bones/1/rotation = Quaternion(0, 0, 0, 1)
+bones/1/position = Vector3(0, 1, -4.37114e-08)
+bones/1/rotation = Quaternion(-0.707107, 0, 0, 0.707107)
 bones/1/scale = Vector3(1, 1, 1)
+bones/2/name = "end"
+bones/2/parent = 1
+bones/2/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+bones/2/enabled = true
+bones/2/position = Vector3(0, 0.5, 0)
+bones/2/rotation = Quaternion(0, 0, 0, 1)
+bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_tk6k5")
 
 [node name="WiggleRotationModifier3D" type="SkeletonModifier3D" parent="Skeleton3D"]
@@ -34,7 +41,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, -3.18955e-07, -1.26994e-08, 3.18955e-07, 0.996834, 0.0795052, -1.26994e-08, -0.0795052, 0.996834, 0, 0, 0)
+transform = Transform3D(-0.591375, -5.96046e-08, -0.806397, -5.96046e-08, 1, 0, 0.806397, 0, -0.591375, 0, 4.37114e-08, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false
@@ -62,7 +69,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, -4.20174e-07, 1.51795e-08, 4.20107e-07, 0.999991, 0.00418787, -1.6939e-08, -0.00418787, 0.999991, -1.59477e-07, 0.498417, -0.0397526)
+transform = Transform3D(-0.0428201, 0.997375, -0.0583891, 0.589823, 0.0724075, 0.80428, 0.806397, 0, -0.591375, -2.98023e-08, 0.5, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false

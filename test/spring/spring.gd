@@ -122,6 +122,10 @@ func set_relative_to_node(value: Node3D) -> void:
 
 
 func _update(delta: float) -> void:
+	# Test lag
+	#if randf_range(0.0., 1.0) < 0.02:
+		#delta *= 5.0
+
 	var force := force_gravity
 	if force_use_global_gravity:
 		force = _global_gravity

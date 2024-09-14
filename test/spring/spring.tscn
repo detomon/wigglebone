@@ -71,7 +71,7 @@ script = ExtResource("1_fbgp7")
 force_gravity = Vector3(0, -9.81, 0)
 
 [node name="Weight" type="MeshInstance3D" parent="Pivot/Spring"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2039e-45, -0.0300153, -2.8026e-45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0300153, 0)
 top_level = true
 mesh = SubResource("SphereMesh_88bgo")
 metadata/_edit_lock_ = true
