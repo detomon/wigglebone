@@ -1,15 +1,14 @@
-[gd_resource type="Resource" script_class="WiggleModifierProperties3D" load_steps=2 format=3 uid="uid://bmfyj215rtl0m"]
+[gd_resource type="Resource" script_class="WiggleRotationProperties3D" load_steps=2 format=3 uid="uid://bmfyj215rtl0m"]
 
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_properties_3d.gd" id="1_lrolf"]
 
 [resource]
 resource_name = "Trunk"
 script = ExtResource("1_lrolf")
-mode = 0
-frequency = 3.0
+frequency = 2.0
 damping = 0.3
-length = 1.5
-max_distance = 0.1
+length = 0.5
 max_rotation = 0.523599
 use_global_gravity = false
 custom_gravity = Vector3(0, 0, 0)
+handle_distance = 0.1

@@ -8,7 +8,7 @@ extends Resource
 const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
 const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
-	frequency = 3.0,
+	frequency = 2.0,
 	damping = 0.2,
 	gravity = Vector3.ZERO,
 	length = 0.1,
@@ -16,11 +16,11 @@ const DEFAULT_VALUES := {
 	handle_distance = 0.1,
 }
 
-## Spring frequency without damping and forces. If [code]0.0[/code], the bone is able to rotate
+## Spring frequency without damping and forces. The frequency may change if forces are applied.
+## If [code]0.0[/code], the bone is able to rotate
 ## freely.
 ## [br][br]
-## [b]Note:[/b] Setting a value above [code]15[/code] may cause a resonance effect with the process
-## frequency.
+## [b]Note:[/b] Setting a very high value may cause the spring to become unstable.
 @export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var frequency := DEFAULT_VALUES.frequency:
 	set = set_frequency
 ## Damping factor. Can be greater than [code]1.0[/code] to have even more influence.

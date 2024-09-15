@@ -1,15 +1,14 @@
-[gd_resource type="Resource" script_class="WiggleModifierProperties3D" load_steps=2 format=3 uid="uid://bw5j67uuj618u"]
+[gd_resource type="Resource" script_class="WiggleRotationProperties3D" load_steps=2 format=3 uid="uid://bw5j67uuj618u"]
 
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_properties_3d.gd" id="1_ommx4"]
 
 [resource]
 resource_name = "Leave"
 script = ExtResource("1_ommx4")
-mode = 0
-frequency = 3.0
-damping = 0.2
-length = 1.5
-max_distance = 0.1
+frequency = 2.0
+damping = 0.4
+length = 0.2
 max_rotation = 0.523599
 use_global_gravity = false
 custom_gravity = Vector3(0, 0, 0)
+handle_distance = 0.1
