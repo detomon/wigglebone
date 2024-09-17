@@ -1,0 +1,61 @@
+[gd_scene load_steps=5 format=3 uid="uid://ctbedk4s7wqrk"]
+
+[ext_resource type="Script" path="res://examples/wigglebone/simple/skeleton.gd" id="1_cfp1t"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_dislocation_modifier_3d.gd" id="2_b8o86"]
+[ext_resource type="Resource" uid="uid://bvqovpi7jfyo" path="res://examples/wigglebone/simple/dislocation_modifiers.tres" id="3_803tg"]
+[ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_s2j6m"]
+
+[node name="Rotation" type="Node3D"]
+
+[node name="Skeleton3D" type="Skeleton3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/0/name = "bone0"
+bones/0/parent = -1
+bones/0/rest = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -1)
+bones/0/enabled = true
+bones/0/position = Vector3(0, 0, -1)
+bones/0/rotation = Quaternion(0.707107, 0, 0, 0.707107)
+bones/0/scale = Vector3(1, 1, 1)
+bones/1/name = "bone1"
+bones/1/parent = 0
+bones/1/rest = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 1, -4.37114e-08)
+bones/1/enabled = true
+bones/1/position = Vector3(0, 1, -4.37114e-08)
+bones/1/rotation = Quaternion(-0.707107, 0, 0, 0.707107)
+bones/1/scale = Vector3(1, 1, 1)
+bones/2/name = "end"
+bones/2/parent = 1
+bones/2/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+bones/2/enabled = true
+bones/2/position = Vector3(0, 0.5, 0)
+bones/2/rotation = Quaternion(0, 0, 0, 1)
+bones/2/scale = Vector3(1, 1, 1)
+script = ExtResource("1_cfp1t")
+
+[node name="WiggleDislocationModifier3D" type="SkeletonModifier3D" parent="Skeleton3D"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00916109, 0.00769623, -0.000272155)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_b8o86")
+bone_name = "bone1"
+properties = ExtResource("3_803tg")
+
+[node name="Bone" type="MeshInstance3D" parent="Skeleton3D/WiggleDislocationModifier3D"]
+transform = Transform3D(0.5, 8.9407e-08, -2.84217e-13, -8.9407e-08, 0.5, -1.66893e-06, 0, 1.66893e-06, 0.5, 0, 2.98023e-08, 1.7053e-13)
+mesh = ExtResource("4_s2j6m")
+skeleton = NodePath("")
+metadata/_edit_lock_ = true

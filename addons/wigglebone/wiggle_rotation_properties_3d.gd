@@ -8,7 +8,7 @@ extends Resource
 const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
 const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
-	frequency = 2.0,
+	frequency = 3.0,
 	damping = 0.2,
 	gravity = Vector3.ZERO,
 	length = 0.1,

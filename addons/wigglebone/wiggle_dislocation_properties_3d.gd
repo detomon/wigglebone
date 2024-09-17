@@ -74,6 +74,7 @@ func set_max_distance(value: float) -> void:
 
 func set_use_global_gravity(value: bool) -> void:
 	use_global_gravity = value
+	_update_gravity()
 	emit_changed()
 	notify_property_list_changed()
 

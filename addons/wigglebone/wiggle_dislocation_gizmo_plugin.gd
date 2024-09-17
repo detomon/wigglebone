@@ -27,8 +27,9 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 		_handle_dragging = true
 
 	var force := handle_position - _handle_init_position
+	var force_multiplier := maxf(1.0, properties.frequency) * FORCE_MULTIPLIER
 
-	node.force_global = force
+	node.force_global = force * force_multiplier
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
@@ -49,7 +50,7 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	if not properties:
 		return
 
-		_draw_sphere(gizmo, properties.max_distance)
+	_draw_sphere(gizmo, properties.max_distance)
 
 	var handle_position := _get_modifier_handle_position(properties)
 	gizmo.add_handles([handle_position], get_material("handles"), [HandleID.FORCE])

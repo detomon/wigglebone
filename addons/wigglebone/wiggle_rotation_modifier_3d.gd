@@ -20,6 +20,8 @@ extends SkeletonModifier3D
 
 const _VELOCITY_DECAY_FACTOR := 25.0
 
+const Functions := preload("functions.gd")
+
 ## The bone name to modify.
 @export var bone_name := "": set = set_bone_name
 ## The properties used to rotate the bone.
@@ -61,7 +63,8 @@ func _set(property: StringName, _value: Variant) -> bool:
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
 		&"bone_name":
-			var bone_names = _get_sorted_skeleton_bones()
+			var skeleton := get_skeleton()
+			var bone_names = Functions.get_sorted_skeleton_bones(skeleton)
 			property.hint |= PROPERTY_HINT_ENUM
 			property.hint_string = ",".join(bone_names)
 
@@ -225,6 +228,9 @@ func reset() -> void:
 
 
 func _setup() -> void:
+	if not properties:
+		return
+
 	var skeleton := get_skeleton()
 	if not skeleton:
 		return
@@ -243,25 +249,6 @@ func _setup() -> void:
 	_direction = bone_pose.basis * Vector3.UP
 	_mass_position = bone_pose * (Vector3.UP * properties.length)
 	_should_reset = true
-
-
-func _get_sorted_skeleton_bones() -> PackedStringArray:
-	var skeleton := get_skeleton()
-	if not skeleton:
-		return []
-
-	var bone_names = []
-	var bone_count := skeleton.get_bone_count()
-	bone_names.resize(bone_count)
-
-	for i in bone_count:
-		bone_names[i] = skeleton.get_bone_name(i)
-
-	bone_names.sort_custom(func (a: String, b: String) -> bool:
-		return a.naturalcasecmp_to(b) < 0
-	)
-
-	return PackedStringArray(bone_names)
 
 
 func _on_properties_changed() -> void:

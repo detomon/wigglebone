@@ -84,8 +84,6 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _physics_process(delta: float) -> void:
-	var time := Time.get_ticks_usec()
-
 	var bone_pose := _skeleton.get_bone_rest(_bone_idx)
 	if _parent_bone_idx >= 0:
 		bone_pose = _skeleton.get_bone_global_pose(_parent_bone_idx) * bone_pose
@@ -149,10 +147,6 @@ func _physics_process(delta: float) -> void:
 
 			var bone_position := _bone_rest_position + _bone_rest_rotation * mass_constrained
 			_skeleton.set_bone_pose_position(_bone_idx, bone_position)
-
-	var time2 := Time.get_ticks_usec()
-	if get_tree().get_frame() % 60 == 0:
-		print(float(time2 - time) / 1_000_000.0)
 
 
 func set_enabled(value: bool) -> void:
