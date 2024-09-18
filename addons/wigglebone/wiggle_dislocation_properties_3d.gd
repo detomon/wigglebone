@@ -33,7 +33,7 @@ const DEFAULT_VALUES := {
 @export var custom_gravity := DEFAULT_VALUES.gravity: set = set_custom_gravity
 
 var _gravity := Vector3.ZERO
-var _spring_alpha := 0.0
+#var _spring_alpha := 0.0
 
 
 func _init() -> void:
@@ -57,13 +57,13 @@ func _validate_property(property: Dictionary) -> void:
 
 func set_frequency(value: float) -> void:
 	frequency = maxf(0.0, value)
-	_update_values()
+	#_update_values()
 	emit_changed()
 
 
 func set_damping(value: float) -> void:
 	damping = maxf(0.0, value)
-	_update_values()
+	#_update_values()
 	emit_changed()
 
 
@@ -91,13 +91,13 @@ func get_gravity() -> Vector3:
 	return _gravity
 
 
-## Internally used value.
-func get_spring_alpha() -> float:
-	return _spring_alpha
+### Internally used value.
+#func get_spring_alpha() -> float:
+	#return _spring_alpha
 
 
-func _update_values() -> void:
-	_spring_alpha = frequency * sqrt(1.0 - damping * damping)
+#func _update_values() -> void:
+	#_spring_alpha = frequency * sqrt(1.0 - damping * damping)
 
 
 func _update_gravity() -> void:
