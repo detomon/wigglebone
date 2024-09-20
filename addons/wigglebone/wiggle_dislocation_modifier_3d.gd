@@ -119,12 +119,9 @@ func _process_modification() -> void:
 	if _should_reset:
 		parent_velocity = Vector3.ZERO
 
-	# Global forces.
-	var force := force_global + properties.get_gravity()
-	# Add force relative to current pose.
-	force += pose_to_global.basis * force_local
-	# Add reverse global velocity.
-	force -= parent_velocity
+	var force := force_global + properties.get_gravity() # Global forces.
+	force += pose_to_global.basis * force_local # Add force relative to current pose.
+	force -= parent_velocity # Add reverse global velocity.
 
 	# Add force.
 	# TODO: Set mass.
@@ -138,16 +135,20 @@ func _process_modification() -> void:
 	# Apply spring velocity without damping. [1]
 	var frequency := properties.frequency * TAU
 	if not is_zero_approx(frequency):
-		var target := pose_to_global.origin
+		var pose_target := pose_to_global.origin
 
 		var alpha := frequency
-		var x0 := _global_position - target
+		var x0 := _global_position - pose_target
 		var cos_ := cos(delta * alpha)
 		var sin_ := sin(delta * alpha)
 		var c2 := _global_velocity / alpha
 
-		_global_position = target + (x0 * cos_ + c2 * sin_)
+		_global_position = pose_target + (x0 * cos_ + c2 * sin_)
 		_global_velocity = (c2 * cos_ - x0 * sin_) * alpha
+
+	# No spring tension. Just move the mass in global space.
+	else:
+		_global_position += _global_velocity * delta
 
 	# Set local position to calculate parent speed in next iteration.
 	_local_position = global_to_pose * _global_position
@@ -198,9 +199,9 @@ func set_properties(value: WiggleDislocationProperties3D) -> void:
 	if properties and is_editor:
 		properties.changed.connect(_on_properties_changed)
 
-	reset()
-	update_configuration_warnings()
+	_setup()
 	update_gizmos()
+	update_configuration_warnings()
 
 
 func set_bone_name(value: String) -> void:

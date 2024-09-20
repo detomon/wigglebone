@@ -108,9 +108,9 @@ func _process_modification() -> void:
 	var pose_to_global := skeleton.global_transform * skeleton_bone_pose
 	var pose_to_global_rotation := pose_to_global.basis.get_rotation_quaternion()
 	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
-	var bone_pose_forward := bone_pose_rotation * Vector3.UP
+	var bone_tail := bone_pose_rotation * (Vector3.UP * properties.length)
 
-	var mass_global := pose_to_global * (bone_pose_forward * properties.length)
+	var mass_global := pose_to_global * bone_tail
 	var global_velocity := (mass_global - _global_position) / delta
 	_global_position = mass_global
 
@@ -118,15 +118,11 @@ func _process_modification() -> void:
 		_angular_velocity = Vector3.ZERO
 		global_velocity = Vector3.ZERO
 
-	# Global forces.
-	var force := force_global + properties.get_gravity()
-	# Add force relative to current pose.
-	force += pose_to_global_rotation * force_local
-	# Add reverse global velocity.
-	force -= global_velocity
+	var force := force_global + properties.get_gravity() # Global forces.
+	force += pose_to_global_rotation * force_local # Add force relative to current pose.
+	force -= global_velocity # Add reverse global velocity.
 
-	# Add torque.
-	# Inverse inertia is simplified to inverse of bone length.
+	# Add torque. Inverse inertia is simplified to inverse of bone length.
 	var inv_inertia := 1.0 / properties.length \
 		if properties.length > 0.0 \
 		else 1.0
@@ -139,23 +135,24 @@ func _process_modification() -> void:
 		var rotation_axis := _angular_velocity / velocity
 		_global_direction = Quaternion(rotation_axis, velocity * delta) * _global_direction
 
-	# Apply spring velocity without damping. [1]
+	# Apply rotation spring velocity without damping. [1]
 	var frequency := properties.frequency * TAU
 	if not is_zero_approx(frequency):
-		var bone_target := pose_to_global_rotation * Vector3.UP
-		# Rotation axis where the length is the rotation in radians.
-		var rotation_axis := bone_target.cross(_global_direction).normalized()
-		rotation_axis *= bone_target.angle_to(_global_direction)
+		# Global pose target.
+		var pose_target := pose_to_global_rotation * Vector3.UP
+		# Torque axis where the length is the rotation difference to the pose target in radians.
+		var torque := pose_target.cross(_global_direction).normalized()
+		torque *= pose_target.angle_to(_global_direction)
 
 		var alpha := frequency
-		var x0 := rotation_axis
+		var x0 := torque
 		var cos_ := cos(delta * alpha)
 		var sin_ := sin(delta * alpha)
 		var c2 := _angular_velocity / alpha
 
 		_angular_velocity = (c2 * cos_ - x0 * sin_) * alpha
 		# FIXME: Ignoring changed position results in spring loosing energy even when damping is 0.0.
-		# Use _direction
+		# Use _global_direction
 		# var position := target + (x0 * cos_ + c2 * sin_)
 
 	_global_direction = _global_direction.normalized()
@@ -171,8 +168,7 @@ func _process_modification() -> void:
 	var direction_local := pose_to_global_rotation.inverse() * _global_direction
 	var rotation_relative := Quaternion(Vector3.UP, direction_local) \
 		if not is_equal_approx(direction_local.dot(Vector3.UP), -1.0) \
-		# Rotate around X axis when rotation is exactly 180°.
-		else Quaternion(1.0, 0.0, 0.0, 0.0)
+		else Quaternion(1.0, 0.0, 0.0, 0.0) # Rotate around X axis as fallback when rotation is exactly 180°.
 
 	# Set bone rotation.
 	var bone_rotation := bone_pose_rotation * rotation_relative
