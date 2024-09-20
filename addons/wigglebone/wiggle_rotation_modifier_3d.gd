@@ -18,6 +18,7 @@ extends SkeletonModifier3D
 # Lerp smoothing is broken
 # https://www.youtube.com/watch?v=LSNQuFEDOyQ
 
+# Factor is arbitary but gives useful results.
 const _VELOCITY_DECAY_FACTOR := 25.0
 
 const Functions := preload("functions.gd")
@@ -34,10 +35,11 @@ const Functions := preload("functions.gd")
 @export var force_local := Vector3.ZERO
 
 var _bone_idx := -1
-# Global mass position.
-var _mass_position := Vector3.ZERO
+var _parent_bone_idx := -1
 # Global bone direction.
-var _direction := Vector3.UP
+var _global_direction := Vector3.UP
+# Global mass position.
+var _global_position := Vector3.ZERO
 # Global angular velocity.
 var _angular_velocity := Vector3.ZERO
 var _should_reset := true
@@ -49,15 +51,7 @@ func _enter_tree() -> void:
 
 func _exit_tree() -> void:
 	_bone_idx = -1
-
-
-func _set(property: StringName, _value: Variant) -> bool:
-	match property:
-		&"active":
-			reset()
-			_setup()
-
-	return false
+	_parent_bone_idx = -1
 
 
 func _validate_property(property: Dictionary) -> void:
@@ -103,56 +97,55 @@ func _process_modification() -> void:
 	delta = clampf(delta, 0.001, 0.1)
 
 	var bone_pose := skeleton.get_bone_pose(_bone_idx)
-	var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
-	var global_bone_pose := bone_pose
-	var global_parent_pose := Transform3D()
+	var skeleton_bone_pose := bone_pose
+	var skeleton_parent_pose := Transform3D()
 
 	# Bone has parent.
-	if parent_bone_idx >= 0:
-		global_parent_pose = skeleton.get_bone_global_pose(parent_bone_idx)
-		global_bone_pose = global_parent_pose * global_bone_pose
+	if _parent_bone_idx >= 0:
+		skeleton_parent_pose = skeleton.get_bone_global_pose(_parent_bone_idx)
+		skeleton_bone_pose = skeleton_parent_pose * skeleton_bone_pose
 
-	var global_global_bone_pose := skeleton.global_transform * global_bone_pose
-	var global_global_bone_rotation := global_global_bone_pose.basis.get_rotation_quaternion()
+	var pose_to_global := skeleton.global_transform * skeleton_bone_pose
+	var pose_to_global_rotation := pose_to_global.basis.get_rotation_quaternion()
 	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 	var bone_pose_forward := bone_pose_rotation * Vector3.UP
 
-	var mass_global := global_global_bone_pose * (bone_pose_forward * properties.length)
-	var mass_velocity := (mass_global - _mass_position) / delta
-	_mass_position = mass_global
+	var mass_global := pose_to_global * (bone_pose_forward * properties.length)
+	var global_velocity := (mass_global - _global_position) / delta
+	_global_position = mass_global
 
 	if _should_reset:
 		_angular_velocity = Vector3.ZERO
-		mass_velocity = Vector3.ZERO
+		global_velocity = Vector3.ZERO
 
 	# Global forces.
 	var force := force_global + properties.get_gravity()
 	# Add force relative to current pose.
-	force += global_global_bone_rotation * force_local
+	force += pose_to_global_rotation * force_local
 	# Add reverse global velocity.
-	force -= mass_velocity
+	force -= global_velocity
 
 	# Add torque.
 	# Inverse inertia is simplified to inverse of bone length.
 	var inv_inertia := 1.0 / properties.length \
 		if properties.length > 0.0 \
 		else 1.0
-	var angular_acceleration := _direction.cross(force) * inv_inertia
+	var angular_acceleration := _global_direction.cross(force) * inv_inertia
 	_angular_velocity += angular_acceleration * delta
 
 	# Apply angular velocity.
 	var velocity := _angular_velocity.length()
 	if not is_zero_approx(velocity):
 		var rotation_axis := _angular_velocity / velocity
-		_direction = Quaternion(rotation_axis, velocity * delta) * _direction
+		_global_direction = Quaternion(rotation_axis, velocity * delta) * _global_direction
 
 	# Apply spring velocity without damping. [1]
 	var frequency := properties.frequency * TAU
 	if not is_zero_approx(frequency):
-		var bone_target := global_global_bone_rotation * Vector3.UP
+		var bone_target := pose_to_global_rotation * Vector3.UP
 		# Rotation axis where the length is the rotation in radians.
-		var rotation_axis := bone_target.cross(_direction).normalized()
-		rotation_axis *= bone_target.angle_to(_direction)
+		var rotation_axis := bone_target.cross(_global_direction).normalized()
+		rotation_axis *= bone_target.angle_to(_global_direction)
 
 		var alpha := frequency
 		var x0 := rotation_axis
@@ -162,20 +155,20 @@ func _process_modification() -> void:
 
 		_angular_velocity = (c2 * cos_ - x0 * sin_) * alpha
 		# FIXME: Ignoring changed position results in spring loosing energy even when damping is 0.0.
+		# Use _direction
 		# var position := target + (x0 * cos_ + c2 * sin_)
 
-	_direction = _direction.normalized()
+	_global_direction = _global_direction.normalized()
 
 	# Remove rotation around bone forward axis.
-	# TODO: Limit _angular_velocity?
-	_angular_velocity = Plane(_direction, 0.0).project(_angular_velocity)
+	_angular_velocity = Plane(_global_direction, 0.0).project(_angular_velocity)
 
-	# Time-independent velocity damping.
-	# Factor is arbitary but gives useful results. [2]
+	# Time-independent velocity damping. [2]
 	var velocity_decay := properties.damping * _VELOCITY_DECAY_FACTOR
 	_angular_velocity *= exp(-velocity_decay * delta)
 
-	var direction_local := global_global_bone_rotation.inverse() * _direction
+	# Get rotation relative to current pose.
+	var direction_local := pose_to_global_rotation.inverse() * _global_direction
 	var rotation_relative := Quaternion(Vector3.UP, direction_local) \
 		if not is_equal_approx(direction_local.dot(Vector3.UP), -1.0) \
 		# Rotate around X axis when rotation is exactly 180°.
@@ -187,7 +180,7 @@ func _process_modification() -> void:
 
 	# Apply bone transform to Node3D.
 	bone_pose.basis = Basis(bone_rotation)
-	global_transform = skeleton.global_transform * global_parent_pose * bone_pose
+	global_transform = skeleton.global_transform * skeleton_parent_pose * bone_pose
 
 	_should_reset = false
 
@@ -235,15 +228,16 @@ func _setup() -> void:
 	if _bone_idx < 0:
 		return
 
-	var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
-	var bone_pose := skeleton.get_bone_pose(_bone_idx)
+	var skeleton_bone_pose := skeleton.get_bone_pose(_bone_idx)
+	_parent_bone_idx = skeleton.get_bone_parent(_bone_idx)
 
 	# Bone has parent.
-	if parent_bone_idx >= 0:
-		bone_pose = skeleton.get_bone_global_pose(parent_bone_idx) * bone_pose
+	if _parent_bone_idx >= 0:
+		skeleton_bone_pose = skeleton.get_bone_global_pose(_parent_bone_idx) * skeleton_bone_pose
 
-	_direction = bone_pose.basis * Vector3.UP
-	_mass_position = bone_pose * (Vector3.UP * properties.length)
+	var global_bone_pose := skeleton.global_transform * skeleton_bone_pose
+	_global_direction = global_bone_pose.basis * Vector3.UP
+	_global_position = global_bone_pose * (Vector3.UP * properties.length)
 	_should_reset = true
 
 

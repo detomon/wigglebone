@@ -18,6 +18,7 @@ extends SkeletonModifier3D
 # Lerp smoothing is broken
 # https://www.youtube.com/watch?v=LSNQuFEDOyQ
 
+# Factor is arbitary but gives useful results.
 const _VELOCITY_DECAY_FACTOR := 25.0
 
 const Functions := preload("functions.gd")
@@ -34,12 +35,13 @@ const Functions := preload("functions.gd")
 @export var force_local := Vector3.ZERO
 
 var _bone_idx := -1
+var _parent_bone_idx := -1
 # Position in pose space.
-var _position := Vector3.ZERO
-# Global mass position.
-var _mass_position := Vector3.ZERO
+var _local_position := Vector3.ZERO
+# Global pose position.
+var _global_position := Vector3.ZERO
 # Global velocity.
-var _velocity := Vector3.ZERO
+var _global_velocity := Vector3.ZERO
 var _should_reset := true
 
 
@@ -49,15 +51,7 @@ func _enter_tree() -> void:
 
 func _exit_tree() -> void:
 	_bone_idx = -1
-
-
-func _set(property: StringName, _value: Variant) -> bool:
-	match property:
-		&"active":
-			reset()
-			_setup()
-
-	return false
+	_parent_bone_idx = -1
 
 
 func _validate_property(property: Dictionary) -> void:
@@ -103,33 +97,34 @@ func _process_modification() -> void:
 	delta = clampf(delta, 0.001, 0.1)
 
 	var bone_pose := skeleton.get_bone_pose(_bone_idx)
-	var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
-	var global_bone_pose := bone_pose
-	var global_parent_pose := Transform3D()
+	var skeleton_bone_pose := bone_pose
+	var skeleton_parent_pose := Transform3D()
 
 	# Bone has parent.
-	if parent_bone_idx >= 0:
-		global_parent_pose = skeleton.get_bone_global_pose(parent_bone_idx)
-		global_bone_pose = global_parent_pose * global_bone_pose
+	if _parent_bone_idx >= 0:
+		skeleton_parent_pose = skeleton.get_bone_global_pose(_parent_bone_idx)
+		skeleton_bone_pose = skeleton_parent_pose * skeleton_bone_pose
 
-	var global_global_bone_pose := skeleton.global_transform * global_bone_pose
-	var global_to_pose := global_global_bone_pose.affine_inverse()
-
-	if _should_reset:
-		_velocity = Vector3.ZERO
-
-	var mass_global := global_global_bone_pose * _position
-	var mass_velocity := (mass_global - _mass_position) / delta
+	var pose_to_global := skeleton.global_transform * skeleton_bone_pose
+	var global_to_pose := pose_to_global.affine_inverse()
 
 	if _should_reset:
-		mass_velocity = Vector3.ZERO
+		_local_position = Vector3.ZERO
+		_global_position = pose_to_global.origin
+		_global_velocity = Vector3.ZERO
+
+	var position_global := pose_to_global * _local_position
+	var parent_velocity := (position_global - _global_position) / delta
+
+	if _should_reset:
+		parent_velocity = Vector3.ZERO
 
 	# Global forces.
 	var force := force_global + properties.get_gravity()
 	# Add force relative to current pose.
-	force += global_global_bone_pose.basis * force_local
+	force += pose_to_global.basis * force_local
 	# Add reverse global velocity.
-	force -= mass_velocity
+	force -= parent_velocity
 
 	# Add force.
 	# TODO: Set mass.
@@ -138,46 +133,51 @@ func _process_modification() -> void:
 		if mass > 0.0 \
 		else 1.0
 	var acceleration := force * inv_inertia
-	_velocity += acceleration * delta
+	_global_velocity += acceleration * delta
 
 	# Apply spring velocity without damping. [1]
 	var frequency := properties.frequency * TAU
 	if not is_zero_approx(frequency):
-		var target := global_global_bone_pose.origin
+		var target := pose_to_global.origin
 
 		var alpha := frequency
-		var x0 := _mass_position - target
+		var x0 := _global_position - target
 		var cos_ := cos(delta * alpha)
 		var sin_ := sin(delta * alpha)
-		var c2 := _velocity / alpha
+		var c2 := _global_velocity / alpha
 
-		_mass_position = target + (x0 * cos_ + c2 * sin_)
-		_velocity = (c2 * cos_ - x0 * sin_) * alpha
+		_global_position = target + (x0 * cos_ + c2 * sin_)
+		_global_velocity = (c2 * cos_ - x0 * sin_) * alpha
 
-	#  Set local position to calculate skeleton speed in next iteration.
-	_position = global_to_pose * _mass_position
+	# Set local position to calculate parent speed in next iteration.
+	_local_position = global_to_pose * _global_position
 
-	# Time-independent velocity damping.
-	# Factor is arbitary but gives useful results. [2]
+	# Time-independent velocity damping. [2]
 	var velocity_decay := properties.damping * _VELOCITY_DECAY_FACTOR
-	_velocity *= exp(-velocity_decay * delta)
+	_global_velocity *= exp(-velocity_decay * delta)
 
 	# Limit distance and velocity.
-	var length_sq := _position.length_squared()
+	var length_squared := _local_position.length_squared()
 	var max_distance := properties.max_distance
-	if length_sq > max_distance * max_distance:
-		var center_to_mass := global_global_bone_pose.origin.direction_to(_mass_position)
-		_position = _position / sqrt(length_sq) * max_distance
-		_mass_position = global_global_bone_pose * _position
-		_velocity = Plane(center_to_mass, 0.0).project(_velocity)
+	if length_squared > max_distance * max_distance:
+		var global_pose_to_mass := pose_to_global.origin.direction_to(_global_position)
+		# Limit position to max_distance.
+		_local_position = _local_position * max_distance / sqrt(length_squared)
+		# Recalculate global position.
+		_global_position = pose_to_global * _local_position
+
+		# Limit velocity when velocity points outwards.
+		if global_pose_to_mass.dot(_global_velocity) > 0.0:
+			# Project velocity to sphere tangent.
+			_global_velocity = Plane(global_pose_to_mass, 0.0).project(_global_velocity)
 
 	# Set bone position.
-	var bone_position := bone_pose * _position
+	var bone_position := bone_pose * _local_position
 	skeleton.set_bone_pose_position(_bone_idx, bone_position)
 
 	# Apply bone transform to Node3D.
 	bone_pose.origin = bone_position
-	global_transform = skeleton.global_transform * global_parent_pose * bone_pose
+	global_transform = skeleton.global_transform * skeleton_parent_pose * bone_pose
 
 	_should_reset = false
 
@@ -225,14 +225,14 @@ func _setup() -> void:
 	if _bone_idx < 0:
 		return
 
-	var parent_bone_idx := skeleton.get_bone_parent(_bone_idx)
-	var bone_pose := skeleton.get_bone_pose(_bone_idx)
+	var skeleton_bone_pose := skeleton.get_bone_pose(_bone_idx)
+	_parent_bone_idx = skeleton.get_bone_parent(_bone_idx)
 
 	# Bone has parent.
-	if parent_bone_idx >= 0:
-		bone_pose = skeleton.get_bone_global_pose(parent_bone_idx) * bone_pose
+	if _parent_bone_idx >= 0:
+		skeleton_bone_pose = skeleton.get_bone_global_pose(_parent_bone_idx) * skeleton_bone_pose
 
-	_mass_position = bone_pose.origin
+	_global_position = skeleton.global_transform * skeleton_bone_pose.origin
 	_should_reset = true
 
 
