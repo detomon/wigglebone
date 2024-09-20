@@ -19,7 +19,7 @@ func set_create_bones(value: bool) -> void:
 	set_bone_parent(idx1, idx0)
 	set_bone_rest(idx1, Transform3D().translated(Vector3(0.0, 0.0, 1.0)).rotated(Vector3.RIGHT, -PI))
 
-	# only needed for bone1 to be visible in Skeleton3D
+	# Needed for "bone1" to be visible in editor.
 	var idx2 := get_bone_count()
 	add_bone("end")
 	set_bone_parent(idx2, idx1)

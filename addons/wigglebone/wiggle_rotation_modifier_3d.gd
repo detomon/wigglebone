@@ -1,5 +1,5 @@
 @tool
-@icon("icons/node_spring.svg")
+@icon("icons/wiggle_rotation_modifier_3d.svg")
 class_name WiggleRotationModifier3D
 extends SkeletonModifier3D
 
@@ -117,19 +117,37 @@ func _process_modification() -> void:
 	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 	var bone_pose_forward := bone_pose_rotation * Vector3.UP
 
+	var mass_global := global_global_bone_pose * (bone_pose_forward * properties.length)
+	var mass_velocity := (mass_global - _mass_position) / delta
+	_mass_position = mass_global
+
 	if _should_reset:
 		_angular_velocity = Vector3.ZERO
+		mass_velocity = Vector3.ZERO
 
-	var velocity := _angular_velocity.length()
+	# Global forces.
+	var force := force_global + properties.get_gravity()
+	# Add force relative to current pose.
+	force += global_global_bone_rotation * force_local
+	# Add reverse global velocity.
+	force -= mass_velocity
+
+	# Add torque.
+	# Inverse inertia is simplified to inverse of bone length.
+	var inv_inertia := 1.0 / properties.length \
+		if properties.length > 0.0 \
+		else 1.0
+	var angular_acceleration := _direction.cross(force) * inv_inertia
+	_angular_velocity += angular_acceleration * delta
 
 	# Apply angular velocity.
+	var velocity := _angular_velocity.length()
 	if not is_zero_approx(velocity):
 		var rotation_axis := _angular_velocity / velocity
 		_direction = Quaternion(rotation_axis, velocity * delta) * _direction
 
-	var frequency := properties.frequency * TAU
-
 	# Apply spring velocity without damping. [1]
+	var frequency := properties.frequency * TAU
 	if not is_zero_approx(frequency):
 		var bone_target := global_global_bone_rotation * Vector3.UP
 		# Rotation axis where the length is the rotation in radians.
@@ -147,28 +165,6 @@ func _process_modification() -> void:
 		# var position := target + (x0 * cos_ + c2 * sin_)
 
 	_direction = _direction.normalized()
-
-	var mass_global := global_global_bone_pose * (bone_pose_forward * properties.length)
-	var mass_velocity := (mass_global - _mass_position) / delta
-	_mass_position = mass_global
-
-	if _should_reset:
-		mass_velocity = Vector3.ZERO
-
-	# Global forces.
-	var force := force_global + properties.get_gravity()
-	# Add force relative to current pose.
-	force += global_global_bone_rotation * force_local
-	# Add reverse global velocity.
-	force -= mass_velocity
-
-	# Add torque.
-	# Inverse inertia is simplified to inverse of bone length.
-	var inv_inertia := 1.0 / properties.length \
-		if properties.length > 0.0 \
-		else 1.0
-	var angular_acceleration := _direction.cross(force) * inv_inertia
-	_angular_velocity += angular_acceleration * delta
 
 	# Remove rotation around bone forward axis.
 	# TODO: Limit _angular_velocity?

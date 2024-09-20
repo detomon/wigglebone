@@ -1,5 +1,5 @@
 @tool
-@icon("icons/resource_spring.svg")
+@icon("icons/wiggle_rotation_properties_3d.svg")
 class_name WiggleRotationProperties3D
 extends Resource
 

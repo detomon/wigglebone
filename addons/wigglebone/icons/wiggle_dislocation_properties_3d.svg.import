@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bs2m5wgmadsbu"
-path="res://.godot/imported/resource_spring.svg-84ab5294c361d5a5e3bf2e35d224f456.ctex"
+uid="uid://lds2dmonojdc"
+path="res://.godot/imported/wiggle_dislocation_properties_3d.svg-50e04eac6eab019d847a3b958238ce5f.ctex"
 metadata={
 "has_editor_variant": true,
 "vram_texture": false
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/wigglebone/icons/resource_spring.svg"
-dest_files=["res://.godot/imported/resource_spring.svg-84ab5294c361d5a5e3bf2e35d224f456.ctex"]
+source_file="res://addons/wigglebone/icons/wiggle_dislocation_properties_3d.svg"
+dest_files=["res://.godot/imported/wiggle_dislocation_properties_3d.svg-50e04eac6eab019d847a3b958238ce5f.ctex"]
 
 [params]
 

@@ -13,6 +13,11 @@ var _cone_lines := Functions.create_cone_lines()
 var _force_global := Vector3.ZERO
 
 
+func _init() -> void:
+	create_material("main", Color.RED, false)
+	create_handle_material("handles")
+
+
 func _has_gizmo(spatial: Node3D) -> bool:
 	return spatial is WiggleRotationModifier3D
 

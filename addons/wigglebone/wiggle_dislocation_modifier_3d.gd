@@ -1,5 +1,5 @@
 @tool
-@icon("icons/node_spring.svg")
+@icon("icons/wiggle_dislocation_modifier_3d.svg")
 class_name WiggleDislocationModifier3D
 extends SkeletonModifier3D
 
@@ -34,7 +34,7 @@ const Functions := preload("functions.gd")
 @export var force_local := Vector3.ZERO
 
 var _bone_idx := -1
-# Local position.
+# Position in pose space.
 var _position := Vector3.ZERO
 # Global mass position.
 var _mass_position := Vector3.ZERO
@@ -118,11 +118,7 @@ func _process_modification() -> void:
 	if _should_reset:
 		_velocity = Vector3.ZERO
 
-	var pose_mass := global_to_pose * _mass_position
-	pose_mass = pose_mass.limit_length(properties.max_distance)
-	_mass_position = global_global_bone_pose * pose_mass
-
-	var mass_global := global_global_bone_pose.origin
+	var mass_global := global_global_bone_pose * _position
 	var mass_velocity := (mass_global - _mass_position) / delta
 
 	if _should_reset:
@@ -144,9 +140,8 @@ func _process_modification() -> void:
 	var acceleration := force * inv_inertia
 	_velocity += acceleration * delta
 
-	var frequency := properties.frequency * TAU
-
 	# Apply spring velocity without damping. [1]
+	var frequency := properties.frequency * TAU
 	if not is_zero_approx(frequency):
 		var target := global_global_bone_pose.origin
 
@@ -159,14 +154,25 @@ func _process_modification() -> void:
 		_mass_position = target + (x0 * cos_ + c2 * sin_)
 		_velocity = (c2 * cos_ - x0 * sin_) * alpha
 
+	#  Set local position to calculate skeleton speed in next iteration.
+	_position = global_to_pose * _mass_position
+
 	# Time-independent velocity damping.
 	# Factor is arbitary but gives useful results. [2]
 	var velocity_decay := properties.damping * _VELOCITY_DECAY_FACTOR
 	_velocity *= exp(-velocity_decay * delta)
 
-	var position_relative := global_to_pose * _mass_position
+	# Limit distance and velocity.
+	var length_sq := _position.length_squared()
+	var max_distance := properties.max_distance
+	if length_sq > max_distance * max_distance:
+		var center_to_mass := global_global_bone_pose.origin.direction_to(_mass_position)
+		_position = _position / sqrt(length_sq) * max_distance
+		_mass_position = global_global_bone_pose * _position
+		_velocity = Plane(center_to_mass, 0.0).project(_velocity)
+
 	# Set bone position.
-	var bone_position := bone_pose * position_relative
+	var bone_position := bone_pose * _position
 	skeleton.set_bone_pose_position(_bone_idx, bone_position)
 
 	# Apply bone transform to Node3D.
