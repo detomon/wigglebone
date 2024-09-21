@@ -10,6 +10,7 @@ const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
 	frequency = 3.0,
 	damping = 0.1,
+	mass = 1.0,
 	gravity = Vector3.ZERO,
 	max_distance = 0.1,
 }
@@ -22,6 +23,9 @@ const DEFAULT_VALUES := {
 ## [b]Note:[/b] Setting a damping factor near [code]0.0[/code] and having a [member frequency] near
 ## the process frequency may cause a resonance effect.
 @export_range(0.0, 1.0, 0.001, "or_greater") var damping := DEFAULT_VALUES.damping: set = set_damping
+## Defines, how much forces are influencing the movement.
+@export_range(0.0, 10.0, 0.001, "or_greater", "suffix:kg") var mass := DEFAULT_VALUES.mass:
+	set = set_mass
 ## Maximum distance the bone can move around its pose position.
 @export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance:
 	set = set_max_distance
@@ -64,6 +68,10 @@ func set_frequency(value: float) -> void:
 func set_damping(value: float) -> void:
 	damping = maxf(0.0, value)
 	#_update_values()
+	emit_changed()
+
+func set_mass(value: float) -> void:
+	mass = maxf(0.0, value)
 	emit_changed()
 
 

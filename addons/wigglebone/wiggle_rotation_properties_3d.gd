@@ -12,6 +12,7 @@ const DEFAULT_VALUES := {
 	damping = 0.2,
 	gravity = Vector3.ZERO,
 	length = 0.1,
+	mass = 0.1,
 	max_rotation = 60.0 / 180.0 * PI,
 	handle_distance = 0.1,
 }
@@ -23,11 +24,14 @@ const DEFAULT_VALUES := {
 ## [b]Note:[/b] Setting a very high value may cause the spring to become unstable.
 @export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var frequency := DEFAULT_VALUES.frequency:
 	set = set_frequency
-## Damping factor. Can be greater than [code]1.0[/code] to have even more influence.
+## Damping factor. Can be greater than [code]1.0[/code] to have an even greater effect.
 @export_range(0.0, 1.0, 0.001, "or_greater") var damping := DEFAULT_VALUES.damping: set = set_damping
-## The bone length. This influences, how much of the global movement is applied to the rotation.
-@export_range(0.01, 1, 0.001, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
+## The bone length. Defines, how much forces and global movement influences the rotation.
+@export_range(0.01, 1.0, 0.001, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
 	set = set_length
+## The bone mass. Defines, how much forces and global movement influences the rotation.
+@export_range(0.0, 10.0, 0.001, "or_greater", "suffix:kg") var mass := DEFAULT_VALUES.mass:
+	set = set_mass
 ## Maximum rotation relative to the pose position.
 @export_range(0.0, 180.0, 0.01, "radians") var max_rotation := DEFAULT_VALUES.max_rotation:
 	set = set_max_rotation
@@ -40,11 +44,6 @@ const DEFAULT_VALUES := {
 @export var use_global_gravity := false: set = set_use_global_gravity
 ## A constant global force.
 @export var custom_gravity := DEFAULT_VALUES.gravity: set = set_custom_gravity
-
-@export_group("Editor")
-## The distance of the drag handle from the bone origin. Used on ly in the editor.
-@export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var handle_distance := DEFAULT_VALUES.handle_distance:
-	set = set_handle_distance
 
 var _gravity := Vector3.ZERO
 var _spring_alpha := 0.0
@@ -89,8 +88,8 @@ func set_length(value: float) -> void:
 	emit_changed()
 
 
-func set_handle_distance(value: float) -> void:
-	handle_distance = maxf(0.0, value)
+func set_mass(value: float) -> void:
+	mass = maxf(0.0, value)
 	emit_changed()
 
 

@@ -123,9 +123,9 @@ func _process_modification() -> void:
 	force -= global_velocity # Add reverse global velocity.
 
 	# Add torque. Inverse inertia is simplified to inverse of bone length.
-	var inv_inertia := 1.0 / properties.length \
-		if properties.length > 0.0 \
-		else 1.0
+	var inv_inertia := 1.0 / properties.length / properties.mass \
+		if properties.length > 0.0 and properties.mass > 0.0 \
+		else 0.0
 	var angular_acceleration := _global_direction.cross(force) * inv_inertia
 	_angular_velocity += angular_acceleration * delta
 
@@ -141,6 +141,7 @@ func _process_modification() -> void:
 		# Global pose target.
 		var pose_target := pose_to_global_rotation * Vector3.UP
 		# Torque axis where the length is the rotation difference to the pose target in radians.
+		# FIXME: Add falback when pose_target.dot(_global_direction) ≈ -1.0
 		var torque := pose_target.cross(_global_direction).normalized()
 		torque *= pose_target.angle_to(_global_direction)
 

@@ -124,11 +124,9 @@ func _process_modification() -> void:
 	force -= parent_velocity # Add reverse global velocity.
 
 	# Add force.
-	# TODO: Set mass.
-	var mass := 1.0
-	var inv_inertia := 1.0 / mass \
-		if mass > 0.0 \
-		else 1.0
+	var inv_inertia := 1.0 / properties.mass \
+		if properties.mass > 0.0 \
+		else 0.0
 	var acceleration := force * inv_inertia
 	_global_velocity += acceleration * delta
 

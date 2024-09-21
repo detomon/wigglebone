@@ -8,6 +8,7 @@
 [node name="Dislocation" type="Node3D"]
 
 [node name="Skeleton3D" type="Skeleton3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0236698)
 bones/0/name = "bone0"
 bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -1)
@@ -41,7 +42,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.18562e-17, -0.0280787, -4.47035e-08)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false

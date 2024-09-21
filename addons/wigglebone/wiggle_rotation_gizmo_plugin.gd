@@ -2,20 +2,21 @@
 extends EditorNode3DGizmoPlugin
 
 const HANDLE_ID_FORCE := 0
-const FORCE_MULTIPLIER := 50.0
+const FORCE_MULTIPLIER := 2.0
 
 const Functions := preload("functions.gd")
 
 var _handle_init_position := Vector3.ZERO
 var _handle_position := Vector3.ZERO
+var _handle_force := Vector3.ZERO
 var _handle_dragging := false
 var _cone_lines := Functions.create_cone_lines()
 var _force_global := Vector3.ZERO
 
 
 func _init() -> void:
-	create_material("main", Color.RED, false)
-	create_handle_material("handles")
+	create_material(&"main", Color.RED, false)
+	create_handle_material(&"handles")
 
 
 func _has_gizmo(spatial: Node3D) -> bool:
@@ -23,15 +24,15 @@ func _has_gizmo(spatial: Node3D) -> bool:
 
 
 func _get_gizmo_name() -> String:
-	return "WiggleRotationModifier3D"
+	return &"WiggleRotationModifier3D"
 
 
-func _get_handle_name(_gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool) -> String:
-		return "Force"
+func _get_handle_name(_gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool) -> String:
+		return &"Force"
 
 
-func _get_handle_value(_gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool) -> Variant:
-	return _handle_position - _handle_init_position
+func _get_handle_value(_gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool) -> Variant:
+	return _handle_force
 
 
 func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, camera: Camera3D, point: Vector2) -> void:
@@ -48,10 +49,8 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 		_handle_init_position = handle_position
 		_handle_dragging = true
 
-	var force := handle_position - _handle_init_position
-	var force_multiplier := properties.length * maxf(1.0, properties.frequency) * FORCE_MULTIPLIER
-
-	node.force_global = force * force_multiplier
+	_handle_force = _get_handle_force(handle_position, properties)
+	node.force_global =_handle_force
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
@@ -73,11 +72,21 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		return
 
 	var handle_position := _get_handle_position(properties)
-	gizmo.add_handles([handle_position], get_material("handles"), [HANDLE_ID_FORCE])
+	gizmo.add_handles([handle_position], get_material(&"handles"), [HANDLE_ID_FORCE])
 
-	var material := get_material("main", gizmo)
+	var material := get_material(&"main", gizmo)
 	Functions.gizmo_draw_cone(gizmo, material, _cone_lines, properties.max_rotation, properties.length)
 
 
 func _get_handle_position(properties: WiggleRotationProperties3D) -> Vector3:
 	return Vector3.UP * properties.length
+
+
+func _get_handle_force(handle_position: Vector3, properties: WiggleRotationProperties3D) -> Vector3:
+	if properties.mass <= 0.0:
+		return Vector3.ZERO
+
+	var force := handle_position - _handle_init_position
+	var force_multiplier := properties.length / properties.mass * FORCE_MULTIPLIER
+
+	return force * force_multiplier
