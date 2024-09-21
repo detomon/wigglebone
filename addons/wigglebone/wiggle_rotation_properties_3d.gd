@@ -8,33 +8,30 @@ extends Resource
 const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
 const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
-	frequency = 3.0,
-	damping = 0.2,
+	spring_freq = 3.0,
+	angular_damp = 0.2,
 	gravity = Vector3.ZERO,
 	length = 0.1,
-	influence = 10.0,
-	max_rotation = 60.0 / 180.0 * PI,
+	torque_scale = 100.0,
+	swing_span = 60.0 / 180.0 * PI,
 	handle_distance = 0.1,
 }
 
-## Spring frequency without damping and forces. The frequency may change if forces are applied.
+## Spring frequence without damping and forces. The frequency may change if forces are applied.
 ## If [code]0.0[/code], the bone is able to rotate
 ## freely.
 ## [br][br]
 ## [b]Note:[/b] Setting a very high value may cause the spring to become unstable.
-@export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var frequency := DEFAULT_VALUES.frequency:
-	set = set_frequency
+@export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var spring_freq := DEFAULT_VALUES.spring_freq:
+	set = set_spring_freq
 ## Damping factor. Can be greater than [code]1.0[/code] to have an even greater effect.
-@export_range(0.0, 1.0, 0.001, "or_greater") var damping := DEFAULT_VALUES.damping: set = set_damping
-## The bone length. Defines, how much forces and global movement influences the rotation.
-@export_range(0.01, 1.0, 0.001, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
-	set = set_length
+@export_range(0.0, 1.0, 0.001, "or_greater") var angular_damp := DEFAULT_VALUES.angular_damp: set = set_angular_damp
 ## The bone influence. Defines, how much forces and global movement influences the rotation.
-@export_range(0.0, 20.0, 0.001, "or_greater") var influence := DEFAULT_VALUES.influence:
-	set = set_influence
+@export_range(0.0, 200.0, 0.001, "or_greater") var torque_scale := DEFAULT_VALUES.torque_scale:
+	set = set_torque_scale
 ## Maximum rotation relative to the pose position.
-@export_range(0.0, 180.0, 0.01, "radians") var max_rotation := DEFAULT_VALUES.max_rotation:
-	set = set_max_rotation
+@export_range(0.0, 180.0, 0.01, "radians") var swing_span := DEFAULT_VALUES.swing_span:
+	set = set_swing_span
 
 @export_group("Gravity")
 ## If [code]true[/code], the gravity is calculated by multiplying
@@ -44,6 +41,10 @@ const DEFAULT_VALUES := {
 @export var use_global_gravity := false: set = set_use_global_gravity
 ## A constant global force.
 @export var custom_gravity := DEFAULT_VALUES.gravity: set = set_custom_gravity
+
+@export_group("Editor")
+## Sets the distance of the editor handle on the bone's Y axis.
+@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := DEFAULT_VALUES.handle_distance: set = set_handle_distance
 
 var _gravity := Vector3.ZERO
 var _spring_alpha := 0.0
@@ -63,7 +64,7 @@ func _property_get_revert(property: StringName) -> Variant:
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
-		&"set_max_rotation":
+		&"set_swing_span":
 			property.usage = PROPERTY_HIDDEN
 
 		&"custom_gravity":
@@ -71,30 +72,25 @@ func _validate_property(property: Dictionary) -> void:
 			property.hint_string = &"suffix:m/s²"
 
 
-func set_frequency(value: float) -> void:
-	frequency = maxf(0.0, value)
+func set_spring_freq(value: float) -> void:
+	spring_freq = maxf(0.0, value)
 	_update_values()
 	emit_changed()
 
 
-func set_damping(value: float) -> void:
-	damping = maxf(0.0, value)
+func set_angular_damp(value: float) -> void:
+	angular_damp = maxf(0.0, value)
 	_update_values()
 	emit_changed()
 
 
-func set_length(value: float) -> void:
-	length = maxf(0.01, value)
+func set_torque_scale(value: float) -> void:
+	torque_scale = maxf(0.0, value)
 	emit_changed()
 
 
-func set_influence(value: float) -> void:
-	influence = maxf(0.0, value)
-	emit_changed()
-
-
-func set_max_rotation(value: float) -> void:
-	max_rotation = value
+func set_swing_span(value: float) -> void:
+	swing_span = value
 	emit_changed()
 
 
@@ -111,6 +107,11 @@ func set_custom_gravity(value: Vector3) -> void:
 	emit_changed()
 
 
+func set_handle_distance(value: float) -> void:
+	handle_distance = maxf(0.0, value)
+	emit_changed()
+
+
 ## Get [member custom_gravity] or global gravity if [member use_global_gravity] is
 ## [code]true[/code].
 func get_gravity() -> Vector3:
@@ -123,7 +124,7 @@ func get_spring_alpha() -> float:
 
 
 func _update_values() -> void:
-	_spring_alpha = frequency * sqrt(1.0 - damping * damping)
+	_spring_alpha = spring_freq * sqrt(1.0 - angular_damp * angular_damp)
 
 
 func _update_gravity() -> void:

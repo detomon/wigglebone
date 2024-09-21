@@ -2,7 +2,7 @@
 extends EditorNode3DGizmoPlugin
 
 const HANDLE_ID_FORCE := 0
-const FORCE_MULTIPLIER := 100.0
+const FORCE_MULTIPLIER := 0.05
 
 const Functions := preload("functions.gd")
 
@@ -75,18 +75,18 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	gizmo.add_handles([handle_position], get_material(&"handles"), [HANDLE_ID_FORCE])
 
 	var material := get_material(&"main", gizmo)
-	Functions.gizmo_draw_cone(gizmo, material, _cone_lines, properties.max_rotation, properties.length)
+	Functions.gizmo_draw_cone(gizmo, material, _cone_lines, properties.swing_span, properties.handle_distance)
 
 
 func _get_handle_position(properties: WiggleRotationProperties3D) -> Vector3:
-	return Vector3.UP * properties.length
+	return Vector3.UP * properties.handle_distance
 
 
 func _get_handle_force(handle_position: Vector3, properties: WiggleRotationProperties3D) -> Vector3:
-	if properties.influence <= 0.0:
+	if properties.torque_scale <= 0.0:
 		return Vector3.ZERO
 
 	var force := handle_position - _handle_init_position
-	var force_multiplier := properties.length / properties.influence * FORCE_MULTIPLIER
+	var force_multiplier := properties.torque_scale * FORCE_MULTIPLIER
 
 	return force * force_multiplier

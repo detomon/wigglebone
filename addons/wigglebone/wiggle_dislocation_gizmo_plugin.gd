@@ -87,6 +87,6 @@ func _get_handle_force(handle_position: Vector3, properties: WiggleDislocationPr
 		return Vector3.ZERO
 
 	var force := handle_position - _handle_init_position
-	var force_multiplier := properties.frequency / properties.influence * FORCE_MULTIPLIER
+	var force_multiplier := properties.spring_freq / properties.influence * FORCE_MULTIPLIER
 
 	return force * force_multiplier

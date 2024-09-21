@@ -44,9 +44,17 @@ var _global_position := Vector3.ZERO
 var _angular_velocity := Vector3.ZERO
 var _should_reset := true
 
+# TODO: Remove.
+const _DEBUG_AXIS := preload("res://_debug_axis.tscn")
+var _rotation_axis_mesh: Node3D
+
 
 func _enter_tree() -> void:
 	_setup()
+
+	_rotation_axis_mesh = _DEBUG_AXIS.instantiate()
+	add_child(_rotation_axis_mesh)
+	_rotation_axis_mesh.top_level = true
 
 
 func _exit_tree() -> void:
@@ -108,7 +116,7 @@ func _process_modification() -> void:
 	var pose_to_global := skeleton.global_transform * skeleton_bone_pose
 	var pose_to_global_rotation := pose_to_global.basis.get_rotation_quaternion()
 	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
-	var bone_tail := bone_pose_rotation * (Vector3.UP * properties.length)
+	var bone_tail := bone_pose_rotation * Vector3.UP
 
 	var mass_global := pose_to_global * bone_tail
 	var global_velocity := (mass_global - _global_position) / delta
@@ -123,9 +131,7 @@ func _process_modification() -> void:
 	force -= global_velocity # Add reverse global velocity.
 
 	# Add torque. Inverse inertia is simplified to inverse of bone length.
-	var inv_inertia := 1.0 / properties.length * properties.influence \
-		if properties.length > 0.0 \
-		else 0.0
+	var inv_inertia := 1.0 * properties.torque_scale
 	var angular_acceleration := _global_direction.cross(force) * inv_inertia
 	_angular_velocity += angular_acceleration * delta
 
@@ -135,16 +141,17 @@ func _process_modification() -> void:
 		var rotation_axis := _angular_velocity / velocity
 		_global_direction = Quaternion(rotation_axis, velocity * delta) * _global_direction
 
-	# Apply rotation spring velocity without damping. [1]
-	var frequency := properties.frequency * TAU
-	if not is_zero_approx(frequency):
-		# Global pose target.
-		var pose_target := pose_to_global_rotation * Vector3.UP
-		# Torque axis where the length is the rotation difference to the pose target in radians.
-		# FIXME: Add falback when pose_target.dot(_global_direction) ≈ -1.0
-		var torque := pose_target.cross(_global_direction).normalized()
-		torque *= pose_target.angle_to(_global_direction)
+	# Global pose target.
+	var pose_target := pose_to_global_rotation * Vector3.UP
+	# Torque axis where the length is the rotation difference to the pose target in radians.
+	# FIXME: Add falback when pose_target.dot(_global_direction) ≈ -1.0
+	var torque_axis := pose_target.cross(_global_direction).normalized()
+	var torque_angle := pose_target.angle_to(_global_direction)
+	var torque := torque_axis * torque_angle
 
+	# Apply rotation spring velocity without damping. [1]
+	var frequency := properties.spring_freq * TAU
+	if not is_zero_approx(frequency):
 		var alpha := frequency
 		var x0 := torque
 		var cos_ := cos(delta * alpha)
@@ -156,13 +163,19 @@ func _process_modification() -> void:
 		# Use _global_direction
 		# var position := target + (x0 * cos_ + c2 * sin_)
 
+	# Limit rotation and angular rotation.
+	if torque_angle > properties.swing_span:
+		_global_direction = pose_target.rotated(torque_axis, properties.swing_span)
+
+		pass
+
 	_global_direction = _global_direction.normalized()
 
 	# Remove rotation around bone forward axis.
 	_angular_velocity = Plane(_global_direction, 0.0).project(_angular_velocity)
 
 	# Time-independent velocity damping. [2]
-	var velocity_decay := properties.damping * _VELOCITY_DECAY_FACTOR
+	var velocity_decay := properties.angular_damp * _VELOCITY_DECAY_FACTOR
 	_angular_velocity *= exp(-velocity_decay * delta)
 
 	# Get rotation relative to current pose.
@@ -178,6 +191,10 @@ func _process_modification() -> void:
 	# Apply bone transform to Node3D.
 	bone_pose.basis = Basis(bone_rotation)
 	global_transform = skeleton.global_transform * skeleton_parent_pose * bone_pose
+
+	_rotation_axis_mesh.global_transform.origin = global_transform.origin
+	_rotation_axis_mesh.global_transform.basis = Basis(Quaternion(Vector3.UP, _angular_velocity.normalized()))
+	_rotation_axis_mesh.global_transform.basis *= _angular_velocity.length()
 
 	_should_reset = false
 
@@ -209,8 +226,14 @@ func set_bone_name(value: String) -> void:
 	update_gizmos()
 
 
+## Reset rotation and angular velocity.
 func reset() -> void:
 	_should_reset = true
+
+
+## Add torque to global angular velocity.
+func add_torque_impulse(torque: Vector3) -> void:
+	_angular_velocity += torque
 
 
 func _setup() -> void:
@@ -234,7 +257,7 @@ func _setup() -> void:
 
 	var global_bone_pose := skeleton.global_transform * skeleton_bone_pose
 	_global_direction = global_bone_pose.basis * Vector3.UP
-	_global_position = global_bone_pose * (Vector3.UP * properties.length)
+	_global_position = global_bone_pose * Vector3.UP
 	_should_reset = true
 
 

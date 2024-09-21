@@ -8,21 +8,21 @@ extends Resource
 const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
 const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
-	frequency = 3.0,
-	damping = 0.1,
+	spring_freq = 3.0,
+	linear_damp = 0.1,
 	influence = 1.0,
 	gravity = Vector3.ZERO,
 	max_distance = 0.1,
 }
 
 ## Spring frequency without damping.
-@export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var frequency := DEFAULT_VALUES.frequency:
-	set = set_frequency
+@export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var spring_freq := DEFAULT_VALUES.spring_freq:
+	set = set_spring_freq
 ## Damping factor. Can be greater than [code]1.0[/code] to have even more influence.
 ## [br][br]
 ## [b]Note:[/b] Setting a damping factor near [code]0.0[/code] and having a [member frequency] near
 ## the process frequency may cause a resonance effect.
-@export_range(0.0, 1.0, 0.001, "or_greater") var damping := DEFAULT_VALUES.damping: set = set_damping
+@export_range(0.0, 1.0, 0.001, "or_greater") var linear_damp := DEFAULT_VALUES.linear_damp: set = set_linear_damp
 ## Defines, how much forces are influencing the movement.
 @export_range(0.0, 20.0, 0.001, "or_greater") var influence := DEFAULT_VALUES.influence:
 	set = set_influence
@@ -59,15 +59,13 @@ func _validate_property(property: Dictionary) -> void:
 			property.hint_string = &"suffix:m/s²"
 
 
-func set_frequency(value: float) -> void:
-	frequency = maxf(0.0, value)
-	#_update_values()
+func set_spring_freq(value: float) -> void:
+	spring_freq = maxf(0.0, value)
 	emit_changed()
 
 
-func set_damping(value: float) -> void:
-	damping = maxf(0.0, value)
-	#_update_values()
+func set_linear_damp(value: float) -> void:
+	linear_damp = maxf(0.0, value)
 	emit_changed()
 
 func set_influence(value: float) -> void:
@@ -97,15 +95,6 @@ func set_custom_gravity(value: Vector3) -> void:
 ## [code]true[/code].
 func get_gravity() -> Vector3:
 	return _gravity
-
-
-### Internally used value.
-#func get_spring_alpha() -> float:
-	#return _spring_alpha
-
-
-#func _update_values() -> void:
-	#_spring_alpha = frequency * sqrt(1.0 - damping * damping)
 
 
 func _update_gravity() -> void:

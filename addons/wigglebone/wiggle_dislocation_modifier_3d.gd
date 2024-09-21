@@ -129,7 +129,7 @@ func _process_modification() -> void:
 	_global_velocity += acceleration * delta
 
 	# Apply spring velocity without damping. [1]
-	var frequency := properties.frequency * TAU
+	var frequency := properties.spring_freq * TAU
 	if not is_zero_approx(frequency):
 		var pose_target := pose_to_global.origin
 
@@ -150,7 +150,7 @@ func _process_modification() -> void:
 	_local_position = global_to_pose * _global_position
 
 	# Time-independent velocity damping. [2]
-	var velocity_decay := properties.damping * _VELOCITY_DECAY_FACTOR
+	var velocity_decay := properties.linear_damp * _VELOCITY_DECAY_FACTOR
 	_global_velocity *= exp(-velocity_decay * delta)
 
 	# Limit distance and velocity.
@@ -206,8 +206,14 @@ func set_bone_name(value: String) -> void:
 	update_gizmos()
 
 
+## Reset position and linear velocity.
 func reset() -> void:
 	_should_reset = true
+
+
+## Add force impulse to global linear velocity.
+func add_force_impulse(force: Vector3) -> void:
+	_global_velocity += force
 
 
 func _setup() -> void:

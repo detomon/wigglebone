@@ -1,14 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://bgf0pfeftthp5"]
+[gd_scene load_steps=6 format=3 uid="uid://bgf0pfeftthp5"]
 
 [ext_resource type="Script" path="res://examples/wigglebone/simple/skeleton.gd" id="1_tk6k5"]
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_rm3gx"]
 [ext_resource type="Resource" uid="uid://barqjxeafyjad" path="res://examples/wigglebone/simple/rotation_modifiers.tres" id="3_41hci"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_r8r5v"]
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_m835s"]
+
 [node name="Rotation" type="Node3D"]
 
 [node name="Skeleton3D" type="Skeleton3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0128794, 0, 0)
 bones/0/name = "bone0"
 bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -1)
@@ -42,7 +43,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, -1.20235e-07, 0, 1.20235e-07, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
+transform = Transform3D(1, -2.01863e-08, 0, 2.01863e-08, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false
@@ -70,13 +71,13 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, -1.9185e-07, 2.92942e-15, 1.9185e-07, 1, -1.87733e-08, 6.72222e-16, 1.87733e-08, 1, -6.0536e-08, 0.5, 0)
+transform = Transform3D(1, -2.98355e-07, -5.39317e-20, 2.98355e-07, 1, 2.43051e-13, -1.85837e-20, -2.43051e-13, 1, -7.27173e-08, 0.5, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false
-visible = true
+visible = false
 visibility_parent = NodePath("")
-active = true
+active = false
 influence = 1.0
 script = ExtResource("2_rm3gx")
 bone_name = "end"
@@ -87,3 +88,22 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_r8r5v")
 skeleton = NodePath("")
 metadata/_edit_lock_ = true
+
+[node name="PhysicalBoneSimulator3D" type="PhysicalBoneSimulator3D" parent="Skeleton3D"]
+visible = false
+active = false
+
+[node name="PhysicalBone3D" type="PhysicalBone3D" parent="Skeleton3D/PhysicalBoneSimulator3D"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -0.999999)
+joint_type = 2
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5.96046e-07, 0)
+body_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.96046e-07, 0)
+bone_name = "bone0"
+joint_constraints/swing_span = 45.0
+joint_constraints/twist_span = 180.0
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.3
+joint_constraints/relaxation = 1.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Skeleton3D/PhysicalBoneSimulator3D/PhysicalBone3D"]
+shape = SubResource("SphereShape3D_m835s")

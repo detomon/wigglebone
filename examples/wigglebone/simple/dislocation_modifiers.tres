@@ -5,8 +5,8 @@
 [resource]
 resource_name = "Dislocation"
 script = ExtResource("1_dfbnm")
-frequency = 3.0
-damping = 0.1
+spring_freq = 3.0
+linear_damp = 0.1
 influence = 1.0
 max_distance = 0.1
 use_global_gravity = false
