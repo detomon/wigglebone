@@ -123,8 +123,8 @@ func _process_modification() -> void:
 	force -= global_velocity # Add reverse global velocity.
 
 	# Add torque. Inverse inertia is simplified to inverse of bone length.
-	var inv_inertia := 1.0 / properties.length / properties.mass \
-		if properties.length > 0.0 and properties.mass > 0.0 \
+	var inv_inertia := 1.0 / properties.length * properties.influence \
+		if properties.length > 0.0 \
 		else 0.0
 	var angular_acceleration := _global_direction.cross(force) * inv_inertia
 	_angular_velocity += angular_acceleration * delta

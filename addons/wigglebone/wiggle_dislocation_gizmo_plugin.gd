@@ -2,7 +2,7 @@
 extends EditorNode3DGizmoPlugin
 
 const HANDLE_ID_FORCE := 0
-const FORCE_MULTIPLIER := 1.0
+const FORCE_MULTIPLIER := 10.0
 
 const Functions := preload("functions.gd")
 
@@ -23,11 +23,11 @@ func _has_gizmo(spatial: Node3D) -> bool:
 	return spatial is WiggleDislocationModifier3D
 
 
-func _get_handle_name(_gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool) -> String:
+func _get_handle_name(_gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool) -> String:
 	return &"Force"
 
 
-func _get_handle_value(_gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool) -> Variant:
+func _get_handle_value(_gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool) -> Variant:
 	return _handle_force
 
 
@@ -83,10 +83,10 @@ func _get_handle_position(_properties: WiggleDislocationProperties3D) -> Vector3
 
 
 func _get_handle_force(handle_position: Vector3, properties: WiggleDislocationProperties3D) -> Vector3:
-	if properties.mass <= 0.0:
+	if properties.influence <= 0.0:
 		return Vector3.ZERO
 
 	var force := handle_position - _handle_init_position
-	var force_multiplier := properties.frequency / properties.mass * FORCE_MULTIPLIER
+	var force_multiplier := properties.frequency / properties.influence * FORCE_MULTIPLIER
 
 	return force * force_multiplier

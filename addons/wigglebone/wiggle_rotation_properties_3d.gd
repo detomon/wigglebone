@@ -12,7 +12,7 @@ const DEFAULT_VALUES := {
 	damping = 0.2,
 	gravity = Vector3.ZERO,
 	length = 0.1,
-	mass = 0.1,
+	influence = 10.0,
 	max_rotation = 60.0 / 180.0 * PI,
 	handle_distance = 0.1,
 }
@@ -29,9 +29,9 @@ const DEFAULT_VALUES := {
 ## The bone length. Defines, how much forces and global movement influences the rotation.
 @export_range(0.01, 1.0, 0.001, "or_greater", "suffix:m") var length := DEFAULT_VALUES.length:
 	set = set_length
-## The bone mass. Defines, how much forces and global movement influences the rotation.
-@export_range(0.0, 10.0, 0.001, "or_greater", "suffix:kg") var mass := DEFAULT_VALUES.mass:
-	set = set_mass
+## The bone influence. Defines, how much forces and global movement influences the rotation.
+@export_range(0.0, 20.0, 0.001, "or_greater") var influence := DEFAULT_VALUES.influence:
+	set = set_influence
 ## Maximum rotation relative to the pose position.
 @export_range(0.0, 180.0, 0.01, "radians") var max_rotation := DEFAULT_VALUES.max_rotation:
 	set = set_max_rotation
@@ -88,8 +88,8 @@ func set_length(value: float) -> void:
 	emit_changed()
 
 
-func set_mass(value: float) -> void:
-	mass = maxf(0.0, value)
+func set_influence(value: float) -> void:
+	influence = maxf(0.0, value)
 	emit_changed()
 
 

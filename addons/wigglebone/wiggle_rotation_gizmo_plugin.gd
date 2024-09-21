@@ -2,7 +2,7 @@
 extends EditorNode3DGizmoPlugin
 
 const HANDLE_ID_FORCE := 0
-const FORCE_MULTIPLIER := 2.0
+const FORCE_MULTIPLIER := 100.0
 
 const Functions := preload("functions.gd")
 
@@ -83,10 +83,10 @@ func _get_handle_position(properties: WiggleRotationProperties3D) -> Vector3:
 
 
 func _get_handle_force(handle_position: Vector3, properties: WiggleRotationProperties3D) -> Vector3:
-	if properties.mass <= 0.0:
+	if properties.influence <= 0.0:
 		return Vector3.ZERO
 
 	var force := handle_position - _handle_init_position
-	var force_multiplier := properties.length / properties.mass * FORCE_MULTIPLIER
+	var force_multiplier := properties.length / properties.influence * FORCE_MULTIPLIER
 
 	return force * force_multiplier
