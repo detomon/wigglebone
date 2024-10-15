@@ -5,10 +5,10 @@
 [resource]
 resource_name = "Rotation"
 script = ExtResource("1_3kjqh")
-spring_freq = 3.0
+spring_freq = 1.0
 angular_damp = 0.2
 torque_scale = 100.0
-swing_span = 1.0472
+swing_span = 2.61799
 use_global_gravity = false
-custom_gravity = Vector3(0, 0, 0)
+custom_gravity = Vector3(0, -3, 0)
 handle_distance = 0.2

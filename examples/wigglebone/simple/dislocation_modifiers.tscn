@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://examples/wigglebone/simple/skeleton.gd" id="1_cfp1t"]
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_dislocation_modifier_3d.gd" id="2_b8o86"]
-[ext_resource type="Resource" uid="uid://bkvifnkhehxqy" path="res://examples/wigglebone/simple/dislocation_modifiers.tres" id="3_803tg"]
+[ext_resource type="Resource" uid="uid://b24bot1miehxt" path="res://examples/wigglebone/simple/dislocation_modifiers.tres" id="3_803tg"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_s2j6m"]
 
 [node name="Dislocation" type="Node3D"]
@@ -41,7 +41,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.60233e-08, -2.10678e-07, 1.19209e-07)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false

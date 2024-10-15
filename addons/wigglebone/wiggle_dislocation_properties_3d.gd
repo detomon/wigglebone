@@ -10,7 +10,7 @@ const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
 	spring_freq = 3.0,
 	linear_damp = 0.1,
-	influence = 1.0,
+	motion_influence = 1.0,
 	gravity = Vector3.ZERO,
 	max_distance = 0.1,
 }
@@ -22,19 +22,22 @@ const DEFAULT_VALUES := {
 ## [br][br]
 ## [b]Note:[/b] Setting a damping factor near [code]0.0[/code] and having a [member frequency] near
 ## the process frequency may cause a resonance effect.
-@export_range(0.0, 1.0, 0.001, "or_greater") var linear_damp := DEFAULT_VALUES.linear_damp: set = set_linear_damp
-## Defines, how much forces are influencing the movement.
-@export_range(0.0, 20.0, 0.001, "or_greater") var influence := DEFAULT_VALUES.influence:
-	set = set_influence
+@export_range(0.0, 1.0, 0.001, "or_greater") var linear_damp := DEFAULT_VALUES.linear_damp:
+	set = set_linear_damp
+## Defines, how much global movement influences motion.
+@export_range(0.0, 1.0, 0.001, "or_greater") var motion_influence := DEFAULT_VALUES.motion_influence:
+	set = set_motion_influence
 ## Maximum distance the bone can move around its pose position.
 @export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := DEFAULT_VALUES.max_distance:
 	set = set_max_distance
 ## Uses the global gravity define in the project settings
 ## [member ProjectSettings.physics/3d/default_gravity] and
 ## [member ProjectSettings.physics/3d/default_gravity_vector]
-@export var use_global_gravity := false: set = set_use_global_gravity
+@export var use_global_gravity := false:
+	set = set_use_global_gravity
 ## Global gravity pulling at the mass center.
-@export var custom_gravity := DEFAULT_VALUES.gravity: set = set_custom_gravity
+@export var custom_gravity := DEFAULT_VALUES.gravity:
+	set = set_custom_gravity
 
 var _gravity := Vector3.ZERO
 #var _spring_alpha := 0.0
@@ -68,8 +71,8 @@ func set_linear_damp(value: float) -> void:
 	linear_damp = maxf(0.0, value)
 	emit_changed()
 
-func set_influence(value: float) -> void:
-	influence = maxf(0.0, value)
+func set_motion_influence(value: float) -> void:
+	motion_influence = maxf(0.0, value)
 	emit_changed()
 
 

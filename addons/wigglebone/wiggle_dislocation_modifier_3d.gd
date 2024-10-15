@@ -114,6 +114,7 @@ func _process_modification() -> void:
 		_global_velocity = Vector3.ZERO
 
 	var position_global := pose_to_global * _local_position
+	_global_position = position_global.lerp(_global_position, properties.motion_influence)
 	var parent_velocity := (position_global - _global_position) / delta
 
 	if _should_reset:
@@ -124,8 +125,7 @@ func _process_modification() -> void:
 	force -= parent_velocity # Add reverse global velocity.
 
 	# Add force.
-	var inv_inertia := 1.0 * properties.influence
-	var acceleration := force * inv_inertia
+	var acceleration := force
 	_global_velocity += acceleration * delta
 
 	# Apply spring velocity without damping. [1]

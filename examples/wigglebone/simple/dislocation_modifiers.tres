@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WiggleDislocationProperties3D" load_steps=2 format=3 uid="uid://bkvifnkhehxqy"]
+[gd_resource type="Resource" script_class="WiggleDislocationProperties3D" load_steps=2 format=3 uid="uid://b24bot1miehxt"]
 
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_dislocation_properties_3d.gd" id="1_dfbnm"]
 
@@ -7,7 +7,7 @@ resource_name = "Dislocation"
 script = ExtResource("1_dfbnm")
 spring_freq = 3.0
 linear_damp = 0.1
-influence = 1.0
+motion_influence = 1.0
 max_distance = 0.1
 use_global_gravity = false
 custom_gravity = Vector3(0, 0, 0)

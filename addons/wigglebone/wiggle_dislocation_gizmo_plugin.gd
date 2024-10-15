@@ -50,7 +50,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, ca
 		_handle_dragging = true
 
 	_handle_force = _get_handle_force(handle_position, properties)
-	node.force_global =_handle_force
+	node.force_global = _handle_force
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, _handle_id: int, _secondary: bool, _restore: Variant, _cancel: bool) -> void:
@@ -83,10 +83,10 @@ func _get_handle_position(_properties: WiggleDislocationProperties3D) -> Vector3
 
 
 func _get_handle_force(handle_position: Vector3, properties: WiggleDislocationProperties3D) -> Vector3:
-	if properties.influence <= 0.0:
+	if properties.motion_influence <= 0.0:
 		return Vector3.ZERO
 
 	var force := handle_position - _handle_init_position
-	var force_multiplier := properties.spring_freq / properties.influence * FORCE_MULTIPLIER
+	var force_multiplier := properties.spring_freq * FORCE_MULTIPLIER
 
 	return force * force_multiplier
