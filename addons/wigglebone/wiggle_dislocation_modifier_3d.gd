@@ -231,7 +231,6 @@ func _setup() -> void:
 	var skeleton_bone_pose := skeleton.get_bone_pose(_bone_idx)
 	_parent_bone_idx = skeleton.get_bone_parent(_bone_idx)
 
-	# Bone has parent.
 	if _parent_bone_idx >= 0:
 		skeleton_bone_pose = skeleton.get_bone_global_pose(_parent_bone_idx) * skeleton_bone_pose
 

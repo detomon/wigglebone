@@ -20,6 +20,7 @@ extends SkeletonModifier3D
 
 # Factor is arbitary but gives useful results.
 const _VELOCITY_DECAY_FACTOR := 25.0
+const _TORQUE_SCALE_FACTOR := 100.0
 
 const Functions := preload("functions.gd")
 
@@ -45,16 +46,16 @@ var _angular_velocity := Vector3.ZERO
 var _should_reset := true
 
 # TODO: Remove.
-const _DEBUG_AXIS := preload("res://_debug_axis.tscn")
-var _rotation_axis_mesh: Node3D
+#const _DEBUG_AXIS := preload("res://_debug_axis.tscn")
+#var _rotation_axis_mesh: Node3D
 
 
 func _enter_tree() -> void:
 	_setup()
 
-	_rotation_axis_mesh = _DEBUG_AXIS.instantiate()
-	add_child(_rotation_axis_mesh)
-	_rotation_axis_mesh.top_level = true
+	#_rotation_axis_mesh = _DEBUG_AXIS.instantiate()
+	#add_child(_rotation_axis_mesh)
+	#_rotation_axis_mesh.top_level = true
 
 
 func _exit_tree() -> void:
@@ -88,7 +89,7 @@ func _process_modification() -> void:
 		return
 
 	# FIXME: Remove.
-	var time := Time.get_ticks_usec()
+	#var time := Time.get_ticks_usec()
 
 	var skeleton := get_skeleton()
 	var delta := 0.016667 # Default to 60 FPS.
@@ -130,8 +131,8 @@ func _process_modification() -> void:
 	force += pose_to_global_rotation * force_local # Add force relative to current pose.
 	force -= global_velocity # Add reverse global velocity.
 
-	# Add torque. Inverse inertia is simplified to inverse of bone length.
-	var inv_inertia := 1.0 * properties.torque_scale
+	# Add torque.
+	var inv_inertia := _TORQUE_SCALE_FACTOR * properties.torque_scale
 	var angular_acceleration := _global_direction.cross(force) * inv_inertia
 	_angular_velocity += angular_acceleration * delta
 
@@ -144,8 +145,10 @@ func _process_modification() -> void:
 	# Global pose target.
 	var pose_target := pose_to_global_rotation * Vector3.UP
 	# Torque axis where the length is the rotation difference to the pose target in radians.
-	# FIXME: Add falback when pose_target.dot(_global_direction) ≈ -1.0
 	var torque_axis := pose_target.cross(_global_direction).normalized()
+	if torque_axis.is_zero_approx():
+		# FIXME: Add fallback for torque_axis.
+		pass
 	var torque_angle := pose_target.angle_to(_global_direction)
 	var torque := torque_axis * torque_angle
 
@@ -166,8 +169,8 @@ func _process_modification() -> void:
 	# Limit rotation and angular rotation.
 	if torque_angle > properties.swing_span:
 		_global_direction = pose_target.rotated(torque_axis, properties.swing_span)
-
-		pass
+		# FIXME: Constrain velocity at swing span.
+		#_angular_velocity = Vector3.ZERO
 
 	_global_direction = _global_direction.normalized()
 
@@ -192,9 +195,9 @@ func _process_modification() -> void:
 	bone_pose.basis = Basis(bone_rotation)
 	global_transform = skeleton.global_transform * skeleton_parent_pose * bone_pose
 
-	_rotation_axis_mesh.global_transform.origin = global_transform.origin
-	_rotation_axis_mesh.global_transform.basis = Basis(Quaternion(Vector3.UP, _angular_velocity.normalized()))
-	_rotation_axis_mesh.global_transform.basis *= _angular_velocity.length()
+	#_rotation_axis_mesh.global_transform.origin = global_transform.origin
+	#_rotation_axis_mesh.global_transform.basis = Basis(Quaternion(Vector3.UP, _angular_velocity.normalized()))
+	#_rotation_axis_mesh.global_transform.basis *= _angular_velocity.length()
 
 	_should_reset = false
 
@@ -251,12 +254,11 @@ func _setup() -> void:
 	var skeleton_bone_pose := skeleton.get_bone_pose(_bone_idx)
 	_parent_bone_idx = skeleton.get_bone_parent(_bone_idx)
 
-	# Bone has parent.
 	if _parent_bone_idx >= 0:
 		skeleton_bone_pose = skeleton.get_bone_global_pose(_parent_bone_idx) * skeleton_bone_pose
 
 	var global_bone_pose := skeleton.global_transform * skeleton_bone_pose
-	_global_direction = global_bone_pose.basis * Vector3.UP
+	_global_direction = (global_bone_pose.basis * Vector3.UP).normalized()
 	_global_position = global_bone_pose * Vector3.UP
 	_should_reset = true
 

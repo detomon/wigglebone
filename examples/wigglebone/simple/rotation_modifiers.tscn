@@ -1,13 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://bgf0pfeftthp5"]
+[gd_scene load_steps=5 format=3 uid="uid://bgf0pfeftthp5"]
 
 [ext_resource type="Script" path="res://examples/wigglebone/simple/skeleton.gd" id="1_tk6k5"]
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_rm3gx"]
 [ext_resource type="Resource" uid="uid://barqjxeafyjad" path="res://examples/wigglebone/simple/rotation_modifiers.tres" id="3_41hci"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_r8r5v"]
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_m835s"]
-
 [node name="Rotation" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0057978)
 
 [node name="Skeleton3D" type="Skeleton3D" parent="."]
 bones/0/name = "bone0"
@@ -43,7 +42,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, 3.83635e-08, 0, -3.83635e-08, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
+transform = Transform3D(1, 8.28631e-08, 0, -8.28631e-08, 1, 0, 0, 0, 1, 0, 4.37114e-08, -5.96046e-08)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false
@@ -88,22 +87,3 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_r8r5v")
 skeleton = NodePath("")
 metadata/_edit_lock_ = true
-
-[node name="PhysicalBoneSimulator3D" type="PhysicalBoneSimulator3D" parent="Skeleton3D"]
-visible = false
-active = false
-
-[node name="PhysicalBone3D" type="PhysicalBone3D" parent="Skeleton3D/PhysicalBoneSimulator3D"]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -0.999999)
-joint_type = 2
-joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -9.53674e-07, 0)
-body_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.53674e-07, 0)
-bone_name = "bone0"
-joint_constraints/swing_span = 45.0
-joint_constraints/twist_span = 180.0
-joint_constraints/bias = 0.3
-joint_constraints/softness = 0.3
-joint_constraints/relaxation = 1.0
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Skeleton3D/PhysicalBoneSimulator3D/PhysicalBone3D"]
-shape = SubResource("SphereShape3D_m835s")

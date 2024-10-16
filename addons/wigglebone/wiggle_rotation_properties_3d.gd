@@ -12,7 +12,7 @@ const DEFAULT_VALUES := {
 	angular_damp = 0.2,
 	gravity = Vector3.ZERO,
 	length = 0.1,
-	torque_scale = 100.0,
+	torque_scale = 1.0,
 	swing_span = 60.0 / 180.0 * PI,
 	handle_distance = 0.1,
 }
@@ -26,8 +26,8 @@ const DEFAULT_VALUES := {
 	set = set_spring_freq
 ## Damping factor. Can be greater than [code]1.0[/code] to have an even greater effect.
 @export_range(0.0, 1.0, 0.001, "or_greater") var angular_damp := DEFAULT_VALUES.angular_damp: set = set_angular_damp
-## The bone influence. Defines, how much forces and global movement influences the rotation.
-@export_range(0.0, 200.0, 0.001, "or_greater") var torque_scale := DEFAULT_VALUES.torque_scale:
+## Defines, how much forces and global movement influences the rotation.
+@export_range(0.0, 1.0, 0.001, "or_greater") var torque_scale := DEFAULT_VALUES.torque_scale:
 	set = set_torque_scale
 ## Maximum rotation relative to the pose position.
 @export_range(0.0, 180.0, 0.01, "radians") var swing_span := DEFAULT_VALUES.swing_span:
