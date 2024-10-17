@@ -5,8 +5,6 @@ extends Resource
 
 ## Defines the properties used to rotate the bone.
 
-const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
-const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
 	spring_freq = 3.0,
 	angular_damp = 0.2,
@@ -25,7 +23,8 @@ const DEFAULT_VALUES := {
 @export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var spring_freq := DEFAULT_VALUES.spring_freq:
 	set = set_spring_freq
 ## Damping factor. Can be greater than [code]1.0[/code] to have an even greater effect.
-@export_range(0.0, 1.0, 0.001, "or_greater") var angular_damp := DEFAULT_VALUES.angular_damp: set = set_angular_damp
+@export_range(0.0, 1.0, 0.001, "or_greater") var angular_damp := DEFAULT_VALUES.angular_damp:
+	set = set_angular_damp
 ## Defines, how much forces and global movement influences the rotation.
 @export_range(0.0, 1.0, 0.001, "or_greater") var torque_scale := DEFAULT_VALUES.torque_scale:
 	set = set_torque_scale
@@ -38,13 +37,16 @@ const DEFAULT_VALUES := {
 ## [member ProjectSettings.physics/3d/default_gravity_vector] with
 ## [member ProjectSettings.physics/3d/default_gravity]. If [code]false[/code],
 ## [member custom_gravity] is used.
-@export var use_global_gravity := false: set = set_use_global_gravity
+@export var use_global_gravity := false:
+	set = set_use_global_gravity
 ## A constant global force.
-@export var custom_gravity := DEFAULT_VALUES.gravity: set = set_custom_gravity
+@export var custom_gravity := DEFAULT_VALUES.gravity:
+	set = set_custom_gravity
 
 @export_group("Editor")
 ## Sets the distance of the editor handle on the bone's Y axis.
-@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := DEFAULT_VALUES.handle_distance: set = set_handle_distance
+@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := DEFAULT_VALUES.handle_distance:
+	set = set_handle_distance
 
 var _gravity := Vector3.ZERO
 var _spring_alpha := 0.0
@@ -63,6 +65,9 @@ func _property_get_revert(property: StringName) -> Variant:
 
 
 func _validate_property(property: Dictionary) -> void:
+	const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
+	const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
+
 	match property.name:
 		&"set_swing_span":
 			property.usage = PROPERTY_HIDDEN

@@ -5,8 +5,6 @@ extends Resource
 
 ## Defines the properties used to move the bone.
 
-const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
-const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
 const DEFAULT_VALUES := {
 	spring_freq = 3.0,
 	linear_damp = 0.1,
@@ -56,6 +54,9 @@ func _property_get_revert(property: StringName) -> Variant:
 
 
 func _validate_property(property: Dictionary) -> void:
+	const PROPERTY_VISIBLE := PROPERTY_USAGE_DEFAULT
+	const PROPERTY_HIDDEN := PROPERTY_VISIBLE & ~PROPERTY_USAGE_EDITOR
+
 	match property.name:
 		&"custom_gravity":
 			property.usage = PROPERTY_HIDDEN if use_global_gravity else PROPERTY_VISIBLE
