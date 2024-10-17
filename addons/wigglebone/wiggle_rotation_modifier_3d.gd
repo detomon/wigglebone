@@ -68,6 +68,7 @@ func _validate_property(property: Dictionary) -> void:
 		&"bone_name":
 			var skeleton := get_skeleton()
 			var bone_names = Functions.get_sorted_skeleton_bones(skeleton)
+
 			property.hint |= PROPERTY_HINT_ENUM
 			property.hint_string = ",".join(bone_names)
 
