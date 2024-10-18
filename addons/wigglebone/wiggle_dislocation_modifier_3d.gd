@@ -36,12 +36,9 @@ const Functions := preload("functions.gd")
 
 var _bone_idx := -1
 var _parent_bone_idx := -1
-# Position in pose space.
-var _local_position := Vector3.ZERO
-# Global pose position.
-var _global_position := Vector3.ZERO
-# Global velocity.
-var _global_velocity := Vector3.ZERO
+var _local_position := Vector3.ZERO # Position in pose space.
+var _global_position := Vector3.ZERO # Global pose position.
+var _global_velocity := Vector3.ZERO # Global velocity.
 var _should_reset := true
 
 
@@ -59,6 +56,7 @@ func _validate_property(property: Dictionary) -> void:
 		&"bone_name":
 			var skeleton := get_skeleton()
 			var bone_names = Functions.get_sorted_skeleton_bones(skeleton)
+
 			property.hint |= PROPERTY_HINT_ENUM
 			property.hint_string = ",".join(bone_names)
 
@@ -80,7 +78,7 @@ func _process_modification() -> void:
 		return
 
 	# FIXME: Remove.
-	var time := Time.get_ticks_usec()
+	#var time := Time.get_ticks_usec()
 
 	var skeleton := get_skeleton()
 	var delta := 1.0 / 60.0 # Default to 60 FPS.
@@ -100,7 +98,6 @@ func _process_modification() -> void:
 	var skeleton_bone_pose := bone_pose
 	var skeleton_parent_pose := Transform3D()
 
-	# Bone has parent.
 	if _parent_bone_idx >= 0:
 		skeleton_parent_pose = skeleton.get_bone_global_pose(_parent_bone_idx)
 		skeleton_bone_pose = skeleton_parent_pose * skeleton_bone_pose
@@ -157,12 +154,12 @@ func _process_modification() -> void:
 	var length_squared := _local_position.length_squared()
 	var max_distance := properties.max_distance
 	if length_squared > max_distance * max_distance:
-		var global_pose_to_mass := pose_to_global.origin.direction_to(_global_position)
 		# Limit position to max_distance.
 		_local_position = _local_position * max_distance / sqrt(length_squared)
 		# Recalculate global position.
 		_global_position = pose_to_global * _local_position
 
+		var global_pose_to_mass := pose_to_global.origin.direction_to(_global_position)
 		# Limit velocity when velocity points outwards.
 		if global_pose_to_mass.dot(_global_velocity) > 0.0:
 			# Project velocity to sphere tangent.

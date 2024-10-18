@@ -21,6 +21,7 @@ extends SkeletonModifier3D
 # Factor is arbitary but gives useful results.
 const _VELOCITY_DECAY_FACTOR := 25.0
 const _TORQUE_SCALE_FACTOR := 100.0
+const _SWING_SPAN_EPSILON := 0.00001
 
 const Functions := preload("functions.gd")
 
@@ -37,12 +38,9 @@ const Functions := preload("functions.gd")
 
 var _bone_idx := -1
 var _parent_bone_idx := -1
-# Global bone direction.
-var _global_direction := Vector3.UP
-# Global mass position.
-var _global_position := Vector3.ZERO
-# Global angular velocity.
-var _angular_velocity := Vector3.ZERO
+var _global_direction := Vector3.UP # Global bone direction.
+var _global_position := Vector3.ZERO # Global mass position.
+var _angular_velocity := Vector3.ZERO # Global angular velocity.
 var _should_reset := true
 
 
@@ -102,14 +100,12 @@ func _process_modification() -> void:
 	var skeleton_bone_pose := bone_pose
 	var skeleton_parent_pose := Transform3D()
 
-	# Bone has parent.
 	if _parent_bone_idx >= 0:
 		skeleton_parent_pose = skeleton.get_bone_global_pose(_parent_bone_idx)
 		skeleton_bone_pose = skeleton_parent_pose * skeleton_bone_pose
 
 	var pose_to_global := skeleton.global_transform * skeleton_bone_pose
 	var pose_to_global_rotation := pose_to_global.basis.get_rotation_quaternion()
-	var global_to_pose_rotation := pose_to_global_rotation.inverse()
 	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 	var bone_tail := bone_pose_rotation * Vector3.UP
 
@@ -134,6 +130,7 @@ func _process_modification() -> void:
 	# Torque axis where the length is the rotation difference to the pose target in radians.
 	var torque_axis := pose_global.cross(_global_direction)
 	if torque_axis.is_zero_approx():
+		# Use fallback axis when exactly 0° or 180°.
 		torque_axis = pose_to_global_rotation * Vector3.RIGHT
 	torque_axis = torque_axis.normalized()
 	var torque_angle := pose_global.angle_to(_global_direction)
@@ -152,27 +149,34 @@ func _process_modification() -> void:
 		torque = x0 * cos_ + c2 * sin_
 		_angular_velocity = (c2 * cos_ - x0 * sin_) * alpha
 
-		# FIXME: Handle angle wrap around pole.
+		# FIXME: Handle wrapping around pole when torque_angle > PI.
 		torque_angle = torque.length()
 		if not is_zero_approx(torque_angle):
 			torque_axis = torque / torque_angle
-			_global_direction = pose_global.rotated(torque_axis, torque_angle)
+		_global_direction = pose_global.rotated(torque_axis, torque_angle)
 
 	# Linear rotation.
 	else:
 		var velocity := _angular_velocity.length()
 		if not is_zero_approx(velocity):
 			var rotation_axis := _angular_velocity / velocity
-			_global_direction = Quaternion(rotation_axis, velocity * delta) * _global_direction
+			var velocity_delta := velocity * delta
+			_global_direction = Quaternion(rotation_axis, velocity_delta) * _global_direction
 
-	# Limit rotation and angular rotation.
-	if torque_angle > properties.swing_span:
+	torque_angle = minf(torque_angle, PI)
+	# Limit rotation and angular velocity.
+	# _SWING_SPAN_EPSILON prevents sticking to limit.
+	if torque_angle > properties.swing_span + _SWING_SPAN_EPSILON:
 		_global_direction = pose_global.rotated(torque_axis, properties.swing_span)
-		# FIXME: Constrain velocity at swing span.
-		#_angular_velocity = Vector3.ZERO
+		# Is rotating towards swing limit.
+		if _angular_velocity.dot(torque_axis) > 0.0:
+			# Global velocity at tip.
+			var torque_force := _angular_velocity.cross(_global_direction)
+			# Limit force to tangent on swing span circle.
+			torque_force = torque_force.project(torque_axis)
+			_angular_velocity = _global_direction.cross(torque_force)
 
 	_global_direction = _global_direction.normalized()
-
 	# Remove rotation around bone forward axis.
 	_angular_velocity = Plane(_global_direction, 0.0).project(_angular_velocity)
 
@@ -181,6 +185,7 @@ func _process_modification() -> void:
 	_angular_velocity *= exp(-velocity_decay * delta)
 
 	# Get rotation relative to current pose.
+	var global_to_pose_rotation := pose_to_global_rotation.inverse()
 	var direction_local := global_to_pose_rotation * _global_direction
 	var rotation_relative := Quaternion(Vector3.UP, direction_local) \
 		if not is_equal_approx(direction_local.dot(Vector3.UP), -1.0) \
@@ -195,6 +200,11 @@ func _process_modification() -> void:
 	global_transform = skeleton.global_transform * skeleton_parent_pose * bone_pose
 
 	_should_reset = false
+
+	# FIXME: Remove.
+	#var time2 := Time.get_ticks_usec()
+	#if get_tree().get_frame() % 60 == 0:
+		#print(float(time2 - time) / 1_000_000.0)
 
 
 func set_properties(value: WiggleRotationProperties3D) -> void:
