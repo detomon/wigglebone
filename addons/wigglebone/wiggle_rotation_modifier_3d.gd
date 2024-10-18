@@ -45,17 +45,9 @@ var _global_position := Vector3.ZERO
 var _angular_velocity := Vector3.ZERO
 var _should_reset := true
 
-# TODO: Remove.
-#const _DEBUG_AXIS := preload("res://_debug_axis.tscn")
-#var _rotation_axis_mesh: Node3D
-
 
 func _enter_tree() -> void:
 	_setup()
-
-	#_rotation_axis_mesh = _DEBUG_AXIS.instantiate()
-	#add_child(_rotation_axis_mesh)
-	#_rotation_axis_mesh.top_level = true
 
 
 func _exit_tree() -> void:
@@ -93,7 +85,7 @@ func _process_modification() -> void:
 	#var time := Time.get_ticks_usec()
 
 	var skeleton := get_skeleton()
-	var delta := 0.016667 # Default to 60 FPS.
+	var delta := 1.0 / 60.0 # Default to 60 FPS.
 
 	# FIXME: Better method to get the current delta?
 	match skeleton.modifier_callback_mode_process:
@@ -117,6 +109,7 @@ func _process_modification() -> void:
 
 	var pose_to_global := skeleton.global_transform * skeleton_bone_pose
 	var pose_to_global_rotation := pose_to_global.basis.get_rotation_quaternion()
+	var global_to_pose_rotation := pose_to_global_rotation.inverse()
 	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 	var bone_tail := bone_pose_rotation * Vector3.UP
 
@@ -137,39 +130,44 @@ func _process_modification() -> void:
 	var angular_acceleration := _global_direction.cross(force) * inv_inertia
 	_angular_velocity += angular_acceleration * delta
 
-	# Apply angular velocity.
-	var velocity := _angular_velocity.length()
-	if not is_zero_approx(velocity):
-		var rotation_axis := _angular_velocity / velocity
-		_global_direction = Quaternion(rotation_axis, velocity * delta) * _global_direction
-
-	# Global pose target.
-	var pose_target := pose_to_global_rotation * Vector3.UP
+	var pose_global := pose_to_global_rotation * Vector3.UP
 	# Torque axis where the length is the rotation difference to the pose target in radians.
-	var torque_axis := pose_target.cross(_global_direction).normalized()
+	var torque_axis := pose_global.cross(_global_direction)
 	if torque_axis.is_zero_approx():
-		# FIXME: Add fallback for torque_axis.
-		pass
-	var torque_angle := pose_target.angle_to(_global_direction)
-	var torque := torque_axis * torque_angle
+		torque_axis = pose_to_global_rotation * Vector3.RIGHT
+	torque_axis = torque_axis.normalized()
+	var torque_angle := pose_global.angle_to(_global_direction)
 
 	# Apply rotation spring velocity without damping. [1]
 	var frequency := properties.spring_freq * TAU
 	if not is_zero_approx(frequency):
+		var torque := torque_axis * torque_angle
+
 		var alpha := frequency
 		var x0 := torque
 		var cos_ := cos(delta * alpha)
 		var sin_ := sin(delta * alpha)
 		var c2 := _angular_velocity / alpha
 
+		torque = x0 * cos_ + c2 * sin_
 		_angular_velocity = (c2 * cos_ - x0 * sin_) * alpha
-		# FIXME: Ignoring changed position results in spring loosing energy even when damping is 0.0.
-		# Use _global_direction
-		# var position := target + (x0 * cos_ + c2 * sin_)
+
+		# FIXME: Handle angle wrap around pole.
+		torque_angle = torque.length()
+		if not is_zero_approx(torque_angle):
+			torque_axis = torque / torque_angle
+			_global_direction = pose_global.rotated(torque_axis, torque_angle)
+
+	# Linear rotation.
+	else:
+		var velocity := _angular_velocity.length()
+		if not is_zero_approx(velocity):
+			var rotation_axis := _angular_velocity / velocity
+			_global_direction = Quaternion(rotation_axis, velocity * delta) * _global_direction
 
 	# Limit rotation and angular rotation.
 	if torque_angle > properties.swing_span:
-		_global_direction = pose_target.rotated(torque_axis, properties.swing_span)
+		_global_direction = pose_global.rotated(torque_axis, properties.swing_span)
 		# FIXME: Constrain velocity at swing span.
 		#_angular_velocity = Vector3.ZERO
 
@@ -183,7 +181,7 @@ func _process_modification() -> void:
 	_angular_velocity *= exp(-velocity_decay * delta)
 
 	# Get rotation relative to current pose.
-	var direction_local := pose_to_global_rotation.inverse() * _global_direction
+	var direction_local := global_to_pose_rotation * _global_direction
 	var rotation_relative := Quaternion(Vector3.UP, direction_local) \
 		if not is_equal_approx(direction_local.dot(Vector3.UP), -1.0) \
 		else Quaternion(1.0, 0.0, 0.0, 0.0) # Rotate around X axis as fallback when rotation is exactly 180°.
@@ -196,16 +194,7 @@ func _process_modification() -> void:
 	bone_pose.basis = Basis(bone_rotation)
 	global_transform = skeleton.global_transform * skeleton_parent_pose * bone_pose
 
-	#_rotation_axis_mesh.global_transform.origin = global_transform.origin
-	#_rotation_axis_mesh.global_transform.basis = Basis(Quaternion(Vector3.UP, _angular_velocity.normalized()))
-	#_rotation_axis_mesh.global_transform.basis *= _angular_velocity.length()
-
 	_should_reset = false
-
-	# FIXME: Remove.
-	#var time2 := Time.get_ticks_usec()
-	#if get_tree().get_frame() % 60 == 0:
-		#print(float(time2 - time) / 1_000_000.0)
 
 
 func set_properties(value: WiggleRotationProperties3D) -> void:
@@ -261,7 +250,8 @@ func _setup() -> void:
 	var global_bone_pose := skeleton.global_transform * skeleton_bone_pose
 	_global_direction = (global_bone_pose.basis * Vector3.UP).normalized()
 	_global_position = global_bone_pose * Vector3.UP
-	_should_reset = true
+
+	reset()
 
 
 func _on_properties_changed() -> void:

@@ -6,7 +6,6 @@
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_r8r5v"]
 
 [node name="Rotation" type="Node3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.19817)
 
 [node name="Skeleton3D" type="Skeleton3D" parent="."]
 bones/0/name = "bone0"
@@ -42,7 +41,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
+transform = Transform3D(1, 1.0347e-05, 0, -1.0347e-05, 1, 0, 0, 0, 1, 0, 4.37114e-08, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false

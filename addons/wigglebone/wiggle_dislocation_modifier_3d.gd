@@ -83,7 +83,7 @@ func _process_modification() -> void:
 	var time := Time.get_ticks_usec()
 
 	var skeleton := get_skeleton()
-	var delta := 0.016667 # Default to 60 FPS.
+	var delta := 1.0 / 60.0 # Default to 60 FPS.
 
 	# FIXME: Better method to get the current delta?
 	match skeleton.modifier_callback_mode_process:
@@ -131,15 +131,15 @@ func _process_modification() -> void:
 	# Apply spring velocity without damping. [1]
 	var frequency := properties.spring_freq * TAU
 	if not is_zero_approx(frequency):
-		var pose_target := pose_to_global.origin
+		var pose_global := pose_to_global.origin
 
 		var alpha := frequency
-		var x0 := _global_position - pose_target
+		var x0 := _global_position - pose_global
 		var cos_ := cos(delta * alpha)
 		var sin_ := sin(delta * alpha)
 		var c2 := _global_velocity / alpha
 
-		_global_position = pose_target + (x0 * cos_ + c2 * sin_)
+		_global_position = pose_global + (x0 * cos_ + c2 * sin_)
 		_global_velocity = (c2 * cos_ - x0 * sin_) * alpha
 
 	# No spring tension. Just move the mass in global space.
