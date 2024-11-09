@@ -1,24 +1,20 @@
-# WiggleBone Plugin for Godot Engine (4.x)
+# WiggleBone Skeleton Modifier for Godot Engine 4.3
 
-Adds jiggle physics to bones of a **Skeleton3D**. It reacts to animated or global motion as if it's connected with a rubber band to its initial position. As it reacts to acceleration instead of velocity, bones of constantly moving objects will not "lag behind" and have a more realistic behaviour.
+Adds jiggle physics to a `Skeleton3D` bone using `SkeletonModifier3D` nodes.
 
-The node inherits from **BoneAttachment3D** and can also be used as such. It overrides the bone's global pose respecting the current pose, so the bone pose still be animated.
-
-See the [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone) directory for some examples.
+> [!NOTE]
+> Requires Godot 4.3. As Godot 4.2 and lower does not support `SkeletonModifier3D` nodes, the branch [godot-4.2](https://github.com/detomon/wigglebone/tree/godot-4.2) has an alternative implementation using `Node3D` and can be used as a fallback for existing projects.
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Node Properties](#node-properties)
-- [WiggleProperties Resource](#wiggleproperties-resource)
-- [Pose Modes](#pose-modes)
-- [Functions](#functions)
-- [Testing in Editor](#testing-in-editor)
-- [Breaking Changes from the Godot 3.x Version](#breaking-changes-from-the-godot-3x-version)
+- [Wiggle rotation](#wiggle-rotation)
+- [Wiggle position](#wiggle-position)
+- [Testing in editor](#testing-in-editor)
+- [References](#references)
 
-> **Note**
-> Requires Godot 4.x. For Godot 3.x, see the [3.x branch](https://github.com/detomon/wigglebone/tree/godot-3.x).
+---
 
-![Editor Example](images/palm.gif)
+![Palm](images/example.gif)
 
 ## Installation
 
@@ -34,80 +30,115 @@ or...
 
 ## Usage
 
-You can now add **WiggleBone** nodes to a **Skeleton3D**. See the example scenes in [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone).
+You can now add `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D` nodes to a `Skeleton3D`. See the example scenes in [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone).
 
-## Node Properties
+**Note:** Poses modified in `SkeletonModifier3D` nodes are only temporary for the current frame. Modifiers for parent bones should come first (above) in the scene tree, otherwise it may have not the desired effect.
 
-| Title | Name | Description |
-|---|---|---|
-| Enabled | `enabled` | Enables or disables wiggling. When disabled, the bone returns to it's current pose. |
-| Properties | `properties` | Properties are stored in a separate [**WiggleProperties**](#wiggleproperties-resource) resource type. |
-| Constant global force | `const_force_global` | This applies a global constant force additional to the gravity already set in [**WiggleProperties**](#wiggleproperties-resource). |
-| Constant local force | `const_force_local` | This applies a constant force relative to the bone's pose. |
-| Bone Name | `bone_name ` | Inherited from **BoneAttachment3D**. Selects which bone should be used. |
+> [!WARNING]
+> The `WiggleBone` node is deprecated and should be replaced with either `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D`.
 
-> **Warning**
-> Should work when `BoneAttachment3D.override_pose` is `true`. Using `BoneAttachment3D.use_external_skeleton` is not supported yet.
+## Wiggle rotation
 
-## WiggleProperties Resource
+**DMWBWiggleRotationModifier3D**
 
-Properties are stored in a separate **WiggleProperties** resource type. This way, bone properties can be reused (saved) and shared between multiple bones, for example, on symetric bones.
+Rotates the bone around the current bone pose. The current pose direction acts as the spring's rest position.
 
-| Title | Name | Description |
-|---|---|---|
-| Mode | `mode` | Two different [pose modes](#pose-modes) are supported: `Rotation` and `Dislocation`. |
-| Stiffness | `stiffness` | This is the bones tendency to return to its original pose. The higher the value the stronger the pull. |
-| Damping | `damping` | Reduces the bones motion. The higher the value the slower it moves in general. |
-| Gravity | `gravity` | The force pulling at the tip (mode `Rotation`) or origin (mode `Dislocation`). |
+### Modifier properties
 
-### Additional Properties for Pose Mode `Rotation`
+| Property | Description |
+|---|---|
+| `properties` | Properties used to move the bone. (`DMWBWiggleRotationProperties3D`) |
+| `force_global ` | Applies a constant global force. |
+| `force_local ` | Applies a constant force relative to the bone's pose. |
+| `handle_distance ` | Sets the distance of the editor handle on the bone's Y axis. |
 
-| Title | Name | Description |
-|---|---|---|
-| Length | `length` | This defines the bone's length. At its end is the point at which gravity and other forces are pulling. This is required as the length influences the motion. |
-| Max Degrees | `max_degrees` | The maximum number of degrees the bone can rotate around it's pose. |
+### Property resource
 
-### Additional Properties for Pose Mode `Dislocation`
+**DMWBWiggleRotationProperties3D**
 
-| Title | Name | Description |
-|---|---|---|
-| Max Distance | `max_distance` | The maximum distance the bone can move around its pose. |
+Used to set the modifier properties. Can be shared by multiple modifiers.
 
-## Pose Modes
+| Property | Description |
+|---|---|
+| `spring_freq ` | The spring's oscillation frequency. *Note: Adding forces may change the frequency.* |
+| `angular_damp` | Damping factor of the angular velocity. |
+| `force_scale` | Defines how much the rotation is influenced by forces. |
+| `linear_scale` | Defines how much the rotation is influenced by global movement. |
+| `swing_span` | Maximum angle the bone can rotate around its pose. |
+| `gravity` | Applies a constant global force. |
 
-Two different pose modes are supported.
+### Methods
 
-### Rotation (`WiggleProperties.Mode.ROTATION`)
+| Method | Description |
+|---|---|
+| `void reset()` | Reset rotation and angular velocity. |
+| `void add_torque_impulse(torque: Vector3)` | Add a global torque impulse. |
+| `void add_force_impulse(force: Vector3)` | Add a global force impulse. |
 
-The bone rotates around its origin relative to the its pose. The rotation angle can be limited using **Max Degrees** (`max_degrees`). It has an upper limit of 90° due to the implementation. All values have a soft limit.
+### Free rotation
 
-### Dislocation (`WiggleProperties.Mode.DISLOCATION`)
+To allow the bone to rotate freely, the spring frequency (`spring_freq`) can  be set to `0.0` or a very low value.
 
-The bone moves around its origin relative to its pose without rotating. The distance can be limited using **Max Distance** (`max_distance`). All values have a soft limit.
+### Limitations
 
-## Functions
+- Rotations near 180° have a "pole", which means that the bone spins around its forward axis near that limit.
+- Rotation with exactly 180° have no unique solution and the bone's forward axis rotation snaps to a fallback axis.
+- When the rotation approaches 180° while using a low spring frequency, the angular rotation may change its direction in certain cases.
 
-This functions can be called on the **WiggleBone** node.
+**Node:** Some of these problems can be avoided by setting the bone pose rotation already to the desired rest position. For example, if a bone is hanging down, the bone pose should already be pointing down.
 
-### `apply_impulse(impulse: Vector3, global := true) -> void`
+## Wiggle position
 
-Adds a single impulse force for the next frame. If `global` is `false`, the force is relative to the bone's pose.
+**DMWBWigglePositionModifier3D**
 
-### `reset() -> void`
+Moves the bone around the current bone pose without rotating. The current pose position acts as the spring's rest position.
 
-Resets movement and resets the bone to its pose. Can be used, for example, after "teleporting" the character (moving instantaneously a long distance) to prevent overshooting.
+### Modifier properties
+
+| Property | Description |
+|---|---|
+| `properties` | Properties used to move the bone. (`DMWBWigglePositionProperties3D`) |
+| `force_global ` | Applies a constant global force. |
+| `force_local ` | Applies a constant local force relative to the bone's pose. |
+
+### Property resource
+
+**DMWBWigglePositionProperties3D**
+
+Used to set the modifier properties. Can be shared by multiple modifiers.
+
+| Property | Description |
+|---|---|
+| `spring_freq ` | The spring's oscillation frequency. *Note: Adding forces may change the frequency.* |
+| `linear_damp` | Damping factor of the velocity. |
+| `force_scale` | Defines how much the position is influenced by forces. |
+| `linear_scale` | Defines how much the position is influenced by global movement. |
+| `max_distance` | Maximum distance the bone can move around its pose position. |
+| `gravity` | Applies a constant global force. |
+
+### Methods
+
+| Method | Description |
+|---|---|
+| `void reset()` | Reset position and velocity. |
+| `void add_force_impulse(force: Vector3)` | Add a global force impulse. |
 
 ## Testing in Editor
 
-When a **WiggleBone** node is selected in the scene tree, a force can be applied to it by dragging its handle. The handle appears at the bone's end when `Rotation` mode is used or at the origin when `Dislocation` mode is used, respectively. Another way is to drag or rotate the **Skeleton3D** or one of its parents.
+When a `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D` node is selected in the scene tree, a force can be applied to it by dragging its handle. Another way is to drag or rotate the `Skeleton3D` or one of its parents.
 
 ### Disabling Editor Gizmo
 
-The editor gizmo (cone/sphere) can be hidden in the 3D viewport by disabling it in `View > Gizmos > WiggleBone`
+The editor gizmo (cone/sphere) can be hidden in the 3D viewport by disabling it in `View > Gizmos > DMWBWiggleRotationModifier3D` or `View > Gizmos > DMWBWigglePositionModifier3D`, respectively.
 
-## Breaking Changes from the Godot 3.x Version
+## References
 
-### [**WiggleProperties**](#wiggleproperties-resource)
+### Springs
 
-- `mass_center` (`Vector3`) was replaced by `length` (`float`)
-- `const_force` was renamed to `const_force_global`
+Based on **Springs: From Hooke's law to a time based equation** by EgoMooses<br>
+<https://www.youtube.com/watch?v=FZekwtIO0I4>
+
+### Time-independent lerp
+
+**Lerp smoothing is broken** by Freya Holmér<br>
+<https://www.youtube.com/watch?v=LSNQuFEDOyQ>

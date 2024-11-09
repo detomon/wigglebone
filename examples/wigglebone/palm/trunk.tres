@@ -1,14 +1,12 @@
-[gd_resource type="Resource" script_class="WiggleProperties" load_steps=2 format=3 uid="uid://cwabaw2vr7rl"]
+[gd_resource type="Resource" script_class="DMWBWiggleRotationProperties3D" load_steps=2 format=3 uid="uid://cwabaw2vr7rl"]
 
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_properties.gd" id="1"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_properties_3d.gd" id="1_lrolf"]
 
 [resource]
-resource_name = "Trunk"
-script = ExtResource("1")
-mode = 0
-stiffness = 0.2
-damping = 0.3
+script = ExtResource("1_lrolf")
+spring_freq = 1.5
+angular_damp = 8.0
+force_scale = 180.0
+linear_scale = 320.0
+swing_span = 1.0472
 gravity = Vector3(0, 0, 0)
-length = 1.5
-max_degrees = 30.0
-max_distance = 0.1

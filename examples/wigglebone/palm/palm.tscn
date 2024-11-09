@@ -1,11 +1,51 @@
-[gd_scene load_steps=5 format=3 uid="uid://c7007qk1iob7y"]
+[gd_scene load_steps=8 format=3 uid="uid://cnaxcfibm3xf8"]
 
-[ext_resource type="PackedScene" uid="uid://f8xayu7qvbjy" path="res://examples/wigglebone/palm/palm.gltf" id="1"]
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_bone.gd" id="2"]
-[ext_resource type="Resource" path="res://examples/wigglebone/palm/leave.tres" id="3"]
-[ext_resource type="Resource" path="res://examples/wigglebone/palm/trunk.tres" id="4"]
+[ext_resource type="PackedScene" uid="uid://f8xayu7qvbjy" path="res://examples/wigglebone/palm/palm.gltf" id="1_agxe0"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_tjql0"]
+[ext_resource type="Resource" uid="uid://cwabaw2vr7rl" path="res://examples/wigglebone/palm/trunk.tres" id="3_3ngce"]
+[ext_resource type="Resource" uid="uid://w6m3ec6wrn42" path="res://examples/wigglebone/palm/leave.tres" id="4_12oac"]
 
-[node name="Palm" instance=ExtResource("1")]
+[sub_resource type="Animation" id="Animation_xchah"]
+length = 0.001
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Armature/Skeleton3D/ModifierTrunk:force_global")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_q2f7y"]
+resource_name = "move"
+length = 2.0
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Armature/Skeleton3D/ModifierTrunk:force_global")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.7, 1, 1.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(-8, 0, 8), Vector3(8, 0, -8), Vector3(-8, 0, 8)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_g66f6"]
+_data = {
+"RESET": SubResource("Animation_xchah"),
+"move": SubResource("Animation_q2f7y")
+}
+
+[node name="Palm" instance=ExtResource("1_agxe0")]
 
 [node name="Skeleton3D" parent="Armature" index="0"]
 bones/5/rotation = Quaternion(0.619893, -0.557946, -0.533385, -0.141169)
@@ -18,80 +58,242 @@ bones/8/rotation = Quaternion(0.710528, 0.364512, 0.348686, -0.490611)
 bones/8/scale = Vector3(1, 1, 1)
 bones/9/rotation = Quaternion(-0.668423, -0.16447, -0.165336, 0.706276)
 bones/10/rotation = Quaternion(0.648663, -0.432408, -0.422444, -0.462385)
-bones/10/scale = Vector3(1, 1, 1)
-bones/11/rotation = Quaternion(-0.125322, 0.646836, 0.652796, 0.373837)
 bones/11/scale = Vector3(1, 1, 1)
-bones/12/rotation = Quaternion(0.334798, 0.573835, 0.577327, -0.474676)
 bones/12/scale = Vector3(1, 1, 1)
 bones/13/rotation = Quaternion(0.721176, 0.329056, 0.327101, 0.514425)
 bones/13/scale = Vector3(1, 1, 1)
 
-[node name="BoneTrunk" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3782, 0)
+[node name="ModifierTrunk" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="2"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(0.982145, -0.187278, 0.0178552, 0.187278, 0.96429, -0.187278, 0.0178552, 0.187278, 0.982145, 0, 2.3782, 0)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "trunk.004"
-bone_idx = 3
-script = ExtResource("2")
-properties = ExtResource("4")
+properties = ExtResource("3_3ngce")
+handle_distance = 1.5
 
-[node name="BoneLeave0" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="3"]
-transform = Transform3D(-0.191607, -0.842329, -0.503754, -0.541138, -0.337536, 0.77022, -0.818814, 0.42018, -0.391142, -0.0552611, 3.58206, -0.0336869)
+[node name="ModifierLeave0" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="3"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(-0.101721, -0.756818, -0.645661, -0.404545, -0.561471, 0.721868, -0.908843, 0.334628, -0.249054, -0.280332, 3.53503, 0.191384)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.000"
-bone_idx = 5
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 1.0
 
-[node name="BoneLeave1" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="4"]
-transform = Transform3D(0.923031, -0.383052, -0.0358505, -0.0435847, -0.196698, 0.979495, -0.382249, -0.902541, -0.198253, -0.0552611, 3.56063, -0.0336869)
+[node name="ModifierLeave1" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="4"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(0.907887, -0.355442, -0.222267, 0.202422, -0.0926004, 0.97491, -0.367106, -0.9301, -0.0121215, -0.276318, 3.51436, 0.18737)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.001"
-bone_idx = 7
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave2" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="5"]
-transform = Transform3D(-0.689081, -0.650204, 0.320003, 0.325953, 0.116303, 0.938205, -0.647242, 0.750805, 0.131794, -0.00715804, 3.84572, 0.0350318)
+[node name="ModifierLeave2" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="5"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(-0.749253, -0.647029, 0.141328, 0.306507, -0.149603, 0.940039, -0.587089, 0.747644, 0.310409, -0.281239, 3.78542, 0.309113)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.002"
-bone_idx = 11
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave3" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="6"]
-transform = Transform3D(-0.516803, 0.737637, 0.434519, 0.475478, -0.174762, 0.862194, 0.711924, 0.652189, -0.260413, -0.0552611, 3.51753, -0.0336869)
+[node name="ModifierLeave3" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="6"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(-0.583896, 0.768844, 0.260662, 0.228383, -0.15255, 0.961545, 0.779042, 0.620973, -0.0865178, -0.268247, 3.4728, 0.179299)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.003"
-bone_idx = 6
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave4" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="7"]
-transform = Transform3D(0.569454, 0.138076, 0.810344, 0.811152, -0.254179, -0.526712, 0.133246, 0.95725, -0.256744, 0.0272013, 3.86988, 0.0487756)
+[node name="ModifierLeave4" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="7"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(0.409698, 0.200242, 0.889972, 0.863991, -0.398207, -0.308142, 0.29269, 0.895173, -0.336152, -0.251771, 3.81257, 0.327748)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.004"
-bone_idx = 13
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave5" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="8"]
-transform = Transform3D(0.491097, 0.860131, 0.137835, 0.175854, -0.252863, 0.951386, 0.85317, -0.442984, -0.275438, 0.0272013, 3.86988, 0.0487756)
+[node name="ModifierLeave5" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="8"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(0.464714, 0.8842, -0.0472367, 0.101766, -0.000339977, 0.994808, 0.879594, -0.467108, -0.0901395, -0.251771, 3.81257, 0.327748)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.005"
-bone_idx = 8
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave6" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="9"]
-transform = Transform3D(0.891227, 0.453416, -0.011293, -0.0136752, 0.0517506, 0.998566, 0.45335, -0.889796, 0.0523221, -0.0209018, 3.84572, -0.0611744)
+[node name="ModifierLeave6" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="9"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(0.885945, 0.419911, -0.196917, 0.0688001, 0.300895, 0.951172, 0.458659, -0.856234, 0.237687, -0.296455, 3.80086, 0.214379)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.006"
-bone_idx = 9
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave7" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="10"]
-transform = Transform3D(-0.325185, 0.932324, -0.158195, -0.163849, 0.109207, 0.980422, 0.931347, 0.344739, 0.117248, 0.0478169, 3.84572, -0.0474306)
+[node name="ModifierLeave7" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="10"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(-0.27194, 0.901518, -0.336621, -0.393289, 0.215138, 0.89389, 0.878278, 0.375474, 0.296052, -0.228718, 3.81115, 0.229104)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave.007"
-bone_idx = 12
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
 
-[node name="BoneLeave8" type="BoneAttachment3D" parent="Armature/Skeleton3D" index="11"]
-transform = Transform3D(0.269128, -0.951639, -0.14817, -0.17031, -0.198447, 0.965201, -0.947927, -0.234527, -0.215481, -0.0552611, 3.84572, -0.0336869)
+[node name="ModifierLeave8" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="11"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(0.279256, -0.901781, -0.329859, 0.0636847, -0.325375, 0.943438, -0.958103, -0.284468, -0.0334332, -0.32971, 3.78928, 0.240762)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_tjql0")
 bone_name = "leave"
-bone_idx = 10
-script = ExtResource("2")
-properties = ExtResource("3")
+properties = ExtResource("4_12oac")
+handle_distance = 0.5
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="1"]
+libraries = {
+"": SubResource("AnimationLibrary_g66f6")
+}

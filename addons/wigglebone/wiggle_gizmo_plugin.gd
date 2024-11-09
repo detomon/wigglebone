@@ -1,6 +1,8 @@
 @tool
 extends EditorNode3DGizmoPlugin
 
+## @deprecated
+
 enum HandleID {
 	FORCE,
 }
