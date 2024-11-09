@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qsyafkgprbof"
-path="res://.godot/imported/icon.svg-4f25d4a9b556b8eaf2954ee994ea2156.ctex"
+path="res://.godot/imported/wiggle_bone.svg-457fa1bbf3d840d4724ee46d0ca3903b.ctex"
 metadata={
 "has_editor_variant": true,
 "vram_texture": false
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/wigglebone/icon.svg"
-dest_files=["res://.godot/imported/icon.svg-4f25d4a9b556b8eaf2954ee994ea2156.ctex"]
+source_file="res://addons/wigglebone/icons/wiggle_bone.svg"
+dest_files=["res://.godot/imported/wiggle_bone.svg-457fa1bbf3d840d4724ee46d0ca3903b.ctex"]
 
 [params]
 

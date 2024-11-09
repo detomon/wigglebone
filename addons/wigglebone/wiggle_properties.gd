@@ -3,6 +3,11 @@ class_name WiggleProperties
 extends Resource
 
 ## Defines the properties used to move the bone.
+##
+## [b]Note:[/b] This class is deprecated. Use [WiggleRotationModifier3D] or
+## [WiggleDislocationModifier3D] instead.
+##
+## @deprecated
 
 ## Emitted when the behaviour changed.
 signal behaviour_changed()

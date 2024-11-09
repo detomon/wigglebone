@@ -14,7 +14,7 @@ body:
     label: Godot version
     description: |
       Specify the Godot version you are using. The version can be copied by clicking the version shown in the editor (bottom bar) or in the project manager (top bar).
-    placeholder: v4.1.1.stable.official
+    placeholder: v4.3.stable.official
   validations:
     required: true
 

@@ -1,4 +1,5 @@
 @tool
+@icon("icons/wiggle_bone.svg")
 class_name WiggleBone
 extends BoneAttachment3D
 
@@ -7,6 +8,11 @@ extends BoneAttachment3D
 ## It reacts to animated or global motion as if it's connected with a rubber
 ## band to its initial position. As it reacts to acceleration instead of velocity,
 ## bones of constantly moving objects will not "lag behind" and have a more realistic behaviour.
+## [br][br]
+## [b]Note:[/b] This class is deprecated. Use [WiggleRotationModifier3D] or
+## [WiggleDislocationModifier3D] instead.
+##
+## @deprecated
 
 const ACCELERATION_WEIGHT := 0.5
 const SOFT_LIMIT_FACTOR := 0.5

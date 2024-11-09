@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DMWBWigglePositionProperties3D" load_steps=2 format=3 uid="uid://dwducfqd5pprg"]
+
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_position_properties_3d.gd" id="1_3njtd"]
+
+[resource]
+script = ExtResource("1_3njtd")
+spring_freq = 3.0
+linear_damp = 5.0
+force_scale = 25.0
+linear_scale = 1.0
+max_distance = 0.2
+gravity = Vector3(0, 0, 0)

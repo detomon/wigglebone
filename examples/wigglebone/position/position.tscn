@@ -1,0 +1,59 @@
+[gd_scene load_steps=5 format=3 uid="uid://ckue6504k456"]
+
+[ext_resource type="Script" path="res://examples/wigglebone/skeleton.gd" id="1_nwjfa"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_position_modifier_3d.gd" id="2_5idjc"]
+[ext_resource type="Resource" uid="uid://dwducfqd5pprg" path="res://examples/wigglebone/position/position.tres" id="3_8uex0"]
+[ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_71eoy"]
+
+[node name="Position" type="Node3D"]
+
+[node name="Skeleton3D" type="Skeleton3D" parent="."]
+bones/0/name = "bone0"
+bones/0/parent = -1
+bones/0/rest = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, -1)
+bones/0/enabled = true
+bones/0/position = Vector3(0, 0, -1)
+bones/0/rotation = Quaternion(1, 0, 0, -4.37114e-08)
+bones/0/scale = Vector3(1, 1, 1)
+bones/1/name = "bone1"
+bones/1/parent = 0
+bones/1/rest = Transform3D(1, 0, 0, 0, -1, -8.74228e-08, 0, 8.74228e-08, -1, 0, -8.74228e-08, -1)
+bones/1/enabled = true
+bones/1/position = Vector3(0, -8.74228e-08, -1)
+bones/1/rotation = Quaternion(1, 0, 0, 4.37114e-08)
+bones/1/scale = Vector3(1, 1, 1)
+bones/2/name = "end"
+bones/2/parent = 1
+bones/2/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+bones/2/enabled = true
+bones/2/position = Vector3(0, 0.5, 0)
+bones/2/rotation = Quaternion(0, 0, 0, 1)
+bones/2/scale = Vector3(1, 1, 1)
+script = ExtResource("1_nwjfa")
+
+[node name="PositionModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00092612, -0.000461721, -0.000413418)
+rotation_edit_mode = 0
+rotation_order = 2
+top_level = false
+visible = true
+visibility_parent = NodePath("")
+active = true
+influence = 1.0
+script = ExtResource("2_5idjc")
+bone_name = "bone1"
+properties = ExtResource("3_8uex0")
+
+[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/PositionModifier"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = ExtResource("4_71eoy")
+metadata/_edit_lock_ = true
