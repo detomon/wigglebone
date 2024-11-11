@@ -8,10 +8,6 @@ extends SkeletonModifier3D
 const _SWING_LIMIT_EPSILON := 1e-4
 const _DEGREES_TO_RAD := PI / 180.0
 
-const DEFAULT := {
-	handle_distance = 0.1,
-}
-
 const Functions := preload("functions.gd")
 
 ## Name of the bone to modify.
@@ -33,7 +29,7 @@ const Functions := preload("functions.gd")
 @export_group("Editor")
 
 ## Sets the distance of the editor handle on the bone's Y axis.
-@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := DEFAULT.handle_distance:
+@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := 0.1:
 	set = set_handle_distance
 
 var _bone_idx := -1
@@ -51,14 +47,6 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	_bone_idx = -1
 	_bone_parent_idx = -1
-
-
-func _property_can_revert(property: StringName) -> bool:
-	return property in DEFAULT
-
-
-func _property_get_revert(property: StringName) -> Variant:
-	return DEFAULT.get(property)
 
 
 func _validate_property(property: Dictionary) -> void:

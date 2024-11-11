@@ -5,49 +5,32 @@ extends Resource
 
 ## Defines the properties used to move the bone.
 
-const DEFAULT := {
-	spring_freq = 3.0,
-	linear_damp = 5.0,
-	force_scale = 25.0,
-	linear_scale = 1.0,
-	max_distance = 0.1,
-	gravity = Vector3.ZERO,
-}
-
 ## The spring's oscillation frequency. The frequency may change if forces are applied.
 ## If [code]0.0[/code], the bone is able to move freely.
 ## [br][br]
 ## [b]Note:[/b] Setting a very high value may cause the spring to become unstable.
-@export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var spring_freq := DEFAULT.spring_freq:
+@export_range(0.0, 10.0, 0.01, "or_greater", "suffix:Hz") var spring_freq := 3.0:
 	set = set_spring_freq
 
 ## Damping factor of the velocity.
-@export_range(0.0, 50.0, 0.001, "or_greater") var linear_damp := DEFAULT.linear_damp:
+@export_range(0.0, 50.0, 0.001, "or_greater") var linear_damp := 5.0:
 	set = set_linear_damp
 
 ## Defines how much the position is influenced by forces.
-@export_range(0.0, 100.0, 0.001, "or_greater") var force_scale := DEFAULT.force_scale:
+@export_range(0.0, 100.0, 0.001, "or_greater") var force_scale := 25.0:
 	set = set_force_scale
 
 ## Defines how much the position is influenced by global movement.
-@export_range(0.0, 1.0, 0.001, "or_greater") var linear_scale := DEFAULT.linear_scale:
+@export_range(0.0, 1.0, 0.001, "or_greater") var linear_scale := 1.0:
 	set = set_linear_scale
 
 ## Maximum distance the bone can move around its pose position.
-@export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := DEFAULT.max_distance:
+@export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := 0.1:
 	set = set_max_distance
 
 ## Applies a constant global force.
-@export var gravity := DEFAULT.gravity:
+@export var gravity := Vector3.ZERO:
 	set = set_gravity
-
-
-func _property_can_revert(property: StringName) -> bool:
-	return property in DEFAULT
-
-
-func _property_get_revert(property: StringName) -> Variant:
-	return DEFAULT.get(property)
 
 
 func _validate_property(property: Dictionary) -> void:
