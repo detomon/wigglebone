@@ -14,7 +14,7 @@ Adds jiggle physics to a `Skeleton3D` bone using `SkeletonModifier3D` nodes.
 
 ---
 
-![Palm](images/example.gif)
+![Palm](images/palm.gif)
 
 ## Installation
 
