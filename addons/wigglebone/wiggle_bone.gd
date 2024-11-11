@@ -76,7 +76,9 @@ func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
 	if not properties:
-		warnings.append("WiggleProperties resource is required")
+		warnings.append("WiggleProperties resource is required.")
+
+	warnings.append("This node is deprecated. Use WiggleRotationModifier3D or WiggleDislocationModifier3D instead.")
 
 	return warnings
 
