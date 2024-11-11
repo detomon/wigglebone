@@ -3,7 +3,7 @@
 class_name DMWBWiggleRotationModifier3D
 extends SkeletonModifier3D
 
-## Adds jiggle physics to a bone influencing the pose position.
+## Adds jiggle physics to a bone influencing the pose rotation.
 
 const _SWING_LIMIT_EPSILON := 1e-4
 const _DEGREES_TO_RAD := PI / 180.0

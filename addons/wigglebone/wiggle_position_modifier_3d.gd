@@ -3,7 +3,7 @@
 class_name DMWBWigglePositionModifier3D
 extends SkeletonModifier3D
 
-## Adds jiggle physics to a bone influencing the pose rotation.
+## Adds jiggle physics to a bone influencing the pose position.
 
 const Functions := preload("functions.gd")
 
