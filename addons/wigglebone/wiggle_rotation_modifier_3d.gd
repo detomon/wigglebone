@@ -1,9 +1,15 @@
 @tool
 @icon("icons/wiggle_rotation_modifier_3d.svg")
 class_name DMWBWiggleRotationModifier3D
-extends SkeletonModifier3D
+extends Node3D
 
 ## Adds jiggle physics to a bone influencing the pose position.
+
+## The process mode.
+enum CallbackMode {
+	IDLE,    ## Process in idle frame.
+	PHYSICS, ## Process in physics frame.
+}
 
 const _SWING_LIMIT_EPSILON := 1e-4
 const _DEGREES_TO_RAD := PI / 180.0
@@ -17,6 +23,10 @@ const Functions := preload("functions.gd")
 ## Name of the bone to modify.
 @export var bone_name := "":
 	set = set_bone_name
+
+## Sets the process mode.
+@export var callback_mode := CallbackMode.IDLE:
+	set = set_callback_mode
 
 ## Properties used to move the bone.
 @export var properties: DMWBWiggleRotationProperties3D:
@@ -36,6 +46,7 @@ const Functions := preload("functions.gd")
 @export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := DEFAULT.handle_distance:
 	set = set_handle_distance
 
+var _skeleton: Skeleton3D
 var _bone_idx := -1
 var _bone_parent_idx := -1
 var _global_position := Vector3.ZERO # Global mass position.
@@ -53,6 +64,10 @@ func _exit_tree() -> void:
 	_bone_parent_idx = -1
 
 
+func _ready() -> void:
+	set_callback_mode(callback_mode)
+
+
 func _property_can_revert(property: StringName) -> bool:
 	return property in DEFAULT
 
@@ -64,8 +79,9 @@ func _property_get_revert(property: StringName) -> Variant:
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
 		&"bone_name":
-			var skeleton := get_skeleton()
-			var bone_names := Functions.get_sorted_skeleton_bones(skeleton)
+			if not _skeleton:
+				return
+			var bone_names := Functions.get_sorted_skeleton_bones(_skeleton)
 
 			property.hint = PROPERTY_HINT_ENUM
 			property.hint_string = ",".join(bone_names)
@@ -83,19 +99,19 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-func _process_modification() -> void:
+func _process(delta: float) -> void:
+	_process_modification(delta)
+
+
+func _physics_process(delta: float) -> void:
+	_process_modification(delta)
+
+
+func _process_modification(delta: float) -> void:
 	if _bone_idx < 0:
 		return
 
-	var skeleton := get_skeleton()
-	var delta := 0.0
-
-	match skeleton.modifier_callback_mode_process:
-		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
-			delta = get_process_delta_time()
-
-		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_PHYSICS:
-			delta = get_physics_process_delta_time()
+	var skeleton := _skeleton
 
 	# Limit delta.
 	delta = clampf(delta, 0.0001, 0.1)
@@ -104,7 +120,7 @@ func _process_modification() -> void:
 	if _bone_parent_idx >= 0:
 		skeleton_bone_parent_global_pose *= skeleton.get_bone_global_pose(_bone_parent_idx)
 
-	var bone_pose := skeleton.get_bone_pose(_bone_idx)
+	var bone_pose := skeleton.get_bone_rest(_bone_idx)
 	var pose_to_global := skeleton_bone_parent_global_pose * bone_pose
 	var pose_to_global_rotation := pose_to_global.basis.get_rotation_quaternion()
 	var global_to_pose_rotation := pose_to_global_rotation.inverse()
@@ -201,7 +217,7 @@ func _process_modification() -> void:
 		else Quaternion(1.0, 0.0, 0.0, 0.0) # Rotate around X axis as fallback when rotation is exactly 180°.
 
 	# Set bone pose rotation.
-	var bone_pose_rotation := skeleton.get_bone_pose_rotation(_bone_idx)
+	var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 	var bone_rotation := bone_pose_rotation * rotation_relative
 	skeleton.set_bone_pose_rotation(_bone_idx, bone_rotation)
 
@@ -226,6 +242,14 @@ func set_properties(value: DMWBWiggleRotationProperties3D) -> void:
 	_setup()
 	update_gizmos()
 	update_configuration_warnings()
+
+
+func set_callback_mode(value: CallbackMode) -> void:
+	callback_mode = value
+
+	if is_inside_tree():
+		set_process(callback_mode == CallbackMode.IDLE)
+		set_physics_process(callback_mode == CallbackMode.PHYSICS)
 
 
 func set_bone_name(value: String) -> void:
@@ -260,14 +284,16 @@ func add_force_impulse(force: Vector3) -> void:
 
 
 func _setup() -> void:
+	_skeleton = null
 	_bone_idx = -1
 
 	if not properties:
 		return
 
-	var skeleton := get_skeleton()
-	if not skeleton:
+	if not get_parent() is Skeleton3D:
 		return
+	_skeleton = get_parent()
+	var skeleton := _skeleton
 
 	_bone_idx = skeleton.find_bone(bone_name)
 	if _bone_idx < 0:

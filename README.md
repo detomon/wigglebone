@@ -1,9 +1,9 @@
-# WiggleBone Skeleton Modifier for Godot Engine 4.3
+# WiggleBone Skeleton Modifier for Godot Engine 4.2
 
-Adds jiggle physics to a `Skeleton3D` bone using `SkeletonModifier3D` nodes.
+Adds jiggle physics to a `Skeleton3D` bone.
 
-> [!NOTE]
-> Requires Godot 4.3. As Godot 4.2 and lower does not support `SkeletonModifier3D` nodes, the branch [godot-4.2](https://github.com/detomon/wigglebone/tree/godot-4.2) has an alternative implementation using `Node3D` and can be used as a fallback for existing projects.
+> [!WARNING]
+> This is a fallback version for backwards compatibility. It uses an alternative implementation for Godot 4.2. Use the [master](https://github.com/detomon/wigglebone/tree/master) branch for Godot 4.3 and higher.
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -14,15 +14,12 @@ Adds jiggle physics to a `Skeleton3D` bone using `SkeletonModifier3D` nodes.
 
 ---
 
-![Palm](images/example.gif)
+![Palm](images/palm.gif)
 
 ## Installation
 
-1. Search for `wigglebone` in the `AssetLib` editor tab
-2. Download and install the plugin
-3. Enable the plugin in the project settings via the `Plugins` tab
-
-or...
+> [!NOTE]
+> This version is not available in the Asset Library.
 
 1. Clone this repository or download the archive
 2. Copy the folder `addons/wigglebone` to your project's `addons` folder (create it if needed)
@@ -32,7 +29,7 @@ or...
 
 You can now add `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D` nodes to a `Skeleton3D`. See the example scenes in [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone).
 
-**Note:** Poses modified in `SkeletonModifier3D` nodes are only temporary for the current frame. Modifiers for parent bones should come first (above) in the scene tree, otherwise it may have not the desired effect.
+**Note:** Nodes for parent bones should come first (above) in the scene tree, otherwise it may have not the desired effect.
 
 > [!WARNING]
 > The `WiggleBone` node is deprecated and should be replaced with either `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D`.
@@ -41,7 +38,7 @@ You can now add `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D`
 
 **DMWBWiggleRotationModifier3D**
 
-Rotates the bone around the current bone pose. The current pose direction acts as the spring's rest position.
+Rotates the bone around the rest pose. The rest pose direction acts as the spring's rest position.
 
 ### Modifier properties
 
@@ -85,13 +82,13 @@ To allow the bone to rotate freely, the spring frequency (`spring_freq`) can  be
 - Rotation with exactly 180° have no unique solution and the bone's forward axis rotation snaps to a fallback axis.
 - When the rotation approaches 180° while using a low spring frequency, the angular rotation may change its direction in certain cases.
 
-**Node:** Some of these problems can be avoided by setting the bone pose rotation already to the desired rest position. For example, if a bone is hanging down, the bone pose should already be pointing down.
+**Note:** Some of these problems can be avoided by setting the bone pose rotation already to the desired rest position. For example, if a bone is hanging down, the bone pose should already be pointing down.
 
 ## Wiggle position
 
 **DMWBWigglePositionModifier3D**
 
-Moves the bone around the current bone pose without rotating. The current pose position acts as the spring's rest position.
+Moves the bone around the rest pose without rotating. The rest pose position acts as the spring's rest position.
 
 ### Modifier properties
 

@@ -32,24 +32,7 @@ bones/2/rotation = Quaternion(0, 0, 0, 1)
 bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_5lxs6")
 
-[node name="RotationModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-transform = Transform3D(1, -5.6493e-07, 0, 5.6493e-07, 1, 0, 0, 0, 1, 0, 0, 0)
-rotation_edit_mode = 0
-rotation_order = 2
-top_level = false
-visible = true
-visibility_parent = NodePath("")
-active = true
-influence = 1.0
+[node name="RotationModifier" type="Node3D" parent="Skeleton3D"]
 script = ExtResource("2_o4ifj")
 bone_name = "bone1"
 properties = ExtResource("3_3cymf")
@@ -61,24 +44,8 @@ mesh = ExtResource("4_5wbwm")
 skeleton = NodePath("")
 metadata/_edit_lock_ = true
 
-[node name="RotationModifier2" type="SkeletonModifier3D" parent="Skeleton3D"]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-transform = Transform3D(1, -3.88874e-07, 3.9766e-26, 3.88874e-07, 1, -8.33841e-20, -7.3401e-27, 8.33841e-20, 1, -2.82465e-07, 0.5, 0)
-rotation_edit_mode = 0
-rotation_order = 2
-top_level = false
-visible = true
-visibility_parent = NodePath("")
-active = true
-influence = 1.0
+[node name="RotationModifier2" type="Node3D" parent="Skeleton3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 script = ExtResource("2_o4ifj")
 bone_name = "end"
 properties = ExtResource("3_3cymf")

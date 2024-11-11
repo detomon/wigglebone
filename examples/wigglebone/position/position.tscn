@@ -31,24 +31,7 @@ bones/2/rotation = Quaternion(0, 0, 0, 1)
 bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_nwjfa")
 
-[node name="PositionModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00092612, -0.000461721, -0.000413418)
-rotation_edit_mode = 0
-rotation_order = 2
-top_level = false
-visible = true
-visibility_parent = NodePath("")
-active = true
-influence = 1.0
+[node name="PositionModifier" type="Node3D" parent="Skeleton3D"]
 script = ExtResource("2_5idjc")
 bone_name = "bone1"
 properties = ExtResource("3_8uex0")
