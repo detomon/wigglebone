@@ -76,7 +76,9 @@ func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
 	if not properties:
-		warnings.append("WiggleProperties resource is required")
+		warnings.append("WiggleProperties resource is required.")
+
+	warnings.append("This node is deprecated. Use WiggleRotationModifier3D or WiggleDislocationModifier3D instead.")
 
 	return warnings
 
@@ -138,6 +140,9 @@ func set_properties(value: WiggleProperties) -> void:
 	update_gizmos()
 
 
+## Applies a force impulse.
+## If [param global] is [code]false[/code], the impulse is relative to the bone pose.
+## If [param global] is [code]true[/code], the impulse is global.
 func apply_impulse(impulse: Vector3, global := false) -> void:
 	if global:
 		impulse = _global_to_pose * impulse
@@ -145,6 +150,7 @@ func apply_impulse(impulse: Vector3, global := false) -> void:
 	_point_mass.apply_force(impulse)
 
 
+## Resets the pose and movement.
 func reset() -> void:
 	if _skeleton:
 		_skeleton.set_bone_global_pose_override(_bone_idx, Transform3D(), 0.0)
