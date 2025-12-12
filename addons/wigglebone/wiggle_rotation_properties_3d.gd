@@ -5,7 +5,7 @@ extends Resource
 
 ## Defines the properties used to rotate the bone.
 
-## The spring's oscillation frequency. The frequency may change if forces are applied.
+## The spring's oscillation frequency in [code]Hz[/code]. The frequency may change if forces are applied.
 ## If [code]0.0[/code], the bone is able to rotate freely.
 ## [br][br]
 ## [b]Note:[/b] Setting a very high value may cause the spring to become unstable.
@@ -16,19 +16,19 @@ extends Resource
 @export_range(0.0, 50.0, 0.001, "or_greater") var angular_damp := 5.0:
 	set = set_angular_damp
 
-## Defines how much the rotation is influenced by forces.
+## Defines how much the rotation is influenced by forces ([code]°/m[/code]).
 @export_range(0.0, 6000.0, 0.001, "or_greater") var force_scale := 180.0:
 	set = set_force_scale
 
-## Defines how much the rotation is influenced by global movement.
+## Defines how much the rotation is influenced by global movement ([code]°/m[/code]).
 @export_range(0.0, 6000.0, 0.001, "or_greater") var linear_scale := 360.0:
 	set = set_linear_scale
 
-## Maximum angle the bone can rotate around its pose.
+## Maximum angle in radians the bone can rotate around its pose.
 @export_range(0.0, 180.0, 0.01, "radians") var swing_span := 60.0 / 180.0 * PI:
 	set = set_swing_span
 
-## Applies a constant global force.
+## Applies a constant global force ([code]m/s²[/code]).
 @export var gravity := Vector3.ZERO:
 	set = set_gravity
 

@@ -5,7 +5,7 @@ extends Resource
 
 ## Defines the properties used to move the bone.
 
-## The spring's oscillation frequency. The frequency may change if forces are applied.
+## The spring's oscillation frequency in [code]Hz[/code]. The frequency may change if forces are applied.
 ## If [code]0.0[/code], the bone is able to move freely.
 ## [br][br]
 ## [b]Note:[/b] Setting a very high value may cause the spring to become unstable.
@@ -16,19 +16,19 @@ extends Resource
 @export_range(0.0, 50.0, 0.001, "or_greater") var linear_damp := 5.0:
 	set = set_linear_damp
 
-## Defines how much the position is influenced by forces.
+## A factor which defines how much the position is influenced by forces.
 @export_range(0.0, 100.0, 0.001, "or_greater") var force_scale := 25.0:
 	set = set_force_scale
 
-## Defines how much the position is influenced by global movement.
+## A factor which defines how much the position is influenced by global movement.
 @export_range(0.0, 1.0, 0.001, "or_greater") var linear_scale := 1.0:
 	set = set_linear_scale
 
-## Maximum distance the bone can move around its pose position.
+## Maximum distance in meters the bone can move around its pose position.
 @export_range(0.0, 1.0, 0.001, "or_greater", "suffix:m") var max_distance := 0.1:
 	set = set_max_distance
 
-## Applies a constant global force.
+## Applies a constant global force ([code]m/s²[/code]).
 @export var gravity := Vector3.ZERO:
 	set = set_gravity
 

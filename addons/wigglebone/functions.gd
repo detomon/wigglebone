@@ -80,7 +80,7 @@ static func get_sorted_skeleton_bones(skeleton: Skeleton3D) -> PackedStringArray
 	if not skeleton:
 		return []
 
-	var bone_names: Array = []
+	var bone_names: Array[String] = []
 	var bone_count := skeleton.get_bone_count()
 
 	bone_names.resize(bone_count)
