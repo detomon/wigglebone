@@ -68,7 +68,7 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	var node: DMWBWiggleRotationModifier3D = gizmo.get_node_3d()
 	var properties: DMWBWiggleRotationProperties3D = node.properties
 
-	if not properties:
+	if not properties or not node.bone_names:
 		return
 
 	var handle_position := _get_handle_position(node)
