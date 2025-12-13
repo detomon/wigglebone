@@ -104,8 +104,14 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.0001, 0.1)
 
-	var frequency := properties.spring_freq * TAU
 	var skeleton_bone_parent_global_pose := skeleton.global_transform
+	var frequency := properties.spring_freq * TAU
+	var has_pring := not is_zero_approx(frequency)
+	var velocity_decay := properties.angular_damp
+	var velocity_decay_delta := exp(-velocity_decay * delta)
+	var a := delta * frequency
+	var cos_ := cos(a)
+	var sin_ := sin(a)
 
 	for i in len(_bone_indices):
 		var bone_idx := _bone_indices[i]
@@ -148,14 +154,11 @@ func _process_modification() -> void:
 		rotation_axis = rotation_axis.normalized()
 
 		# Apply rotation spring velocity without damping (see README.md).
-		if not is_zero_approx(frequency):
+		if has_pring:
 			# Rotation axis where the length is the rotation difference to the pose in radians.
 			var spring_rotation := rotation_axis * rotation_angle
 
 			var x0 := spring_rotation
-			var a := delta * frequency
-			var cos_ := cos(a)
-			var sin_ := sin(a)
 			var c2 := _angular_velocities[i] / frequency
 
 			spring_rotation = x0 * cos_ + c2 * sin_
@@ -201,8 +204,7 @@ func _process_modification() -> void:
 		_angular_velocities[i] = Plane(_global_directions[i], 0.0).project(_angular_velocities[i])
 
 		# Time-independent velocity damping (see README.md).
-		var velocity_decay := properties.angular_damp
-		_angular_velocities[i] *= exp(-velocity_decay * delta)
+		_angular_velocities[i] *= velocity_decay_delta
 
 		# Get rotation relative to current pose.
 		var local_direction := global_to_pose_rotation * _global_directions[i]

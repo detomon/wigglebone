@@ -89,8 +89,14 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.001, 0.1)
 
-	var frequency := properties.spring_freq * TAU
 	var skeleton_bone_parent_global_pose := skeleton.global_transform
+	var frequency := properties.spring_freq * TAU
+	var has_spring := not is_zero_approx(frequency)
+	var velocity_decay := properties.linear_damp
+	var velocity_decay_delta := exp(-velocity_decay * delta)
+	var a := delta * frequency
+	var cos_ := cos(a)
+	var sin_ := sin(a)
 
 	for i in len(_bone_indices):
 		var bone_idx := _bone_indices[i]
@@ -128,14 +134,11 @@ func _process_modification() -> void:
 		_global_velocities[i] += acceleration * delta
 
 		# Apply spring velocity without damping (see README.md).
-		if not is_zero_approx(frequency):
+		if has_spring:
 			var pose_global := pose_to_global.origin
 			var spring_position := _global_positions[i] - pose_global
 
 			var x0 := spring_position
-			var a := delta * frequency
-			var cos_ := cos(a)
-			var sin_ := sin(a)
 			var c2 := _global_velocities[i] / frequency
 
 			_global_positions[i] = pose_global + (x0 * cos_ + c2 * sin_)
@@ -149,8 +152,7 @@ func _process_modification() -> void:
 		_local_positions[i] = global_to_pose * _global_positions[i]
 
 		# Time-independent velocity damping (see README.md).
-		var velocity_decay := properties.linear_damp
-		_global_velocities[i] *= exp(-velocity_decay * delta)
+		_global_velocities[i] *= velocity_decay_delta
 
 		# Limit position and velocity.
 		var length_squared := _local_positions[i].length_squared()
