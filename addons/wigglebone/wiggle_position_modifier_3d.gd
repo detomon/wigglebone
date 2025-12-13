@@ -59,6 +59,8 @@ func _validate_property(property: Dictionary) -> void:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
+	if not bones:
+		warnings.append(tr(&"No bones defined.", &"DMWB"))
 	if len(_bone_indices) < len(bones):
 		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
