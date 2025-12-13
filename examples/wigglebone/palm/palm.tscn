@@ -82,7 +82,7 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_tjql0")
-bone_names = PackedStringArray("trunk.004")
+bones = PackedStringArray("trunk.004")
 properties = ExtResource("3_3ngce")
 handle_distance = 1.5
 
@@ -105,7 +105,7 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_tjql0")
-bone_names = PackedStringArray("leave", "leave.000", "leave.001", "leave.002", "leave.003", "leave.004", "leave.005", "leave.006", "leave.007")
+bones = PackedStringArray("leave", "leave.000", "leave.001", "leave.002", "leave.003", "leave.004", "leave.005", "leave.006", "leave.007")
 properties = ExtResource("4_12oac")
 handle_distance = 1.0
 

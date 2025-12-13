@@ -7,19 +7,14 @@ extends SkeletonModifier3D
 
 const Functions := preload("functions.gd")
 
-## Name of the bones to modify.
-@export var bone_names := PackedStringArray():
-	set = set_bone_names
-
-## Properties used to move the bone.
-@export var properties: DMWBWigglePositionProperties3D:
-	set = set_properties
+## Names of the bones to modify.
+@export var bones := PackedStringArray(): set = set_bones
+## Properties used to move the bones.
+@export var properties: DMWBWigglePositionProperties3D: set = set_properties
 
 @export_group("Force", "force")
-
 ## Applies a constant global force.
 @export var force_global := Vector3.ZERO
-
 ## Applies a constant local force relative to the bone's pose.
 @export var force_local := Vector3.ZERO
 
@@ -42,7 +37,7 @@ func _exit_tree() -> void:
 func _set(property: StringName, value: Variant) -> bool:
 	# Migrate old single bone name.
 	if property == &"bone_name":
-		set_bone_names([value])
+		set_bones([value])
 		return true
 
 	return false
@@ -50,7 +45,7 @@ func _set(property: StringName, value: Variant) -> bool:
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
-		&"bone_names":
+		&"bones":
 			var skeleton := get_skeleton()
 			var names := Functions.get_sorted_skeleton_bones(skeleton)
 
@@ -64,7 +59,7 @@ func _validate_property(property: Dictionary) -> void:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
-	if len(_bone_indices) < len(bone_names):
+	if len(_bone_indices) < len(bones):
 		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
 		warnings.append(tr(&"DMWBWigglePositionProperties3D resource is required.", &"DMWB"))
@@ -94,7 +89,8 @@ func _process_modification() -> void:
 	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.linear_damp
 	var velocity_decay_delta := exp(-velocity_decay * delta)
-	var a := delta * frequency
+	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
+	var a := frequency * delta
 	var cos_ := cos(a)
 	var sin_ := sin(a)
 
@@ -123,17 +119,17 @@ func _process_modification() -> void:
 			global_velocity = Vector3.ZERO
 
 		# Global forces.
-		var force := (force_global + properties.get_gravity()) * properties.force_scale
-		# Add force relative to current pose.
-		force += pose_to_global.basis * force_local * properties.force_scale
-		# Add reverse global velocity.
-		force -= global_velocity
+		var force := global_force \
+			# Add force relative to current pose.
+			+ pose_to_global.basis * force_local * properties.force_scale \
+			# Add reverse global velocity.
+			- global_velocity
 
 		# Add force.
 		var acceleration := force
 		_global_velocities[i] += acceleration * delta
 
-		# Apply spring velocity without damping (see README.md).
+		# Apply linear velocity to spring without damping (see README.md).
 		if has_spring:
 			var pose_global := pose_to_global.origin
 			var spring_position := _global_positions[i] - pose_global
@@ -173,6 +169,7 @@ func _process_modification() -> void:
 		var bone_position := bone_pose * _local_positions[i]
 		skeleton.set_bone_pose_position(bone_idx, bone_position)
 
+		# Use first bone for modifier position.
 		if i == 0:
 			# Apply bone transform to node.
 			bone_pose.origin = bone_position
@@ -182,9 +179,7 @@ func _process_modification() -> void:
 
 
 func set_properties(value: DMWBWigglePositionProperties3D) -> void:
-	var is_editor := Engine.is_editor_hint()
-
-	if is_editor:
+	if Engine.is_editor_hint():
 		if properties:
 			properties.changed.disconnect(_on_properties_changed)
 		if value:
@@ -192,13 +187,11 @@ func set_properties(value: DMWBWigglePositionProperties3D) -> void:
 
 	properties = value
 	_setup()
-
-	if is_editor:
-		update_gizmos()
+	update_gizmos()
 
 
-func set_bone_names(value: PackedStringArray) -> void:
-	bone_names = value
+func set_bones(value: PackedStringArray) -> void:
+	bones = value
 	_setup()
 	update_gizmos()
 
@@ -224,14 +217,14 @@ func _setup() -> void:
 	if not skeleton:
 		return
 
-	var count := len(bone_names)
+	var count := len(bones)
 	var valid_count := 0
 	var skeleton_global_xform := skeleton.global_transform
 
 	_resize_lists(count)
 
 	for i in count:
-		var bone_idx := skeleton.find_bone(bone_names[i])
+		var bone_idx := skeleton.find_bone(bones[i])
 		if bone_idx < 0:
 			continue
 

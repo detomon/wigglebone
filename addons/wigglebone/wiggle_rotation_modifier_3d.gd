@@ -10,32 +10,20 @@ const _DEGREES_TO_RAD := PI / 180.0
 
 const Functions := preload("functions.gd")
 
-## Name of the bones to modify.
-@export var bone_names := PackedStringArray():
-	set = set_bone_names
-
-## Properties used to move the bone.
-@export var properties: DMWBWiggleRotationProperties3D:
-	set = set_properties
+## Names of the bones to modify.
+@export var bones := PackedStringArray(): set = set_bones
+## Properties used to move the bones.
+@export var properties: DMWBWiggleRotationProperties3D: set = set_properties
 
 @export_group("Force", "force")
-
 ## Applies a constant global force.
 @export var force_global := Vector3.ZERO
-
 ## Applies a constant force relative to the bone's pose.
 @export var force_local := Vector3.ZERO
 
-@export_group("Collision", "collision")
-
-@export var collision_enabled := false
-@export var collision_shape: Shape3D
-@export_flags_3d_physics var collision_layers: int = 1
-
 @export_group("Editor")
-
 ## Sets the distance of the editor handle on the bone's Y axis.
-@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := 0.1:
+@export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := 0.25:
 	set = set_handle_distance
 
 var _bone_indices := PackedInt32Array()
@@ -57,7 +45,7 @@ func _exit_tree() -> void:
 func _set(property: StringName, value: Variant) -> bool:
 	# Migrate old single bone name.
 	if property == &"bone_name":
-		set_bone_names([value])
+		set_bones([value])
 		return true
 
 	return false
@@ -65,7 +53,7 @@ func _set(property: StringName, value: Variant) -> bool:
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
-		&"bone_names":
+		&"bones":
 			var skeleton := get_skeleton()
 			var names := Functions.get_sorted_skeleton_bones(skeleton)
 
@@ -79,7 +67,7 @@ func _validate_property(property: Dictionary) -> void:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
-	if len(_bone_indices) < len(bone_names):
+	if len(_bone_indices) < len(bones):
 		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
 		warnings.append(tr(&"DMWBWiggleRotationProperties3D resource is required.", &"DMWB"))
@@ -109,7 +97,8 @@ func _process_modification() -> void:
 	var has_pring := not is_zero_approx(frequency)
 	var velocity_decay := properties.angular_damp
 	var velocity_decay_delta := exp(-velocity_decay * delta)
-	var a := delta * frequency
+	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
+	var a := frequency * delta
 	var cos_ := cos(a)
 	var sin_ := sin(a)
 
@@ -136,11 +125,11 @@ func _process_modification() -> void:
 			global_velocity = Vector3.ZERO
 
 		# Global forces.
-		var force := (force_global + properties.get_gravity()) * properties.force_scale
-		# Add force relative to current pose.
-		force += pose_to_global_rotation * force_local * properties.force_scale
-		# Linear velocity.
-		force -= global_velocity * properties.linear_scale
+		var force := global_force \
+			# Add force relative to current pose.
+			+ pose_to_global_rotation * force_local * properties.force_scale \
+			# Add reverse global velocity.
+			- global_velocity * properties.linear_scale
 
 		# Add torque.
 		var angular_acceleration := _global_directions[i].cross(force) * _DEGREES_TO_RAD
@@ -153,7 +142,7 @@ func _process_modification() -> void:
 			rotation_axis = pose_to_global_rotation * Vector3.RIGHT
 		rotation_axis = rotation_axis.normalized()
 
-		# Apply rotation spring velocity without damping (see README.md).
+		# Apply rotation velocity to spring without damping (see README.md).
 		if has_pring:
 			# Rotation axis where the length is the rotation difference to the pose in radians.
 			var spring_rotation := rotation_axis * rotation_angle
@@ -227,9 +216,7 @@ func _process_modification() -> void:
 
 
 func set_properties(value: DMWBWiggleRotationProperties3D) -> void:
-	var is_editor := Engine.is_editor_hint()
-
-	if is_editor:
+	if Engine.is_editor_hint():
 		if properties:
 			properties.changed.disconnect(_on_properties_changed)
 		if value:
@@ -237,13 +224,11 @@ func set_properties(value: DMWBWiggleRotationProperties3D) -> void:
 
 	properties = value
 	_setup()
-
-	if is_editor:
-		update_gizmos()
+	update_gizmos()
 
 
-func set_bone_names(value: PackedStringArray) -> void:
-	bone_names = value
+func set_bones(value: PackedStringArray) -> void:
+	bones = value
 	_setup()
 	update_gizmos()
 
@@ -287,14 +272,14 @@ func _setup() -> void:
 	if not skeleton:
 		return
 
-	var count := len(bone_names)
+	var count := len(bones)
 	var valid_count := 0
 	var skeleton_global_xform := skeleton.global_transform
 
 	_resize_lists(count)
 
 	for i in count:
-		var bone_idx := skeleton.find_bone(bone_names[i])
+		var bone_idx := skeleton.find_bone(bones[i])
 		if bone_idx < 0:
 			continue
 
