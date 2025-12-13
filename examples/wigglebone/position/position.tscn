@@ -50,7 +50,7 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_5idjc")
-bone_name = "bone1"
+bone_names = PackedStringArray("bone1")
 properties = ExtResource("3_8uex0")
 
 [node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/PositionModifier"]

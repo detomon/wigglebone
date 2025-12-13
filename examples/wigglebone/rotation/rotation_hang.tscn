@@ -51,7 +51,7 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_o4ifj")
-bone_name = "bone1"
+bone_names = PackedStringArray("bone1")
 properties = ExtResource("3_3cymf")
 handle_distance = 0.5
 
@@ -80,7 +80,7 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_o4ifj")
-bone_name = "end"
+bone_names = PackedStringArray("end")
 properties = ExtResource("3_3cymf")
 handle_distance = 0.5
 
