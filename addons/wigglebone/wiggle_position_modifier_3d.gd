@@ -7,9 +7,9 @@ extends SkeletonModifier3D
 
 const Functions := preload("functions.gd")
 
-## Names of the bones to modify.
+## Bone names to modify.
 @export var bones := PackedStringArray(): set = set_bones
-## Properties used to move the bones.
+## Properties which define the spring behaviour.
 @export var properties: DMWBWigglePositionProperties3D: set = set_properties
 
 @export_group("Force", "force")
