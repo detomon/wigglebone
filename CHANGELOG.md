@@ -1,17 +1,17 @@
 # Changelog
 
-## v.3.0.0 - 2025-11-11
+## v3.0.0 - 2025-11-11
 
 ### Changed
 
 - Rewrite modifier as `SkeletonModifier3D`
 - Use spring simulation instead of verlet integration
 
-## v.3.1.0 - 2025-12-12
+## v3.1.0 - 2025-12-12
 
 ### Changed
 
-- Fix typos and update class documentation
+- Update class documentation
 
 ### Added
 

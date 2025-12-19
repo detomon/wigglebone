@@ -92,3 +92,29 @@ static func get_sorted_skeleton_bones(skeleton: Skeleton3D) -> PackedStringArray
 	)
 
 	return PackedStringArray(bone_names)
+
+
+static func search_parent_skeleton(node: Node) -> Skeleton3D:
+	var skeleton: Skeleton3D
+	var parent := node.get_parent()
+
+	while parent:
+		if parent is Skeleton3D:
+			return parent
+			break
+		parent = parent.get_parent()
+
+	return null
+
+
+#static func setup_controller(skeleton: Skeleton3D) -> DMWBController:
+	#var child_count := skeleton.get_child_count(true)
+	#for i in range(child_count - 1, -1, -1):
+		#var child := skeleton.get_child(i, true)
+		#if child is DMWBController:
+			#return child
+#
+	#var controller := DMWBController.new()
+	#skeleton.add_child(controller, false, Node.INTERNAL_MODE_BACK)
+#
+	#return controller

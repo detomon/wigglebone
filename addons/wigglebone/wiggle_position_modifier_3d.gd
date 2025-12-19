@@ -23,15 +23,21 @@ var _bone_parent_indices := PackedInt32Array()
 var _global_positions := PackedVector3Array() # Global pose positions.
 var _global_velocities := PackedVector3Array() # Global velocities.
 var _local_positions := PackedVector3Array() # Positions in pose space.
+var _controller: DMWBController
 var _reset := true
 
 
 func _enter_tree() -> void:
+	var skeleton := get_skeleton()
+	if skeleton:
+		_controller = DMWBController.get_for_skeleton(skeleton)
+
 	_setup()
 
 
 func _exit_tree() -> void:
 	_resize_lists(0)
+	_controller = null
 
 
 func _set(property: StringName, value: Variant) -> bool:
@@ -74,6 +80,7 @@ func _process_modification() -> void:
 		return
 
 	var skeleton := get_skeleton()
+	var colliders := _controller.get_colliders()
 	var delta := 0.0
 
 	match skeleton.modifier_callback_mode_process:
@@ -146,6 +153,12 @@ func _process_modification() -> void:
 		else:
 			_global_positions[i] += _global_velocities[i] * delta
 
+		if colliders:
+			var pos := _global_positions[i]
+			for collider in colliders:
+				pos = collider.collide(pos)
+			_global_positions[i] = pos
+
 		# Set local position to calculate parent speed in next iteration.
 		_local_positions[i] = global_to_pose * _global_positions[i]
 
@@ -212,15 +225,11 @@ func add_force_impulse(force: Vector3) -> void:
 func _setup() -> void:
 	_resize_lists(0)
 
-	if not properties:
-		return
-
 	var skeleton := get_skeleton()
-	if not skeleton:
+	if not properties or not skeleton:
 		return
 
 	var count := len(bones)
-	var valid_count := 0
 	var skeleton_global_xform := skeleton.global_transform
 
 	_resize_lists(count)
@@ -228,24 +237,20 @@ func _setup() -> void:
 	for i in count:
 		var bone_idx := skeleton.find_bone(bones[i])
 		if bone_idx < 0:
-			continue
+			_resize_lists(0)
+			break
 
-		_bone_indices[valid_count] = bone_idx
+		_bone_indices[i] = bone_idx
 
 		var skeleton_bone_pose := skeleton.get_bone_pose(bone_idx)
 		var parent_idx := skeleton.get_bone_parent(bone_idx)
-		_bone_parent_indices[valid_count] = parent_idx
+		_bone_parent_indices[i] = parent_idx
 		if parent_idx >= 0:
 			skeleton_bone_pose = skeleton.get_bone_global_pose(parent_idx) * skeleton_bone_pose
 
 		_global_positions[i] = skeleton_global_xform * skeleton_bone_pose.origin
 		_global_velocities[i] = Vector3.ZERO
 		_local_positions[i] = Vector3.ZERO
-
-		valid_count += 1
-
-	if valid_count < count:
-		_resize_lists(valid_count)
 
 	reset()
 	update_configuration_warnings()

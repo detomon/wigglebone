@@ -31,15 +31,21 @@ var _bone_parent_indices := PackedInt32Array()
 var _global_positions := PackedVector3Array() # Global mass position.
 var _global_directions := PackedVector3Array() # Global bone direction.
 var _angular_velocities := PackedVector3Array() # Global angular velocity.
+var _controller: DMWBController
 var _reset := true
 
 
 func _enter_tree() -> void:
+	var skeleton := get_skeleton()
+	if skeleton:
+		_controller = DMWBController.get_for_skeleton(skeleton)
+
 	_setup()
 
 
 func _exit_tree() -> void:
 	_resize_lists(0)
+	_controller = null
 
 
 func _set(property: StringName, value: Variant) -> bool:
@@ -82,6 +88,7 @@ func _process_modification() -> void:
 		return
 
 	var skeleton := get_skeleton()
+	var colliders := _controller.get_colliders()
 	var delta := 0.0
 
 	match skeleton.modifier_callback_mode_process:
@@ -190,6 +197,12 @@ func _process_modification() -> void:
 				torque_force = torque_force.project(rotation_axis)
 				_angular_velocities[i] = _global_directions[i].cross(torque_force)
 
+		if colliders:
+			var pos := _global_positions[i]
+			for collider in colliders:
+				pos = collider.collide(pos)
+			_global_positions[i] = pos
+
 		_global_directions[i] = _global_directions[i].normalized()
 		# Remove rotation around bone forward axis.
 		_angular_velocities[i] = Plane(_global_directions[i], 0.0).project(_angular_velocities[i])
@@ -267,15 +280,11 @@ func add_force_impulse(force: Vector3) -> void:
 func _setup() -> void:
 	_resize_lists(0)
 
-	if not properties:
-		return
-
 	var skeleton := get_skeleton()
-	if not skeleton:
+	if not properties or not skeleton:
 		return
 
 	var count := len(bones)
-	var valid_count := 0
 	var skeleton_global_xform := skeleton.global_transform
 
 	_resize_lists(count)
@@ -283,27 +292,24 @@ func _setup() -> void:
 	for i in count:
 		var bone_idx := skeleton.find_bone(bones[i])
 		if bone_idx < 0:
-			continue
+			_resize_lists(0)
+			break
 
-		_bone_indices[valid_count] = bone_idx
+		_bone_indices[i] = bone_idx
 
 		var skeleton_bone_pose := skeleton.get_bone_pose(bone_idx)
 		var parent_idx := skeleton.get_bone_parent(bone_idx)
-		_bone_parent_indices[valid_count] = parent_idx
+		_bone_parent_indices[i] = parent_idx
 		if parent_idx >= 0:
 			skeleton_bone_pose = skeleton.get_bone_global_pose(parent_idx) * skeleton_bone_pose
 
 		var global_bone_pose := skeleton_global_xform * skeleton_bone_pose
-		_global_directions[valid_count] = (global_bone_pose.basis * Vector3.UP).normalized()
-		_global_positions[valid_count] = global_bone_pose * Vector3.UP
-		_angular_velocities[valid_count] = Vector3.ZERO
-
-		valid_count += 1
-
-	if valid_count < count:
-		_resize_lists(valid_count)
+		_global_directions[i] = (global_bone_pose.basis * Vector3.UP).normalized()
+		_global_positions[i] = global_bone_pose * Vector3.UP
+		_angular_velocities[i] = Vector3.ZERO
 
 	reset()
+
 	update_configuration_warnings()
 
 
