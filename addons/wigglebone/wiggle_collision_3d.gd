@@ -3,33 +3,46 @@
 class_name DMWBWiggleCollision3D
 extends Node3D
 
-const Functions := preload("functions.gd")
+enum ShapeType {
+	NONE,
+	SPHERE,
+	CAPSULE,
+	BOX,
+}
 
-## The collision shape. Only [BoxShape3D], [SphereShape3D], or [CapsuleShape3D] is supported.
+## Adds a collision shape for bones to collide with.
+##
+## Allows bones from [DMWBWiggleRotationModifier3D] or [DMWBWigglePositionModifier3D] to collide with this shape.
+## This node can be placed as a descendant anywhere in a [Skeleton3D].[br][br]
+
+const _COLLISION_EPSILON := 1e-4
+
+const Functions := preload("functions.gd")
+const Controller := preload("controller.gd")
+
+## A collision shape to collide with. Only [BoxShape3D], [SphereShape3D], or [CapsuleShape3D] is supported at the moment.
 ## The shape properties [code]custom_solver_bias[/code] and [code]margin[/code] are ignored.
 @export var shape: Shape3D: set = set_shape
+## If [code]true[/code], the collision shape is disabled.
 @export var disabled := false: set = set_disabled
 
-var _controller: DMWBController: set = _set_collider
+var _controller: Controller: set = _set_collider
+var _shape_type := ShapeType.NONE
+var _radius := 0.0
 
 
 func set_shape(value: Shape3D) -> void:
 	if value == shape:
 		return
 
-	if Engine.is_editor_hint():
-		if shape:
-			shape.changed.disconnect(_on_shape_changed)
-		if value:
-			value.changed.connect(_on_shape_changed)
+	if shape:
+		shape.changed.disconnect(_on_shape_changed)
+	if value:
+		value.changed.connect(_on_shape_changed)
 
 	shape = value
-
-	if _controller:
-		if is_valid_shape():
-			_controller.add_collider(self)
-		else:
-			_controller.remove_collider(self)
+	_update_shape()
+	_register_collider()
 
 	update_gizmos()
 	update_configuration_warnings()
@@ -37,14 +50,14 @@ func set_shape(value: Shape3D) -> void:
 
 func set_disabled(value: bool) -> void:
 	disabled = value
-
+	_register_collider()
 	update_gizmos()
 
 
 func _enter_tree() -> void:
 	var skeleton := Functions.search_parent_skeleton(self)
 	if skeleton:
-		_controller = DMWBController.get_for_skeleton(skeleton)
+		_controller = Controller.get_for_skeleton(skeleton)
 
 
 func _exit_tree() -> void:
@@ -59,31 +72,72 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 	if not shape:
 		warnings.append(tr(&"A shape must be provided. Only BoxShape3D, SphereShape3D, or CapsuleShape3D is supported.", &"DMWB"))
-	elif not is_valid_shape():
+	elif _shape_type == ShapeType.NONE:
 		warnings.append(tr(&"Only BoxShape3D, SphereShape3D, or CapsuleShape3D is supported.", &"DMWB"))
 
 	return warnings
 
 
-func is_valid_shape() -> bool:
-	return shape is BoxShape3D or shape is SphereShape3D or shape is CapsuleShape3D
-
-
-func _set_collider(value: DMWBController) -> void:
+func _set_collider(value: Controller) -> void:
 	if value == _controller:
 		return
 
 	if _controller:
 		_controller.remove_collider(self)
-	if value:
-		value.add_collider(self)
 
 	_controller = value
+	_register_collider()
 
 
-func collide(vector: Vector3) -> Vector3:
-	return vector
+## Checks if [param point] collides with the shape surface in which case the nearest point on the
+## surface is returned.[br][br]
+## Returns [code]Vector3(INF, INF, INF)[/code], if no collision occurs, which
+## can be checked with [method Vector3.is_finite].
+func collide(point: Vector3) -> Vector3:
+	var distance_sq := point.distance_squared_to(global_position)
+	# No collision.
+	if distance_sq >= _radius * _radius:
+		return Vector3(INF, INF, INF)
+
+	var distance := sqrt(distance_sq)
+	var direction := (point - global_position) / distance
+	point = global_position + direction * (_radius + _COLLISION_EPSILON)
+
+	return point
+
+
+func _update_shape() -> void:
+	if shape is BoxShape3D:
+		_shape_type = ShapeType.BOX
+	elif shape is SphereShape3D:
+		_shape_type = ShapeType.SPHERE
+	elif shape is CapsuleShape3D:
+		_shape_type = ShapeType.CAPSULE
+	else:
+		_shape_type = ShapeType.NONE
+
+	match _shape_type:
+		ShapeType.BOX:
+			var box: BoxShape3D = shape
+			_radius = box.size.length() * 0.5
+		ShapeType.SPHERE:
+			var sphere: SphereShape3D = shape
+			_radius = sphere.radius
+		ShapeType.CAPSULE:
+			var capsule: CapsuleShape3D = shape
+			_radius = capsule.height * 0.5
+
+
+func _register_collider() -> void:
+	if not _controller:
+		return
+
+	if not disabled and _shape_type != ShapeType.NONE:
+		_controller.add_collider(self)
+	else:
+		_controller.remove_collider(self)
 
 
 func _on_shape_changed() -> void:
+	_update_shape()
 	update_gizmos()

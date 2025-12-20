@@ -21,8 +21,10 @@ var _cylinder_lines := PackedVector3Array([
 func _init() -> void:
 	var editor_settings = EditorInterface.get_editor_settings()
 	var shape_color: Color = editor_settings.get(&"editors/3d_gizmos/gizmo_colors/shape")
+	var disabled_color: Color = editor_settings.get(&"editors/3d_gizmos/gizmo_colors/instantiated")
 
 	create_material(&"main", shape_color, false)
+	create_material(&"disabled", disabled_color, false)
 
 
 func _has_gizmo(spatial: Node3D) -> bool:
@@ -41,7 +43,8 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	if not node.shape:
 		return
 
-	var material := get_material(&"main", gizmo)
+	var material_name := &"disabled" if node.disabled else &"main"
+	var material := get_material(material_name, gizmo)
 
 	if node.shape is BoxShape3D:
 		var shape: BoxShape3D = node.shape

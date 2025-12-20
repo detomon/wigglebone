@@ -18,6 +18,15 @@ const Functions := preload("functions.gd")
 ## Applies a constant local force relative to the bone's pose.
 @export var force_local := Vector3.ZERO
 
+@export_group("Collision", "collision")
+## If [code]true[/code], collision is enabled and all [member bones] collide with [DMWBWiggleCollision3D]
+## nodes in the same [Skeleton3D]. The bone collision shape is always a capsule.
+@export var collision_enabled := false
+## Defines the length of the bone capsule shape used for all [member bones].
+@export_range(0, 1, 0.01, "or_greater") var collision_length := 0.1
+## Defines the radius of the bone capsule shape used for all [member bones].
+@export_range(0, 1, 0.01, "or_greater") var collision_radius := 0.0
+
 var _bone_indices := PackedInt32Array()
 var _bone_parent_indices := PackedInt32Array()
 var _global_positions := PackedVector3Array() # Global pose positions.
@@ -61,6 +70,9 @@ func _validate_property(property: Dictionary) -> void:
 		&"force_global", &"force_local":
 			property.hint_string = &"suffix:m/s²"
 
+		&"collision_length", &"collision_radius":
+			property.hint_string = &"0,1,0.01,or_greater,suffix:m"
+
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
@@ -80,8 +92,11 @@ func _process_modification() -> void:
 		return
 
 	var skeleton := get_skeleton()
-	var colliders := _controller.get_colliders()
+	var colliders: Array[DMWBWiggleCollision3D] = []
 	var delta := 0.0
+
+	if collision_enabled:
+		colliders = _controller.get_colliders()
 
 	match skeleton.modifier_callback_mode_process:
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
@@ -155,9 +170,19 @@ func _process_modification() -> void:
 
 		if colliders:
 			var pos := _global_positions[i]
+			var velocity := _global_velocities[i]
+
 			for collider in colliders:
-				pos = collider.collide(pos)
+				var pos_new := collider.collide(pos)
+				if pos_new.is_finite():
+					var pos_delta := pos_new - pos
+					# Limit velocity if it points towards collision surface.
+					if pos_delta.dot(velocity) < 0.0:
+						velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
+					pos = pos_new
+
 			_global_positions[i] = pos
+			_global_velocities[i] = velocity
 
 		# Set local position to calculate parent speed in next iteration.
 		_local_positions[i] = global_to_pose * _global_positions[i]
