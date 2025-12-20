@@ -31,21 +31,21 @@ var _bone_parent_indices := PackedInt32Array()
 var _global_positions := PackedVector3Array() # Global mass position.
 var _global_directions := PackedVector3Array() # Global bone direction.
 var _angular_velocities := PackedVector3Array() # Global angular velocity.
-var _controller: DMWBController
+var _cache: DMWBCache
 var _reset := true
 
 
 func _enter_tree() -> void:
 	var skeleton := get_skeleton()
 	if skeleton:
-		_controller = DMWBController.get_for_skeleton(skeleton)
+		_cache = DMWBCache.get_for_skeleton(skeleton)
 
 	_setup()
 
 
 func _exit_tree() -> void:
 	_resize_lists(0)
-	_controller = null
+	_cache = null
 
 
 func _set(property: StringName, value: Variant) -> bool:
@@ -88,7 +88,7 @@ func _process_modification() -> void:
 		return
 
 	var skeleton := get_skeleton()
-	var colliders := _controller.get_colliders()
+	var colliders := _cache.get_colliders()
 	var delta := 0.0
 
 	match skeleton.modifier_callback_mode_process:
@@ -199,8 +199,14 @@ func _process_modification() -> void:
 
 		if colliders:
 			var pos := _global_positions[i]
+
 			for collider in colliders:
-				pos = collider.collide(pos)
+				var pos_new := collider.collide(pos)
+				if not pos_new.is_finite():
+					continue
+
+				pos = pos_new
+
 			_global_positions[i] = pos
 
 		_global_directions[i] = _global_directions[i].normalized()

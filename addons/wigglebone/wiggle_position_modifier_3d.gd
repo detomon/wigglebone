@@ -32,21 +32,21 @@ var _bone_parent_indices := PackedInt32Array()
 var _global_positions := PackedVector3Array() # Global pose positions.
 var _global_velocities := PackedVector3Array() # Global velocities.
 var _local_positions := PackedVector3Array() # Positions in pose space.
-var _controller: DMWBController
+var _cache: DMWBCache
 var _reset := true
 
 
 func _enter_tree() -> void:
 	var skeleton := get_skeleton()
 	if skeleton:
-		_controller = DMWBController.get_for_skeleton(skeleton)
+		_cache = DMWBCache.get_for_skeleton(skeleton)
 
 	_setup()
 
 
 func _exit_tree() -> void:
 	_resize_lists(0)
-	_controller = null
+	_cache = null
 
 
 func _set(property: StringName, value: Variant) -> bool:
@@ -96,7 +96,7 @@ func _process_modification() -> void:
 	var delta := 0.0
 
 	if collision_enabled:
-		colliders = _controller.get_colliders()
+		colliders = _cache.get_colliders()
 
 	match skeleton.modifier_callback_mode_process:
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
@@ -174,12 +174,14 @@ func _process_modification() -> void:
 
 			for collider in colliders:
 				var pos_new := collider.collide(pos)
-				if pos_new.is_finite():
-					var pos_delta := pos_new - pos
-					# Limit velocity if it points towards collision surface.
-					if pos_delta.dot(velocity) < 0.0:
-						velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
-					pos = pos_new
+				if not pos_new.is_finite():
+					continue
+
+				var pos_delta := pos_new - pos
+				# Limit velocity if it points towards collision surface.
+				if pos_delta.dot(velocity) < 0.0:
+					velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
+				pos = pos_new
 
 			_global_positions[i] = pos
 			_global_velocities[i] = velocity

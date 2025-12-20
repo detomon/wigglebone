@@ -12,23 +12,23 @@ enum ShapeType {
 
 ## Adds a collision shape for bones to collide with.
 ##
-## Allows bones from [DMWBWiggleRotationModifier3D] or [DMWBWigglePositionModifier3D] to collide with this shape.
-## This node can be placed as a descendant anywhere in a [Skeleton3D].[br][br]
+## Allows bones from [DMWBWiggleRotationModifier3D] or [DMWBWigglePositionModifier3D] to collide
+## with this shape. This node can be placed anywhere as a descendant in a [Skeleton3D].
 
 const _COLLISION_EPSILON := 1e-4
 
 const Functions := preload("functions.gd")
-const Controller := preload("controller.gd")
 
-## A collision shape to collide with. Only [BoxShape3D], [SphereShape3D], or [CapsuleShape3D] is supported at the moment.
-## The shape properties [code]custom_solver_bias[/code] and [code]margin[/code] are ignored.
+## The collision shape for bones to collide with. Only a [BoxShape3D], [SphereShape3D], or
+## [CapsuleShape3D] is supported at the moment. The shape properties [member Shape3D.custom_solver_bias]
+## and [member Shape3D.margin] are ignored.
 @export var shape: Shape3D: set = set_shape
-## If [code]true[/code], the collision shape is disabled.
+## If [code]true[/code], the collision is disabled.
 @export var disabled := false: set = set_disabled
 
-var _controller: Controller: set = _set_collider
 var _shape_type := ShapeType.NONE
-var _radius := 0.0
+var _shape_radius := 0.0
+var _cache: DMWBCache: set = _set_cache
 
 
 func set_shape(value: Shape3D) -> void:
@@ -57,17 +57,17 @@ func set_disabled(value: bool) -> void:
 func _enter_tree() -> void:
 	var skeleton := Functions.search_parent_skeleton(self)
 	if skeleton:
-		_controller = Controller.get_for_skeleton(skeleton)
+		_cache = DMWBCache.get_for_skeleton(skeleton)
 
 
 func _exit_tree() -> void:
-	_controller = null
+	_cache = null
 
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
-	if not _controller:
+	if not _cache:
 		warnings.append(tr(&"DMWBWiggleCollision3D must be a descendant of a Skeleton3D.", &"DMWB"))
 
 	if not shape:
@@ -78,14 +78,14 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-func _set_collider(value: Controller) -> void:
-	if value == _controller:
+func _set_cache(value: DMWBCache) -> void:
+	if value == _cache:
 		return
 
-	if _controller:
-		_controller.remove_collider(self)
+	if _cache:
+		_cache.remove_collider(self)
 
-	_controller = value
+	_cache = value
 	_register_collider()
 
 
@@ -96,12 +96,12 @@ func _set_collider(value: Controller) -> void:
 func collide(point: Vector3) -> Vector3:
 	var distance_sq := point.distance_squared_to(global_position)
 	# No collision.
-	if distance_sq >= _radius * _radius:
+	if distance_sq >= _shape_radius * _shape_radius:
 		return Vector3(INF, INF, INF)
 
 	var distance := sqrt(distance_sq)
 	var direction := (point - global_position) / distance
-	point = global_position + direction * (_radius + _COLLISION_EPSILON)
+	point = global_position + direction * (_shape_radius + _COLLISION_EPSILON)
 
 	return point
 
@@ -119,23 +119,23 @@ func _update_shape() -> void:
 	match _shape_type:
 		ShapeType.BOX:
 			var box: BoxShape3D = shape
-			_radius = box.size.length() * 0.5
+			_shape_radius = box.size.length() * 0.5
 		ShapeType.SPHERE:
 			var sphere: SphereShape3D = shape
-			_radius = sphere.radius
+			_shape_radius = sphere.radius
 		ShapeType.CAPSULE:
 			var capsule: CapsuleShape3D = shape
-			_radius = capsule.height * 0.5
+			_shape_radius = capsule.height * 0.5
 
 
 func _register_collider() -> void:
-	if not _controller:
+	if not _cache:
 		return
 
 	if not disabled and _shape_type != ShapeType.NONE:
-		_controller.add_collider(self)
+		_cache.add_collider(self)
 	else:
-		_controller.remove_collider(self)
+		_cache.remove_collider(self)
 
 
 func _on_shape_changed() -> void:
