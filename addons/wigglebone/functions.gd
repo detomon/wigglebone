@@ -1,54 +1,92 @@
 extends RefCounted
 
+const SEGMENT_COUNT := 64
+
+static var _ring_points := PackedVector3Array()
+
+
+static func get_ring_points() -> PackedVector3Array:
+	if _ring_points:
+		return _ring_points.duplicate()
+
+	const POINT_COUNT := SEGMENT_COUNT * 2
+	_ring_points.resize(POINT_COUNT)
+
+	for i in SEGMENT_COUNT:
+		var point := Vector3.RIGHT.rotated(Vector3.UP, (i + 1) * TAU / SEGMENT_COUNT)
+		_ring_points[(i * 2 + 1) % POINT_COUNT] = point
+		_ring_points[(i * 2 + 2) % POINT_COUNT] = point
+
+	return _ring_points
+
 
 ## Create line segments for a normalized cone wireframe.
 static func create_cone_lines() -> PackedVector3Array:
-	var count := 32
-	var points := PackedVector3Array()
+	var transform := Transform3D().translated(Vector3.UP)
+	var lines := transform * get_ring_points()
+	var count := len(lines)
 
-	for i in count:
-		points.append(Vector3(1, 1, 0).rotated(Vector3.UP, i * TAU / count))
-
-	var lines := PackedVector3Array()
-
-	for i in len(points) - 1:
-		lines.append(points[i])
-		lines.append(points[i + 1])
-
-		if i % 8 == 0:
-			lines.append(Vector3.ZERO)
-			lines.append(points[i])
-
-	lines.append(points[0])
-	lines.append(points[len(points) - 1])
+	for i in range(0, count, SEGMENT_COUNT / 4):
+		lines.append(Vector3.ZERO)
+		lines.append(lines[i])
 
 	return lines
 
 
 ## Create line segments for a normalized sphere wireframe.
 static func create_sphere_lines() -> PackedVector3Array:
-	var count := 32
-	var points := PackedVector3Array()
-
-	for i in count:
-		points.append(Vector3.RIGHT.rotated(Vector3.UP, i * TAU / count))
-
-	var lines := PackedVector3Array()
-	var rotations := [
+	var rotations: Array[Transform3D] = [
 		Transform3D(),
 		Transform3D().rotated(Vector3.RIGHT, PI * 0.5),
 		Transform3D().rotated(Vector3.BACK, PI * 0.5),
 	]
+	var points := get_ring_points()
+	var lines := PackedVector3Array()
 
-	for transform: Transform3D in rotations:
-		var new_lines := transform * points
+	for transform in rotations:
+		lines.append_array(transform * points)
 
-		for i in len(new_lines) - 1:
-			lines.append(new_lines[i])
-			lines.append(new_lines[i + 1])
+	return lines
 
-		lines.append(new_lines[0])
-		lines.append(new_lines[len(new_lines) - 1])
+
+## Create line segments for a normalized box wireframe.
+static func create_box_lines() -> PackedVector3Array:
+	var points := PackedVector3Array([
+		Vector3(-0.5, -0.5, -0.5),
+		Vector3(+0.5, -0.5, -0.5),
+		Vector3(-0.5, +0.5, -0.5),
+		Vector3(+0.5, +0.5, -0.5),
+		Vector3(-0.5, -0.5, +0.5),
+		Vector3(+0.5, -0.5, +0.5),
+		Vector3(-0.5, +0.5, +0.5),
+		Vector3(+0.5, +0.5, +0.5),
+	])
+	var rotations: Array[Transform3D] = [
+		Transform3D(),
+		Transform3D().rotated(Vector3.BACK, PI * 0.5),
+		Transform3D().rotated(Vector3.UP, PI * 0.5),
+	]
+	var lines := PackedVector3Array()
+
+	for transform in rotations:
+		lines.append_array(transform * points)
+
+	return lines
+
+
+static func create_cap_lines() -> PackedVector3Array:
+	var rotations: Array[Transform3D] = [
+		Transform3D().rotated(Vector3.RIGHT, PI * 0.5),
+		Transform3D().rotated(Vector3.RIGHT, PI * 0.5).rotated(Vector3.UP, PI * 0.5),
+	]
+	var points := get_ring_points()
+	var lines := PackedVector3Array()
+
+	lines.append_array(points)
+
+	points.resize(len(points) / 2) # Half circle.
+	for transform in rotations:
+		lines.append_array(transform * points)
 
 	return lines
 
@@ -75,15 +113,23 @@ static func gizmo_draw_sphere(gizmo: EditorNode3DGizmo, material: StandardMateri
 	gizmo.add_lines(lines, material, true)
 
 
+## Draw line segments created with [member create_box_lines] to [param gizmo].
+static func gizmo_draw_box(gizmo: EditorNode3DGizmo, material: StandardMaterial3D, lines: PackedVector3Array, scale: Vector3) -> void:
+	var transform := Transform3D().scaled(scale)
+
+	lines = transform * lines
+	gizmo.add_lines(lines, material, true)
+
+
 ## Get a naturally sorted list of bone names from [param skeleton].
 static func get_sorted_skeleton_bones(skeleton: Skeleton3D) -> PackedStringArray:
 	if not skeleton:
 		return []
 
-	var bone_names: Array[String] = []
 	var bone_count := skeleton.get_bone_count()
-
+	var bone_names: Array[String] = []
 	bone_names.resize(bone_count)
+
 	for i in bone_count:
 		bone_names[i] = skeleton.get_bone_name(i)
 
@@ -95,26 +141,11 @@ static func get_sorted_skeleton_bones(skeleton: Skeleton3D) -> PackedStringArray
 
 
 static func search_parent_skeleton(node: Node) -> Skeleton3D:
-	var skeleton: Skeleton3D
 	var parent := node.get_parent()
 
 	while parent:
 		if parent is Skeleton3D:
 			return parent
-			break
 		parent = parent.get_parent()
 
 	return null
-
-
-#static func setup_controller(skeleton: Skeleton3D) -> DMWBController:
-	#var child_count := skeleton.get_child_count(true)
-	#for i in range(child_count - 1, -1, -1):
-		#var child := skeleton.get_child(i, true)
-		#if child is DMWBController:
-			#return child
-#
-	#var controller := DMWBController.new()
-	#skeleton.add_child(controller, false, Node.INTERNAL_MODE_BACK)
-#
-	#return controller

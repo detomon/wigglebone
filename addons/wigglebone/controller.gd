@@ -27,12 +27,12 @@ static func get_for_skeleton(skeleton: Skeleton3D) -> DMWBController:
 	return controller
 
 
-func get_colliders() -> Array[Node]:
-	return []
+func get_colliders() -> Array[DMWBWiggleCollision3D]:
+	return _colliders
 
 
 func add_collider(collider: DMWBWiggleCollision3D) -> void:
-	if collider not in _colliders:
+	if collider and collider not in _colliders:
 		_colliders.append(collider)
 
 

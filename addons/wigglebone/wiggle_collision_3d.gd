@@ -8,6 +8,7 @@ const Functions := preload("functions.gd")
 ## The collision shape. Only [BoxShape3D], [SphereShape3D], or [CapsuleShape3D] is supported.
 ## The shape properties [code]custom_solver_bias[/code] and [code]margin[/code] are ignored.
 @export var shape: Shape3D: set = set_shape
+@export var disabled := false: set = set_disabled
 
 var _controller: DMWBController: set = _set_collider
 
@@ -32,6 +33,12 @@ func set_shape(value: Shape3D) -> void:
 
 	update_gizmos()
 	update_configuration_warnings()
+
+
+func set_disabled(value: bool) -> void:
+	disabled = value
+
+	update_gizmos()
 
 
 func _enter_tree() -> void:
@@ -72,6 +79,10 @@ func _set_collider(value: DMWBController) -> void:
 		value.add_collider(self)
 
 	_controller = value
+
+
+func collide(vector: Vector3) -> Vector3:
+	return vector
 
 
 func _on_shape_changed() -> void:

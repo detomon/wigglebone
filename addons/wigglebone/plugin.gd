@@ -1,10 +1,10 @@
 @tool
 extends EditorPlugin
 
-const WigglePositionGizmoPlugin := preload("wiggle_position_gizmo_plugin.gd")
-const WiggleRotationGizmoPlugin := preload("wiggle_rotation_gizmo_plugin.gd")
-const WiggleCollisionGizmo := preload("wiggle_collision_gizmo_plugin.gd")
-const WiggleGizmoPlugin := preload("wiggle_gizmo_plugin.gd")
+const WigglePositionGizmoPlugin := preload("plugin/wiggle_position_gizmo_plugin.gd")
+const WiggleRotationGizmoPlugin := preload("plugin/wiggle_rotation_gizmo_plugin.gd")
+const WiggleCollisionGizmo := preload("plugin/wiggle_collision_gizmo_plugin.gd")
+const WiggleGizmoPlugin := preload("plugin/wiggle_gizmo_plugin.gd")
 
 var _position_gizmo_plugin: WigglePositionGizmoPlugin
 var _rotation_gizmo_plugin: WiggleRotationGizmoPlugin
