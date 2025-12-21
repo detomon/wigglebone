@@ -6,6 +6,7 @@ const Functions := preload("../functions.gd")
 var _box_lines := Functions.create_box_lines()
 var _sphere_lines := Functions.create_sphere_lines()
 var _cap_lines := Functions.create_cap_lines()
+var _ring_points := Functions.get_ring_points()
 var _cylinder_lines := PackedVector3Array([
 	Vector3(+1.0, -1.0, +0.0),
 	Vector3(+1.0, +1.0, +0.0),
@@ -46,24 +47,38 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	var material_name := &"disabled" if node.disabled else &"main"
 	var material := get_material(material_name, gizmo)
 
-	if node.shape is BoxShape3D:
+	if node.shape is SphereShape3D:
+		var shape: SphereShape3D = node.shape
+		Functions.gizmo_draw_sphere(gizmo, material, _sphere_lines, shape.radius)
+
+	elif node.shape is BoxShape3D:
 		var shape: BoxShape3D = node.shape
 		Functions.gizmo_draw_box(gizmo, material, _box_lines, shape.size)
 
-	elif node.shape is SphereShape3D:
-		var shape: SphereShape3D = node.shape
-		Functions.gizmo_draw_sphere(gizmo, material, _sphere_lines, shape.radius)
+	elif node.shape is CylinderShape3D:
+		var shape: CylinderShape3D = node.shape
+		var radius := shape.radius
+		var height := shape.height
+		var top_xform := Transform3D().scaled(Vector3.ONE * radius).translated(Vector3.UP * height * 0.5)
+		var bottom_xform := top_xform.rotated(Vector3.RIGHT, PI)
+		var cylinder_xform := Transform3D().scaled(Vector3(radius, height * 0.5, radius))
+
+		var lines := top_xform * _ring_points
+		lines.append_array(bottom_xform * _ring_points)
+		lines.append_array(cylinder_xform * _cylinder_lines)
+
+		gizmo.add_lines(lines, material, true)
 
 	elif node.shape is CapsuleShape3D:
 		var shape: CapsuleShape3D = node.shape
 		var radius := shape.radius
 		var height := shape.height - radius * 2.0
-		var cap_top_xform := Transform3D().scaled(Vector3.ONE * radius).translated(Vector3.UP * height * 0.5)
-		var cap_bottom_xform := cap_top_xform.rotated(Vector3.RIGHT, PI)
+		var top_xform := Transform3D().scaled(Vector3.ONE * radius).translated(Vector3.UP * height * 0.5)
+		var bottom_xform := top_xform.rotated(Vector3.RIGHT, PI)
 		var cylinder_xform := Transform3D().scaled(Vector3(radius, height * 0.5, radius))
 
-		var lines := cap_top_xform * _cap_lines
-		lines.append_array(cap_bottom_xform * _cap_lines)
+		var lines := top_xform * _cap_lines
+		lines.append_array(bottom_xform * _cap_lines)
 		lines.append_array(cylinder_xform * _cylinder_lines)
 
 		gizmo.add_lines(lines, material, true)

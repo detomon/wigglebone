@@ -11,25 +11,22 @@ extends Node3D
 ## [b]Note:[/b] Scaling is not supported. This node, the parent [Skeleton3D], and all nodes before
 ## it have to be unscaled.
 
-enum ShapeType {
-	NONE,
-	SPHERE,
-	CAPSULE,
-	BOX,
-}
-
 const Functions := preload("functions.gd")
 
-## The collision shape for bones to collide with. Only a [BoxShape3D], [SphereShape3D], or
-## [CapsuleShape3D] is supported at the moment. The shape properties [member Shape3D.custom_solver_bias]
-## and [member Shape3D.margin] are ignored.
+## The collision shape for bones to collide with. Only a [SphereShape3D], [BoxShape3D],
+## [CapsuleShape3D], or [CylinderShape3D] is supported at the moment. The shape properties
+## [member Shape3D.custom_solver_bias] and [member Shape3D.margin] are ignored.
 @export var shape: Shape3D: set = set_shape
 ## If [code]true[/code], the collision is disabled.
 @export var disabled := false: set = set_disabled
 
-var _shape_type := ShapeType.NONE
-var _shape_radius := 0.0
+var _area_rid: RID
+var _shape_rid: RID
 var _cache: DMWBCache: set = _set_cache
+
+
+func _init() -> void:
+	_area_rid = PhysicsServer3D.area_create()
 
 
 func set_shape(value: Shape3D) -> void:
@@ -40,9 +37,10 @@ func set_shape(value: Shape3D) -> void:
 		shape.changed.disconnect(_on_shape_changed)
 	if value:
 		value.changed.connect(_on_shape_changed)
-
 	shape = value
-	_update_shape()
+
+	if is_inside_tree():
+		_update_shape()
 	_register_collider()
 
 	update_gizmos()
@@ -60,6 +58,8 @@ func _enter_tree() -> void:
 	if skeleton:
 		_cache = DMWBCache.get_for_skeleton(skeleton)
 
+	_update_shape()
+
 
 func _exit_tree() -> void:
 	_cache = null
@@ -70,13 +70,21 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 	if not _cache:
 		warnings.append(tr(&"DMWBWiggleCollision3D must be a descendant of a Skeleton3D.", &"DMWB"))
-
-	if not shape:
-		warnings.append(tr(&"A shape must be provided. Only BoxShape3D, SphereShape3D, or CapsuleShape3D is supported.", &"DMWB"))
-	elif _shape_type == ShapeType.NONE:
-		warnings.append(tr(&"Only BoxShape3D, SphereShape3D, or CapsuleShape3D is supported.", &"DMWB"))
+	if not _shape_rid.is_valid():
+		warnings.append(tr(&"A shape must be provided. Only SphereShape3D, BoxShape3D, CapsuleShape3D, CylinderShape3D is supported.", &"DMWB"))
 
 	return warnings
+
+
+func _process(_delta: float) -> void:
+	# TODO: Update once.
+	PhysicsServer3D.area_set_transform(_area_rid, global_transform)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		PhysicsServer3D.free_rid(_shape_rid)
+		PhysicsServer3D.free_rid(_area_rid)
 
 
 func _set_cache(value: DMWBCache) -> void:
@@ -87,77 +95,71 @@ func _set_cache(value: DMWBCache) -> void:
 		_cache.remove_collider(self)
 	_cache = value
 
+	if _cache:
+		var space_rid := _cache.get_space()
+		PhysicsServer3D.area_set_space(_area_rid, space_rid)
+
 	_register_collider()
 
 
-## Checks if [param point] collides with the shape surface in which case the nearest point on the
-## surface is returned.
-## [br][br]
-## Returns [code]Vector3(INF, INF, INF)[/code], if no collision occurs, which
-## can be checked with [method Vector3.is_finite].
-func collide(point: Vector3) -> Vector3:
-	return Functions.collide_point_sphere(point, global_position, _shape_radius)
-
-
-func collide_capsule(head: Vector3, tail: Vector3, radius: float) -> Vector3:
-	match _shape_type:
-		ShapeType.BOX:
-			pass
-			#var box: BoxShape3D = shape
-			#_shape_radius = box.size.length() * 0.5
-
-		ShapeType.SPHERE:
-			pass
-			#var sphere: SphereShape3D = shape
-			#_shape_radius = sphere.radius
-
-		ShapeType.CAPSULE:
-			var capsule: CapsuleShape3D = shape
-			var height := capsule.height - capsule.radius * 2.0
-			var half_height := Vector3.UP * height * 0.5
-			var this_head := global_transform * -half_height
-			var this_tail := global_transform * +half_height
-			var head_new := Functions.collide_capsule_capsule(head, tail, radius, this_head, this_tail, capsule.radius)
-
-			# Collision
-			if head_new.is_finite():
-				head = head_new
-
-	return head
-
-
 func _update_shape() -> void:
-	if shape is BoxShape3D:
-		_shape_type = ShapeType.BOX
-	elif shape is SphereShape3D:
-		_shape_type = ShapeType.SPHERE
-	elif shape is CapsuleShape3D:
-		_shape_type = ShapeType.CAPSULE
-	else:
-		_shape_type = ShapeType.NONE
+	if _shape_rid.is_valid():
+		PhysicsServer3D.free_rid(_shape_rid)
+		_shape_rid = RID()
 
-	match _shape_type:
-		ShapeType.BOX:
-			var box: BoxShape3D = shape
-			_shape_radius = box.size.length() * 0.5
-		ShapeType.SPHERE:
+	if shape is SphereShape3D:
+		_shape_rid = PhysicsServer3D.sphere_shape_create()
+	elif shape is BoxShape3D:
+		_shape_rid = PhysicsServer3D.box_shape_create()
+	elif shape is CapsuleShape3D:
+		_shape_rid = PhysicsServer3D.capsule_shape_create()
+	elif shape is CylinderShape3D:
+		_shape_rid = PhysicsServer3D.cylinder_shape_create()
+
+	if _shape_rid.is_valid():
+		PhysicsServer3D.area_add_shape(_area_rid, _shape_rid)
+
+	_update_shape_data()
+
+
+func _update_shape_data() -> void:
+	if not _shape_rid.is_valid():
+		return
+
+	match PhysicsServer3D.shape_get_type(_shape_rid):
+		PhysicsServer3D.SHAPE_SPHERE:
 			var sphere: SphereShape3D = shape
-			_shape_radius = sphere.radius
-		ShapeType.CAPSULE:
+			PhysicsServer3D.shape_set_data(_shape_rid, sphere.radius)
+
+		PhysicsServer3D.SHAPE_BOX:
+			var box: BoxShape3D = shape
+			PhysicsServer3D.shape_set_data(_shape_rid, box.size * 0.5)
+
+		PhysicsServer3D.SHAPE_CAPSULE:
 			var capsule: CapsuleShape3D = shape
-			_shape_radius = capsule.height * 0.5
+			PhysicsServer3D.shape_set_data(_shape_rid, {
+				height = capsule.height,
+				radius = capsule.radius,
+			})
+
+		PhysicsServer3D.SHAPE_CYLINDER:
+			var cylinder: CylinderShape3D = shape
+			PhysicsServer3D.shape_set_data(_shape_rid, {
+				height = cylinder.height,
+				radius = cylinder.radius,
+			})
 
 
 func _register_collider() -> void:
 	if not _cache:
 		return
 
-	if not disabled and _shape_type != ShapeType.NONE:
+	if not disabled and _shape_rid.is_valid():
 		_cache.add_collider(self)
 	else:
 		_cache.remove_collider(self)
 
 
 func _on_shape_changed() -> void:
-	_update_shape()
+	_update_shape_data()
 	update_gizmos()

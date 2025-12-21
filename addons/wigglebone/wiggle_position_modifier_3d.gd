@@ -21,11 +21,11 @@ const Functions := preload("functions.gd")
 @export_group("Collision", "collision")
 ## If [code]true[/code], collision is enabled and all [member bones] collide with [DMWBWiggleCollision3D]
 ## nodes in the same [Skeleton3D]. The bone collision shape is always a capsule.
-@export var collision_enabled := false
+@export var collision_enabled := false: set = set_collision_enabled
 ## Defines the length of the bone capsule shape used for all [member bones].
-@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_length := 0.1
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_length := 0.2: set = set_collision_length
 ## Defines the radius of the bone capsule shape used for all [member bones].
-@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_radius := 0.0
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_radius := 0.1: set = set_collision_radius
 
 var _bone_indices := PackedInt32Array()
 var _bone_parent_indices := PackedInt32Array()
@@ -33,6 +33,8 @@ var _global_positions := PackedVector3Array() # Global pose positions.
 var _global_velocities := PackedVector3Array() # Global velocities.
 var _local_positions := PackedVector3Array() # Positions in pose space.
 var _cache: DMWBCache
+var _shape_rid: RID
+var _query_params: PhysicsShapeQueryParameters3D
 var _reset := true
 
 
@@ -84,16 +86,20 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		PhysicsServer3D.free_rid(_shape_rid)
+		_shape_rid = RID()
+
+
 func _process_modification() -> void:
 	if not _bone_indices:
 		return
 
 	var skeleton := get_skeleton()
-	var colliders: Array[DMWBWiggleCollision3D] = []
+	var space_state := _cache.get_space_state()
+	var query := _get_query_params()
 	var delta := 0.0
-
-	if collision_enabled:
-		colliders = _cache.get_colliders()
 
 	match skeleton.modifier_callback_mode_process:
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
@@ -154,6 +160,7 @@ func _process_modification() -> void:
 		if has_spring:
 			var pose_global := pose_to_global.origin
 			var spring_position := _global_positions[i] - pose_global
+
 			var x0 := spring_position
 			var c2 := _global_velocities[i] / frequency
 
@@ -164,23 +171,26 @@ func _process_modification() -> void:
 		else:
 			_global_positions[i] += _global_velocities[i] * delta
 
-		if colliders:
-			var pos := _global_positions[i]
-			var velocity := _global_velocities[i]
+		if collision_enabled:
+			var query_xform := pose_to_global
+			query_xform.origin = _global_positions[i] + query_xform * (Vector3.UP * collision_length * 0.5)
+			query.transform = query_xform
 
-			for collider in colliders:
-				var pos_new := collider.collide(pos)
-				if not pos_new.is_finite():
-					continue
+			var points := space_state.collide_shape(_query_params, 2)
+			for j in range(0, len(points), 2):
+				var coll_a := points[j]
+				var coll_b := points[j + 1]
+				var pos_old := _global_positions[i]
+				var pos_new := pos_old + (coll_b - coll_a)
+				var pos_delta := pos_new - pos_old
 
-				var pos_delta := pos_new - pos
-				# Limit velocity if it points towards collision surface.
+				## Limit velocity if it points towards collision surface.
+				var velocity := _global_velocities[i]
 				if pos_delta.dot(velocity) < 0.0:
 					velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
-				pos = pos_new
+					_global_velocities[i] = velocity
 
-			_global_positions[i] = pos
-			_global_velocities[i] = velocity
+				_global_positions[i] = pos_new
 
 		# Set local position to calculate parent speed in next iteration.
 		_local_positions[i] = global_to_pose * _global_positions[i]
@@ -231,6 +241,20 @@ func set_bones(value: PackedStringArray) -> void:
 	bones = value
 	_setup()
 	update_gizmos()
+
+
+func set_collision_enabled(value: bool) -> void:
+	collision_enabled = value
+
+
+func set_collision_length(value: float) -> void:
+	collision_length = value
+	_update_shape()
+
+
+func set_collision_radius(value: float) -> void:
+	collision_radius = value
+	_update_shape()
 
 
 ## Resets position and velocity.
@@ -284,6 +308,31 @@ func _resize_lists(count: int) -> void:
 	_global_positions.resize(count)
 	_global_velocities.resize(count)
 	_local_positions.resize(count)
+
+
+func _get_shape() -> RID:
+	if not _shape_rid.is_valid():
+		_shape_rid = PhysicsServer3D.capsule_shape_create()
+
+	return _shape_rid
+
+
+func _get_query_params() -> PhysicsShapeQueryParameters3D:
+	if not _query_params:
+		_query_params = PhysicsShapeQueryParameters3D.new()
+		_query_params.collide_with_areas = true
+		_query_params.collide_with_bodies = false
+		_query_params.shape_rid = _get_shape()
+
+	return _query_params
+
+
+func _update_shape() -> void:
+	var shape_rid := _get_shape()
+	PhysicsServer3D.shape_set_data(shape_rid, {
+		height = collision_length,
+		radius = collision_radius,
+	})
 
 
 func _on_properties_changed() -> void:

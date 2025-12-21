@@ -155,6 +155,7 @@ func _process_modification() -> void:
 		if has_pring:
 			# Rotation axis where the length is the rotation difference to the pose in radians.
 			var spring_rotation := rotation_axis * rotation_angle
+
 			var x0 := spring_rotation
 			var c2 := _angular_velocities[i] / frequency
 
@@ -196,18 +197,18 @@ func _process_modification() -> void:
 				torque_force = torque_force.project(rotation_axis)
 				_angular_velocities[i] = _global_directions[i].cross(torque_force)
 
-		if colliders:
-			var pos := _global_positions[i]
-
-			for collider in colliders:
-				var pos_new := collider.collide(pos)
-				if not pos_new.is_finite():
-					continue
-
-				# TODO: Implement.
-				pos = pos_new
-
-			_global_positions[i] = pos
+		#if colliders:
+			#var pos := _global_positions[i]
+#
+			#for collider in colliders:
+				#var pos_new := collider.collide(pos)
+				#if not pos_new.is_finite():
+					#continue
+#
+				## TODO: Implement.
+				#pos = pos_new
+#
+			#_global_positions[i] = pos
 
 		_global_directions[i] = _global_directions[i].normalized()
 		# Remove rotation around bone forward axis.
