@@ -1,9 +1,17 @@
-[gd_scene load_steps=5 format=3 uid="uid://bpo5cdokfdck"]
+[gd_scene load_steps=8 format=3 uid="uid://bpo5cdokfdck"]
 
 [ext_resource type="Script" path="res://examples/wigglebone/skeleton.gd" id="1_nnete"]
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_y2df2"]
 [ext_resource type="Resource" uid="uid://o6j4nxk7njex" path="res://examples/wigglebone/rotation/rotation.tres" id="3_ksx86"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_hbuno"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_collision_3d.gd" id="5_6nxvw"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_mx8nd"]
+radius = 0.225
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b2ldl"]
+radius = 0.2
+height = 1.0
 
 [node name="Position" type="Node3D"]
 
@@ -30,6 +38,16 @@ bones/2/position = Vector3(0, 0.5, 0)
 bones/2/rotation = Quaternion(0, 0, 0, 1)
 bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_nnete")
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Skeleton3D"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, -1)
+bone_name = "bone0"
+bone_idx = 0
+
+[node name="Collision" type="Node3D" parent="Skeleton3D/BoneAttachment3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.36598, -0.643373)
+script = ExtResource("5_6nxvw")
+shape = SubResource("SphereShape3D_mx8nd")
 
 [node name="RotationModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
 _import_path = NodePath("")
@@ -88,3 +106,7 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_hbuno")
 skeleton = NodePath("")
 metadata/_edit_lock_ = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+visible = false
+shape = SubResource("CapsuleShape3D_b2ldl")

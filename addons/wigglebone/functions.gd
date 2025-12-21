@@ -1,6 +1,7 @@
 extends RefCounted
 
 const SEGMENT_COUNT := 64
+const COLLISION_EPSILON := 1e-4
 
 static var _ring_points := PackedVector3Array()
 
@@ -74,6 +75,7 @@ static func create_box_lines() -> PackedVector3Array:
 	return lines
 
 
+## Create lines for a capsule cap.
 static func create_cap_lines() -> PackedVector3Array:
 	var rotations: Array[Transform3D] = [
 		Transform3D().rotated(Vector3.RIGHT, PI * 0.5),
@@ -140,6 +142,9 @@ static func get_sorted_skeleton_bones(skeleton: Skeleton3D) -> PackedStringArray
 	return PackedStringArray(bone_names)
 
 
+## Returns the upper parent [Skeleton3D] of [param node].
+## [br][br]
+## Returns [code]null[/code], if [param node] is not inside a [Skeleton3D].
 static func search_parent_skeleton(node: Node) -> Skeleton3D:
 	var parent := node.get_parent()
 
@@ -149,3 +154,56 @@ static func search_parent_skeleton(node: Node) -> Skeleton3D:
 		parent = parent.get_parent()
 
 	return null
+
+
+## Checks if [param point] collides with a sphere at position [param center] with [param radius],
+## in which case the nearest point on the sphere surface is returned.
+## [br][br]
+## Returns [code]Vector3(INF, INF, INF)[/code], if no collision occurs, which
+## can be checked with [method Vector3.is_finite].
+static func collide_point_sphere(point: Vector3, center: Vector3, radius: float) -> Vector3:
+	var distance_sq := point.distance_squared_to(center)
+
+	# No intersection.
+	if distance_sq >= radius * radius:
+		return Vector3(INF, INF, INF)
+
+	var distance := sqrt(distance_sq)
+	var direction := (point - center) / distance
+	point = center + direction * (radius + COLLISION_EPSILON)
+
+	return point
+
+
+## Checks the capsule with collides with another capsule, in which case the new position of
+## [param head_a] is returned.
+## [br][br]
+## Returns [code]Vector3(INF, INF, INF)[/code], if no collision occurs, which
+## can be checked with [method Vector3.is_finite].
+static func collide_capsule_capsule(head_a: Vector3, tail_a: Vector3, radius_a: float, head_b: Vector3, tail_b: Vector3, radius_b: float) -> Vector3:
+	var ha_hb := head_a.distance_squared_to(head_b)
+	var ta_hb := tail_a.distance_squared_to(head_b)
+	var ha_tb := head_a.distance_squared_to(tail_b)
+	var ta_tb := tail_a.distance_squared_to(tail_b)
+	var best_a := tail_a \
+		if ha_tb < ha_hb or ha_tb < ta_hb or ta_tb < ha_hb or ta_tb < ta_hb \
+		else head_a
+
+	var best_b := Geometry3D.get_closest_point_to_segment(best_a, head_b, tail_b)
+	best_a = Geometry3D.get_closest_point_to_segment(best_b, head_a, tail_a)
+
+	var dist_sq := best_a.distance_squared_to(best_b)
+	var radius_ab := radius_a + radius_b
+
+	# No intersection.
+	if dist_sq >= radius_ab * radius_ab:
+		return Vector3(INF, INF, INF)
+
+	var p_normal := best_a - best_b
+	var p_length := p_normal.length()
+	p_normal /= p_length
+	var p_depth := radius_ab - p_length
+
+	head_a += p_normal * (p_depth + COLLISION_EPSILON)
+
+	return head_a

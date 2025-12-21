@@ -23,9 +23,9 @@ const Functions := preload("functions.gd")
 ## nodes in the same [Skeleton3D]. The bone collision shape is always a capsule.
 @export var collision_enabled := false
 ## Defines the length of the bone capsule shape used for all [member bones].
-@export_range(0, 1, 0.01, "or_greater") var collision_length := 0.1
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_length := 0.1
 ## Defines the radius of the bone capsule shape used for all [member bones].
-@export_range(0, 1, 0.01, "or_greater") var collision_radius := 0.0
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_radius := 0.0
 
 var _bone_indices := PackedInt32Array()
 var _bone_parent_indices := PackedInt32Array()
@@ -69,9 +69,6 @@ func _validate_property(property: Dictionary) -> void:
 
 		&"force_global", &"force_local":
 			property.hint_string = &"suffix:m/s²"
-
-		&"collision_length", &"collision_radius":
-			property.hint_string = &"0,1,0.01,or_greater,suffix:m"
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -157,7 +154,6 @@ func _process_modification() -> void:
 		if has_spring:
 			var pose_global := pose_to_global.origin
 			var spring_position := _global_positions[i] - pose_global
-
 			var x0 := spring_position
 			var c2 := _global_velocities[i] / frequency
 
@@ -188,7 +184,6 @@ func _process_modification() -> void:
 
 		# Set local position to calculate parent speed in next iteration.
 		_local_positions[i] = global_to_pose * _global_positions[i]
-
 		# Time-independent velocity damping (see README.md).
 		_global_velocities[i] *= velocity_decay_delta
 

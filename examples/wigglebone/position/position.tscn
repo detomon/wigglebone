@@ -1,9 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://ckue6504k456"]
+[gd_scene load_steps=8 format=3 uid="uid://ckue6504k456"]
 
 [ext_resource type="Script" path="res://examples/wigglebone/skeleton.gd" id="1_nwjfa"]
 [ext_resource type="Script" path="res://addons/wigglebone/wiggle_position_modifier_3d.gd" id="2_5idjc"]
 [ext_resource type="Resource" uid="uid://dwducfqd5pprg" path="res://examples/wigglebone/position/position.tres" id="3_8uex0"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_71eoy"]
+[ext_resource type="Script" path="res://addons/wigglebone/wiggle_collision_3d.gd" id="5_emmku"]
+[ext_resource type="Script" path="res://addons/wigglebone/space.gd" id="6_v5he3"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_skmgp"]
+radius = 0.225
 
 [node name="Position" type="Node3D"]
 
@@ -52,8 +57,17 @@ influence = 1.0
 script = ExtResource("2_5idjc")
 bones = PackedStringArray("bone1")
 properties = ExtResource("3_8uex0")
+collision_enabled = true
 
 [node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/PositionModifier"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_71eoy")
 metadata/_edit_lock_ = true
+
+[node name="Collision" type="Node3D" parent="Skeleton3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
+script = ExtResource("5_emmku")
+shape = SubResource("SphereShape3D_skmgp")
+
+[node name="DMWBSpace" type="Node" parent="."]
+script = ExtResource("6_v5he3")

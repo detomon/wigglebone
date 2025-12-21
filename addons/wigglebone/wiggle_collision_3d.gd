@@ -3,19 +3,20 @@
 class_name DMWBWiggleCollision3D
 extends Node3D
 
+## Adds a collision shape for bones to collide with.
+##
+## Allows bones from [DMWBWiggleRotationModifier3D] or [DMWBWigglePositionModifier3D] to collide
+## with this shape. This node can be placed anywhere as a descendant in a [Skeleton3D].
+## [br][br]
+## [b]Note:[/b] Scaling is not supported. This node, the parent [Skeleton3D], and all nodes before
+## it have to be unscaled.
+
 enum ShapeType {
 	NONE,
 	SPHERE,
 	CAPSULE,
 	BOX,
 }
-
-## Adds a collision shape for bones to collide with.
-##
-## Allows bones from [DMWBWiggleRotationModifier3D] or [DMWBWigglePositionModifier3D] to collide
-## with this shape. This node can be placed anywhere as a descendant in a [Skeleton3D].
-
-const _COLLISION_EPSILON := 1e-4
 
 const Functions := preload("functions.gd")
 
@@ -84,26 +85,45 @@ func _set_cache(value: DMWBCache) -> void:
 
 	if _cache:
 		_cache.remove_collider(self)
-
 	_cache = value
+
 	_register_collider()
 
 
 ## Checks if [param point] collides with the shape surface in which case the nearest point on the
-## surface is returned.[br][br]
+## surface is returned.
+## [br][br]
 ## Returns [code]Vector3(INF, INF, INF)[/code], if no collision occurs, which
 ## can be checked with [method Vector3.is_finite].
 func collide(point: Vector3) -> Vector3:
-	var distance_sq := point.distance_squared_to(global_position)
-	# No collision.
-	if distance_sq >= _shape_radius * _shape_radius:
-		return Vector3(INF, INF, INF)
+	return Functions.collide_point_sphere(point, global_position, _shape_radius)
 
-	var distance := sqrt(distance_sq)
-	var direction := (point - global_position) / distance
-	point = global_position + direction * (_shape_radius + _COLLISION_EPSILON)
 
-	return point
+func collide_capsule(head: Vector3, tail: Vector3, radius: float) -> Vector3:
+	match _shape_type:
+		ShapeType.BOX:
+			pass
+			#var box: BoxShape3D = shape
+			#_shape_radius = box.size.length() * 0.5
+
+		ShapeType.SPHERE:
+			pass
+			#var sphere: SphereShape3D = shape
+			#_shape_radius = sphere.radius
+
+		ShapeType.CAPSULE:
+			var capsule: CapsuleShape3D = shape
+			var height := capsule.height - capsule.radius * 2.0
+			var half_height := Vector3.UP * height * 0.5
+			var this_head := global_transform * -half_height
+			var this_tail := global_transform * +half_height
+			var head_new := Functions.collide_capsule_capsule(head, tail, radius, this_head, this_tail, capsule.radius)
+
+			# Collision
+			if head_new.is_finite():
+				head = head_new
+
+	return head
 
 
 func _update_shape() -> void:
