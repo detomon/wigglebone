@@ -27,6 +27,7 @@ static func create_cone_lines() -> PackedVector3Array:
 	var lines := transform * get_ring_points()
 	var count := len(lines)
 
+	@warning_ignore("integer_division")
 	for i in range(0, count, SEGMENT_COUNT / 4):
 		lines.append(Vector3.ZERO)
 		lines.append(lines[i])
@@ -86,6 +87,7 @@ static func create_cap_lines() -> PackedVector3Array:
 
 	lines.append_array(points)
 
+	@warning_ignore("integer_division")
 	points.resize(len(points) / 2) # Half circle.
 	for transform in rotations:
 		lines.append_array(transform * points)

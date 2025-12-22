@@ -21,7 +21,7 @@ const Functions := preload("functions.gd")
 @export_group("Collision", "collision")
 ## If [code]true[/code], collision is enabled and all [member bones] collide with [DMWBWiggleCollision3D]
 ## nodes in the same [Skeleton3D]. The bone collision shape is always a capsule.
-@export var collision_enabled := false: set = set_collision_enabled
+@export var collision_enabled := false
 ## Defines the length of the bone capsule shape used for all [member bones].
 @export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_length := 0.2: set = set_collision_length
 ## Defines the radius of the bone capsule shape used for all [member bones].
@@ -96,9 +96,14 @@ func _process_modification() -> void:
 	if not _bone_indices:
 		return
 
+	var space_state: PhysicsDirectSpaceState3D
+	var shape_query: PhysicsShapeQueryParameters3D
+	if collision_enabled:
+		space_state = _cache.get_space_state()
+		if space_state:
+			shape_query = _get_query_params()
+
 	var skeleton := get_skeleton()
-	var space_state := _cache.get_space_state()
-	var query := _get_query_params()
 	var delta := 0.0
 
 	match skeleton.modifier_callback_mode_process:
@@ -171,12 +176,12 @@ func _process_modification() -> void:
 		else:
 			_global_positions[i] += _global_velocities[i] * delta
 
-		if collision_enabled:
+		if shape_query:
 			var query_xform := pose_to_global
 			query_xform.origin = _global_positions[i] + query_xform * (Vector3.UP * collision_length * 0.5)
-			query.transform = query_xform
+			shape_query.transform = query_xform
 
-			var points := space_state.collide_shape(_query_params, 2)
+			var points := space_state.collide_shape(shape_query, 2)
 			for j in range(0, len(points), 2):
 				var coll_a := points[j]
 				var coll_b := points[j + 1]
@@ -184,7 +189,7 @@ func _process_modification() -> void:
 				var pos_new := pos_old + (coll_b - coll_a)
 				var pos_delta := pos_new - pos_old
 
-				## Limit velocity if it points towards collision surface.
+				# Limit velocity if it points towards the collision surface.
 				var velocity := _global_velocities[i]
 				if pos_delta.dot(velocity) < 0.0:
 					velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
@@ -194,7 +199,7 @@ func _process_modification() -> void:
 
 		# Set local position to calculate parent speed in next iteration.
 		_local_positions[i] = global_to_pose * _global_positions[i]
-		# Time-independent velocity damping (see README.md).
+		# Time-independent velocity damping.
 		_global_velocities[i] *= velocity_decay_delta
 
 		# Limit position and velocity.
@@ -243,17 +248,13 @@ func set_bones(value: PackedStringArray) -> void:
 	update_gizmos()
 
 
-func set_collision_enabled(value: bool) -> void:
-	collision_enabled = value
-
-
 func set_collision_length(value: float) -> void:
-	collision_length = value
+	collision_length = maxf(0.0, value)
 	_update_shape()
 
 
 func set_collision_radius(value: float) -> void:
-	collision_radius = value
+	collision_radius = maxf(0.0, value)
 	_update_shape()
 
 

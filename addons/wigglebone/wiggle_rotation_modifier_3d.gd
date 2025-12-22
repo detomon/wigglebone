@@ -21,6 +21,15 @@ const Functions := preload("functions.gd")
 ## Applies a constant force relative to the bone's pose.
 @export var force_local := Vector3.ZERO
 
+@export_group("Collision", "collision")
+## If [code]true[/code], collision is enabled and all [member bones] collide with [DMWBWiggleCollision3D]
+## nodes in the same [Skeleton3D]. The bone collision shape is always a capsule.
+@export var collision_enabled := false
+## Defines the length of the bone capsule shape used for all [member bones].
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_length := 0.2: set = set_collision_length
+## Defines the radius of the bone capsule shape used for all [member bones].
+@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_radius := 0.1: set = set_collision_radius
+
 @export_group("Editor")
 ## Sets the distance of the editor handle on the bone's Y axis.
 @export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := 0.25:
@@ -32,6 +41,8 @@ var _global_positions := PackedVector3Array() # Global mass position.
 var _global_directions := PackedVector3Array() # Global bone direction.
 var _angular_velocities := PackedVector3Array() # Global angular velocity.
 var _cache: DMWBCache
+var _shape_rid: RID
+var _query_params: PhysicsShapeQueryParameters3D
 var _reset := true
 
 
@@ -87,9 +98,15 @@ func _process_modification() -> void:
 	if not _bone_indices:
 		return
 
-	var skeleton := get_skeleton()
-	var colliders := _cache.get_colliders()
+	var space_state: PhysicsDirectSpaceState3D
+	var shape_query: PhysicsShapeQueryParameters3D
+	if collision_enabled:
+		space_state = _cache.get_space_state()
+		if space_state:
+			shape_query = _get_query_params()
+
 	var delta := 0.0
+	var skeleton := get_skeleton()
 
 	match skeleton.modifier_callback_mode_process:
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
@@ -103,7 +120,7 @@ func _process_modification() -> void:
 
 	var skeleton_bone_parent_global_pose := skeleton.global_transform
 	var frequency := properties.spring_freq * TAU
-	var has_pring := not is_zero_approx(frequency)
+	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.angular_damp
 	var velocity_decay_delta := exp(-velocity_decay * delta)
 	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
@@ -152,7 +169,7 @@ func _process_modification() -> void:
 		rotation_axis = rotation_axis.normalized()
 
 		# Apply rotation velocity to spring without damping (see README.md).
-		if has_pring:
+		if has_spring:
 			# Rotation axis where the length is the rotation difference to the pose in radians.
 			var spring_rotation := rotation_axis * rotation_angle
 
@@ -197,24 +214,32 @@ func _process_modification() -> void:
 				torque_force = torque_force.project(rotation_axis)
 				_angular_velocities[i] = _global_directions[i].cross(torque_force)
 
-		#if colliders:
-			#var pos := _global_positions[i]
-#
-			#for collider in colliders:
-				#var pos_new := collider.collide(pos)
-				#if not pos_new.is_finite():
-					#continue
-#
-				## TODO: Implement.
-				#pos = pos_new
-#
-			#_global_positions[i] = pos
+		if shape_query:
+			var query_xform := pose_to_global
+			query_xform.origin = _global_positions[i] + query_xform * (Vector3.UP * collision_length * 0.5)
+			shape_query.transform = query_xform
 
+			var points := space_state.collide_shape(shape_query, 2)
+			for j in range(0, len(points), 2):
+				var coll_a := points[j]
+				var coll_b := points[j + 1]
+				var pos_old := _global_positions[i]
+				var pos_new := pos_old + (coll_b - coll_a)
+				#var pos_delta := pos_new - pos_old
+
+				var x := Plane(_global_directions[i], (coll_a - pos_old).length()).project(pos_new)
+				_global_directions[i] = x.normalized()
+
+				## Limit velocity if it points towards collision surface.
+				#var velocity := _angular_velocities[i]
+				#if pos_delta.dot(velocity) < 0.0:
+					#velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
+					#_angular_velocities[i] = velocity
+#
 		_global_directions[i] = _global_directions[i].normalized()
 		# Remove rotation around bone forward axis.
 		_angular_velocities[i] = Plane(_global_directions[i], 0.0).project(_angular_velocities[i])
-
-		# Time-independent velocity damping (see README.md).
+		# Time-independent velocity damping.
 		_angular_velocities[i] *= velocity_decay_delta
 
 		# Get rotation relative to current pose.
@@ -224,7 +249,7 @@ func _process_modification() -> void:
 			else Quaternion(1.0, 0.0, 0.0, 0.0) # Rotate around X axis as fallback when rotation is exactly 180°.
 
 		# Set bone pose rotation.
-		var bone_pose_rotation := skeleton.get_bone_pose_rotation(bone_idx)
+		var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 		var bone_rotation := bone_pose_rotation * rotation_relative
 		skeleton.set_bone_pose_rotation(bone_idx, bone_rotation)
 
@@ -253,6 +278,16 @@ func set_bones(value: PackedStringArray) -> void:
 	bones = value
 	_setup()
 	update_gizmos()
+
+
+func set_collision_length(value: float) -> void:
+	collision_length = maxf(0.0, value)
+	_update_shape()
+
+
+func set_collision_radius(value: float) -> void:
+	collision_radius = maxf(0.0, value)
+	_update_shape()
 
 
 func set_handle_distance(value: float) -> void:
@@ -327,6 +362,30 @@ func _resize_lists(count: int) -> void:
 	_global_directions.resize(count)
 	_angular_velocities.resize(count)
 
+
+func _get_shape() -> RID:
+	if not _shape_rid.is_valid():
+		_shape_rid = PhysicsServer3D.capsule_shape_create()
+
+	return _shape_rid
+
+
+func _get_query_params() -> PhysicsShapeQueryParameters3D:
+	if not _query_params:
+		_query_params = PhysicsShapeQueryParameters3D.new()
+		_query_params.collide_with_areas = true
+		_query_params.collide_with_bodies = false
+		_query_params.shape_rid = _get_shape()
+
+	return _query_params
+
+
+func _update_shape() -> void:
+	var shape_rid := _get_shape()
+	PhysicsServer3D.shape_set_data(shape_rid, {
+		height = collision_length,
+		radius = collision_radius,
+	})
 
 func _on_properties_changed() -> void:
 	update_gizmos()

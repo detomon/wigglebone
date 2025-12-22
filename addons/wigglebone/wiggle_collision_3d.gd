@@ -41,7 +41,6 @@ func set_shape(value: Shape3D) -> void:
 
 	if is_inside_tree():
 		_update_shape()
-	_register_collider()
 
 	update_gizmos()
 	update_configuration_warnings()
@@ -49,7 +48,10 @@ func set_shape(value: Shape3D) -> void:
 
 func set_disabled(value: bool) -> void:
 	disabled = value
-	_register_collider()
+
+	if _shape_rid.is_valid():
+		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, disabled)
+
 	update_gizmos()
 
 
@@ -62,6 +64,7 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, true)
 	_cache = null
 
 
@@ -91,15 +94,11 @@ func _set_cache(value: DMWBCache) -> void:
 	if value == _cache:
 		return
 
-	if _cache:
-		_cache.remove_collider(self)
 	_cache = value
 
 	if _cache:
 		var space_rid := _cache.get_space()
 		PhysicsServer3D.area_set_space(_area_rid, space_rid)
-
-	_register_collider()
 
 
 func _update_shape() -> void:
@@ -118,6 +117,7 @@ func _update_shape() -> void:
 
 	if _shape_rid.is_valid():
 		PhysicsServer3D.area_add_shape(_area_rid, _shape_rid)
+		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, disabled)
 
 	_update_shape_data()
 
@@ -148,16 +148,6 @@ func _update_shape_data() -> void:
 				height = cylinder.height,
 				radius = cylinder.radius,
 			})
-
-
-func _register_collider() -> void:
-	if not _cache:
-		return
-
-	if not disabled and _shape_rid.is_valid():
-		_cache.add_collider(self)
-	else:
-		_cache.remove_collider(self)
 
 
 func _on_shape_changed() -> void:
