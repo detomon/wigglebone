@@ -87,8 +87,10 @@ static func create_cap_lines() -> PackedVector3Array:
 
 	lines.append_array(points)
 
+	 # Make half circle.
 	@warning_ignore("integer_division")
-	points.resize(len(points) / 2) # Half circle.
+	points.resize(len(points) / 2)
+
 	for transform in rotations:
 		lines.append_array(transform * points)
 

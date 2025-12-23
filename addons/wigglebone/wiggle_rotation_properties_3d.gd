@@ -29,20 +29,14 @@ extends Resource
 	set = set_swing_span
 
 ## Applies a constant global force ([code]m/s²[/code]).
-@export var gravity := Vector3.ZERO:
+@export_custom(PROPERTY_HINT_NONE, "suffix:m/s²") var gravity := Vector3.ZERO:
 	set = set_gravity
 
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
-		&"force_scale":
+		&"force_scale", &"linear_scale":
 			property.hint_string = &"0,6000,0.001,or_greater,suffix:°/m"
-
-		&"linear_scale":
-			property.hint_string = &"0,6000,0.001,or_greater,suffix:°/m"
-
-		&"gravity":
-			property.hint_string = &"suffix:m/s²"
 
 
 func set_spring_freq(value: float) -> void:

@@ -54,8 +54,8 @@ func _process_modification() -> void:
 	var velocity_decay_delta := exp(-velocity_decay * delta)
 	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
 	var a := frequency * delta
-	var cos_ := cos(a)
 	var sin_ := sin(a)
+	var cos_ := cos(a)
 
 	var space_state: PhysicsDirectSpaceState3D
 	var shape_query: PhysicsShapeQueryParameters3D
@@ -179,15 +179,9 @@ func _process_modification() -> void:
 		# Time-independent velocity damping.
 		_angular_velocities[i] *= velocity_decay_delta
 
-		if _global_directions[i].is_zero_approx():
-			print(i)
-
 		# Get rotation relative to current pose.
 		var local_direction := global_to_pose_rotation * _global_directions[i]
-		var rotation_relative := Quaternion(Vector3.UP, local_direction) \
-			if not is_equal_approx(local_direction.dot(Vector3.UP), -1.0) \
-			else Quaternion(1.0, 0.0, 0.0, 0.0) # Rotate around X axis as fallback when rotation is exactly 180°.
-
+		var rotation_relative := Quaternion(Vector3.UP, local_direction)
 		# Set bone pose rotation.
 		var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 		var bone_rotation := bone_pose_rotation * rotation_relative

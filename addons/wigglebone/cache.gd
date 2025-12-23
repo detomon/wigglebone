@@ -22,17 +22,6 @@ func _physics_process(_delta: float) -> void:
 	set_physics_process(false)
 
 
-static func get_for_skeleton(skeleton: Skeleton3D) -> DMWBCache:
-	if skeleton in _skeleton_caches:
-		return _skeleton_caches[skeleton]
-
-	var cache := DMWBCache.new()
-	_skeleton_caches[skeleton] = cache
-	skeleton.add_child.call_deferred(cache, false, Node.INTERNAL_MODE_BACK)
-
-	return cache
-
-
 func get_space() -> RID:
 	if not _space_rid:
 		_space_rid = PhysicsServer3D.space_create()
@@ -42,6 +31,17 @@ func get_space() -> RID:
 
 func get_space_state() -> PhysicsDirectSpaceState3D:
 	return _space_state
+
+
+static func get_for_skeleton(skeleton: Skeleton3D) -> DMWBCache:
+	if skeleton in _skeleton_caches:
+		return _skeleton_caches[skeleton]
+
+	var cache := DMWBCache.new()
+	_skeleton_caches[skeleton] = cache
+	skeleton.add_child.call_deferred(cache, false, Node.INTERNAL_MODE_BACK)
+
+	return cache
 
 
 static func clear() -> void:

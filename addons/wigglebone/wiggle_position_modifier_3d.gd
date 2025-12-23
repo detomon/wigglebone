@@ -46,8 +46,8 @@ func _process_modification() -> void:
 	var velocity_decay_delta := exp(-velocity_decay * delta)
 	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
 	var a := frequency * delta
-	var cos_ := cos(a)
 	var sin_ := sin(a)
+	var cos_ := cos(a)
 
 	var space_state: PhysicsDirectSpaceState3D
 	var shape_query: PhysicsShapeQueryParameters3D
