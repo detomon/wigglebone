@@ -1,93 +1,29 @@
 @tool
 @icon("icons/wiggle_rotation_modifier_3d.svg")
 class_name DMWBWiggleRotationModifier3D
-extends SkeletonModifier3D
+extends DMWBWiggleModifier3D
 
 ## Adds jiggle physics to a bone influencing the pose rotation.
 
 const _SWING_LIMIT_EPSILON := 1e-4
 const _DEGREES_TO_RAD := PI / 180.0
 
-const Functions := preload("functions.gd")
-
-## Bone names to modify.
-@export var bones := PackedStringArray(): set = set_bones
 ## Properties which define the spring behaviour.
 @export var properties: DMWBWiggleRotationProperties3D: set = set_properties
-
-@export_group("Force", "force")
-## Applies a constant global force.
-@export var force_global := Vector3.ZERO
-## Applies a constant force relative to the bone's pose.
-@export var force_local := Vector3.ZERO
-
-@export_group("Collision", "collision")
-## If [code]true[/code], collision is enabled and all [member bones] collide with [DMWBWiggleCollision3D]
-## nodes in the same [Skeleton3D]. The bone collision shape is always a capsule.
-@export var collision_enabled := false
-## Defines the length of the bone capsule shape used for all [member bones].
-@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_length := 0.2: set = set_collision_length
-## Defines the radius of the bone capsule shape used for all [member bones].
-@export_range(0, 1, 0.01, "or_greater", "suffix:m") var collision_radius := 0.1: set = set_collision_radius
 
 @export_group("Editor")
 ## Sets the distance of the editor handle on the bone's Y axis.
 @export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := 0.25:
 	set = set_handle_distance
 
-var _bone_indices := PackedInt32Array()
-var _bone_parent_indices := PackedInt32Array()
-var _global_positions := PackedVector3Array() # Global mass position.
+var _global_positions := PackedVector3Array() # Global pose positions.
 var _global_directions := PackedVector3Array() # Global bone direction.
 var _angular_velocities := PackedVector3Array() # Global angular velocity.
-var _cache: DMWBCache
-var _shape_rid: RID
-var _query_params: PhysicsShapeQueryParameters3D
-var _reset := true
-
-
-func _enter_tree() -> void:
-	var skeleton := get_skeleton()
-	if skeleton:
-		_cache = DMWBCache.get_for_skeleton(skeleton)
-
-	_setup()
-
-
-func _exit_tree() -> void:
-	_resize_lists(0)
-	_cache = null
-
-
-func _set(property: StringName, value: Variant) -> bool:
-	# Migrate old single bone name.
-	if property == &"bone_name":
-		set_bones([value])
-		return true
-
-	return false
-
-
-func _validate_property(property: Dictionary) -> void:
-	match property.name:
-		&"bones":
-			var skeleton := get_skeleton()
-			var names := Functions.get_sorted_skeleton_bones(skeleton)
-
-			property.hint = PROPERTY_HINT_TYPE_STRING
-			property.hint_string = "%d/%d:%s" % [TYPE_STRING, PROPERTY_HINT_ENUM, ",".join(names)]
-
-		&"force_global", &"force_local":
-			property.hint_string = &"suffix:m/s²"
 
 
 func _get_configuration_warnings() -> PackedStringArray:
-	var warnings := PackedStringArray()
+	var warnings := super()
 
-	if not bones:
-		warnings.append(tr(&"No bones defined.", &"DMWB"))
-	if len(_bone_indices) < len(bones):
-		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
 		warnings.append(tr(&"DMWBWiggleRotationProperties3D resource is required.", &"DMWB"))
 
@@ -97,13 +33,6 @@ func _get_configuration_warnings() -> PackedStringArray:
 func _process_modification() -> void:
 	if not _bone_indices:
 		return
-
-	var space_state: PhysicsDirectSpaceState3D
-	var shape_query: PhysicsShapeQueryParameters3D
-	if collision_enabled:
-		space_state = _cache.get_space_state()
-		if space_state:
-			shape_query = _get_query_params()
 
 	var delta := 0.0
 	var skeleton := get_skeleton()
@@ -127,6 +56,13 @@ func _process_modification() -> void:
 	var a := frequency * delta
 	var cos_ := cos(a)
 	var sin_ := sin(a)
+
+	var space_state: PhysicsDirectSpaceState3D
+	var shape_query: PhysicsShapeQueryParameters3D
+	if collision_enabled:
+		space_state = _cache.get_space_state()
+		if space_state:
+			shape_query = _get_query_params()
 
 	for i in len(_bone_indices):
 		var bone_idx := _bone_indices[i]
@@ -227,8 +163,9 @@ func _process_modification() -> void:
 				var pos_new := pos_old + (coll_b - coll_a)
 				#var pos_delta := pos_new - pos_old
 
-				var x := Plane(_global_directions[i], (coll_a - pos_old).length()).project(pos_new)
-				_global_directions[i] = x.normalized()
+				var direction := Plane(_global_directions[i], (coll_a - pos_old).length()).project(pos_new)
+				if not direction.is_zero_approx():
+					_global_directions[i] = direction.normalized()
 
 				## Limit velocity if it points towards collision surface.
 				#var velocity := _angular_velocities[i]
@@ -241,6 +178,9 @@ func _process_modification() -> void:
 		_angular_velocities[i] = Plane(_global_directions[i], 0.0).project(_angular_velocities[i])
 		# Time-independent velocity damping.
 		_angular_velocities[i] *= velocity_decay_delta
+
+		if _global_directions[i].is_zero_approx():
+			print(i)
 
 		# Get rotation relative to current pose.
 		var local_direction := global_to_pose_rotation * _global_directions[i]
@@ -270,34 +210,15 @@ func set_properties(value: DMWBWiggleRotationProperties3D) -> void:
 			value.changed.connect(_on_properties_changed)
 
 	properties = value
-	_setup()
-	update_gizmos()
 
-
-func set_bones(value: PackedStringArray) -> void:
-	bones = value
-	_setup()
-	update_gizmos()
-
-
-func set_collision_length(value: float) -> void:
-	collision_length = maxf(0.0, value)
-	_update_shape()
-
-
-func set_collision_radius(value: float) -> void:
-	collision_radius = maxf(0.0, value)
-	_update_shape()
+	if is_inside_tree():
+		_setup()
+		update_gizmos()
 
 
 func set_handle_distance(value: float) -> void:
 	handle_distance = maxf(0.0, value)
 	update_gizmos()
-
-
-## Resets rotation and angular velocity.
-func reset() -> void:
-	_reset = true
 
 
 ## Adds a global torque impulse.
@@ -346,46 +267,21 @@ func _setup() -> void:
 			skeleton_bone_pose = skeleton.get_bone_global_pose(parent_idx) * skeleton_bone_pose
 
 		var global_bone_pose := skeleton_global_xform * skeleton_bone_pose
-		_global_directions[i] = (global_bone_pose.basis * Vector3.UP).normalized()
+
 		_global_positions[i] = global_bone_pose * Vector3.UP
-		_angular_velocities[i] = Vector3.ZERO
+		_global_directions[i] = (global_bone_pose.basis * Vector3.UP).normalized()
 
-	reset()
+	_angular_velocities.fill(Vector3.ZERO)
 
-	update_configuration_warnings()
+	super()
 
 
 func _resize_lists(count: int) -> void:
-	_bone_indices.resize(count)
-	_bone_parent_indices.resize(count)
+	super(count)
 	_global_positions.resize(count)
 	_global_directions.resize(count)
 	_angular_velocities.resize(count)
 
-
-func _get_shape() -> RID:
-	if not _shape_rid.is_valid():
-		_shape_rid = PhysicsServer3D.capsule_shape_create()
-
-	return _shape_rid
-
-
-func _get_query_params() -> PhysicsShapeQueryParameters3D:
-	if not _query_params:
-		_query_params = PhysicsShapeQueryParameters3D.new()
-		_query_params.collide_with_areas = true
-		_query_params.collide_with_bodies = false
-		_query_params.shape_rid = _get_shape()
-
-	return _query_params
-
-
-func _update_shape() -> void:
-	var shape_rid := _get_shape()
-	PhysicsServer3D.shape_set_data(shape_rid, {
-		height = collision_length,
-		radius = collision_radius,
-	})
 
 func _on_properties_changed() -> void:
 	update_gizmos()

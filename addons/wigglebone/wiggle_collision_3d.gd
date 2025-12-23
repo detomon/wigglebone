@@ -49,7 +49,7 @@ func set_shape(value: Shape3D) -> void:
 func set_disabled(value: bool) -> void:
 	disabled = value
 
-	if _shape_rid.is_valid():
+	if _shape_rid:
 		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, disabled)
 
 	update_gizmos()
@@ -73,7 +73,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 	if not _cache:
 		warnings.append(tr(&"DMWBWiggleCollision3D must be a descendant of a Skeleton3D.", &"DMWB"))
-	if not _shape_rid.is_valid():
+	if not _shape_rid:
 		warnings.append(tr(&"A shape must be provided. Only SphereShape3D, BoxShape3D, CapsuleShape3D, CylinderShape3D is supported.", &"DMWB"))
 
 	return warnings
@@ -102,7 +102,7 @@ func _set_cache(value: DMWBCache) -> void:
 
 
 func _update_shape() -> void:
-	if _shape_rid.is_valid():
+	if _shape_rid:
 		PhysicsServer3D.free_rid(_shape_rid)
 		_shape_rid = RID()
 
@@ -115,7 +115,7 @@ func _update_shape() -> void:
 	elif shape is CylinderShape3D:
 		_shape_rid = PhysicsServer3D.cylinder_shape_create()
 
-	if _shape_rid.is_valid():
+	if _shape_rid:
 		PhysicsServer3D.area_add_shape(_area_rid, _shape_rid)
 		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, disabled)
 
@@ -123,7 +123,7 @@ func _update_shape() -> void:
 
 
 func _update_shape_data() -> void:
-	if not _shape_rid.is_valid():
+	if not _shape_rid:
 		return
 
 	match PhysicsServer3D.shape_get_type(_shape_rid):
