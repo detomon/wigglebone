@@ -58,9 +58,12 @@ func _process_modification() -> void:
 
 	for i in len(_bone_indices):
 		var bone_idx := _bone_indices[i]
-		var bone_parent_global_pose := skeleton_bone_parent_global_pose
-
 		var parent_idx := _bone_parent_indices[i]
+		var position_local := _local_positions[i]
+		var position_global := _global_positions[i]
+		var velocity_global := _global_velocities[i]
+
+		var bone_parent_global_pose := skeleton_bone_parent_global_pose
 		if parent_idx >= 0:
 			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
 
@@ -69,13 +72,13 @@ func _process_modification() -> void:
 		var global_to_pose := pose_to_global.affine_inverse()
 
 		if _reset:
-			_local_positions[i] = Vector3.ZERO
-			_global_positions[i] = pose_to_global.origin
-			_global_velocities[i] = Vector3.ZERO
+			position_local = Vector3.ZERO
+			position_global = pose_to_global.origin
+			velocity_global = Vector3.ZERO
 
-		var global_position_new := pose_to_global * _local_positions[i]
-		_global_positions[i] = global_position_new.lerp(_global_positions[i], properties.linear_scale)
-		var global_velocity := (global_position_new - _global_positions[i]) / delta
+		var global_position_new := pose_to_global * position_local
+		position_global = global_position_new.lerp(position_global, properties.linear_scale)
+		var global_velocity := (global_position_new - position_global) / delta
 
 		if _reset:
 			global_velocity = Vector3.ZERO
@@ -89,67 +92,71 @@ func _process_modification() -> void:
 
 		# Add force.
 		var acceleration := force
-		_global_velocities[i] += acceleration * delta
+		velocity_global += acceleration * delta
 
 		# Apply linear velocity to spring without damping (see README.md).
 		if has_spring:
 			var pose_global := pose_to_global.origin
-			var spring_position := _global_positions[i] - pose_global
+			var spring_position := position_global - pose_global
 
 			var x0 := spring_position
-			var c2 := _global_velocities[i] / frequency
+			var c2 := velocity_global / frequency
 
-			_global_positions[i] = pose_global + (x0 * cos_ + c2 * sin_)
-			_global_velocities[i] = (c2 * cos_ - x0 * sin_) * frequency
+			position_global = pose_global + (x0 * cos_ + c2 * sin_)
+			velocity_global = (c2 * cos_ - x0 * sin_) * frequency
 
 		# No spring tension; linear movement.
 		else:
-			_global_positions[i] += _global_velocities[i] * delta
+			position_global += velocity_global * delta
 
 		if shape_query:
 			var query_xform := pose_to_global
-			query_xform.origin = _global_positions[i] + query_xform * (Vector3.UP * collision_length * 0.5)
+			query_xform.origin = position_global + query_xform * (Vector3.UP * collision_length * 0.5)
 			shape_query.transform = query_xform
 
 			var points := space_state.collide_shape(shape_query, 2)
 			for j in range(0, len(points), 2):
 				var coll_a := points[j]
 				var coll_b := points[j + 1]
-				var pos_old := _global_positions[i]
+				var pos_old := position_global
 				var pos_new := pos_old + (coll_b - coll_a)
 				var pos_delta := pos_new - pos_old
 
 				# Limit velocity if it points towards the collision surface.
-				var velocity := _global_velocities[i]
+				var velocity := velocity_global
 				if pos_delta.dot(velocity) < 0.0:
 					velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
-					_global_velocities[i] = velocity
+					velocity_global = velocity
 
-				_global_positions[i] = pos_new
+				position_global = pos_new
 
 		# Set local position to calculate parent speed in next iteration.
-		_local_positions[i] = global_to_pose * _global_positions[i]
+		position_local = global_to_pose * position_global
 		# Time-independent velocity damping.
-		_global_velocities[i] *= velocity_decay_delta
+		velocity_global *= velocity_decay_delta
 
 		# Limit position and velocity.
-		var length_squared := _local_positions[i].length_squared()
+		var length_squared := position_local.length_squared()
 		var max_distance := properties.max_distance
 		if length_squared > max_distance * max_distance:
 			# Limit position to max_distance.
-			_local_positions[i] = _local_positions[i] * max_distance / sqrt(length_squared)
+			position_local = position_local * max_distance / sqrt(length_squared)
 			# Recalculate global position.
-			_global_positions[i] = pose_to_global * _local_positions[i]
+			position_global = pose_to_global * position_local
 
-			var position_relative := _global_positions[i] - pose_to_global.origin
+			var position_relative := position_global - pose_to_global.origin
 			# Limit velocity when moving towards limit.
-			if position_relative.dot(_global_velocities[i]) > 0.0:
+			if position_relative.dot(velocity_global) > 0.0:
 				# Project velocity to sphere tangent.
-				_global_velocities[i] = Plane(position_relative.normalized(), 0.0).project(_global_velocities[i])
+				velocity_global = Plane(position_relative.normalized(), 0.0).project(velocity_global)
 
 		# Set bone pose position.
-		var bone_position := bone_pose * _local_positions[i]
+		var bone_position := bone_pose * position_local
 		skeleton.set_bone_pose_position(bone_idx, bone_position)
+
+		_local_positions[i] = position_local
+		_global_positions[i] = position_global
+		_global_velocities[i] = velocity_global
 
 		# Use first bone for modifier position.
 		if i == 0:

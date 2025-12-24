@@ -7,12 +7,6 @@ static var _space_state: PhysicsDirectSpaceState3D
 static var _skeleton_caches := {} # Dictionary[Skeleton3D, DMWBCache]
 
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_PREDELETE:
-		var skeleton: Skeleton3D = _skeleton_caches.find_key(self)
-		_skeleton_caches.erase(skeleton)
-
-
 func _physics_process(_delta: float) -> void:
 	if not _space_state:
 		var space := get_space()
@@ -30,16 +24,30 @@ func get_space() -> RID:
 
 
 func get_space_state() -> PhysicsDirectSpaceState3D:
+	if not is_instance_valid(_space_state):
+		_space_state = null
+
 	return _space_state
 
 
 static func get_for_skeleton(skeleton: Skeleton3D) -> DMWBCache:
-	if skeleton in _skeleton_caches:
-		return _skeleton_caches[skeleton]
+	var cache: DMWBCache = _skeleton_caches.get(skeleton)
+	if cache:
+		return cache
 
-	var cache := DMWBCache.new()
+	cache = skeleton.get_node_or_null(^"DMWBCache")
+	if cache:
+		return cache
+
+	cache = DMWBCache.new()
+	cache.name = &"DMWBCache"
 	_skeleton_caches[skeleton] = cache
-	skeleton.add_child.call_deferred(cache, false, Node.INTERNAL_MODE_BACK)
+
+	cache.tree_entered.connect(func () -> void:
+		_skeleton_caches.erase(skeleton)
+	, CONNECT_ONE_SHOT)
+
+	skeleton.add_child.call_deferred(cache, true, INTERNAL_MODE_BACK)
 
 	return cache
 
