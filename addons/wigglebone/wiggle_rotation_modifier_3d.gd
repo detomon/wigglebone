@@ -154,28 +154,28 @@ func _process_modification() -> void:
 				angular_velocity = direction_global.cross(torque_force)
 
 		if shape_query:
-			var query_xform := pose_to_global
-			query_xform.origin = position_global + query_xform * (Vector3.UP * collision_length * 0.5)
-			shape_query.transform = query_xform
+			var shape_basis := Basis(Quaternion(Vector3.UP, direction_global))
+			var shape_offset := shape_basis * (Vector3.UP * collision_length * 0.5)
+			var shape_origin := position_global + shape_offset
+			shape_query.transform = Transform3D(shape_basis, shape_origin)
 
-			var points := space_state.collide_shape(shape_query, 2)
+			var points := space_state.collide_shape(shape_query, 1)
 			for j in range(0, len(points), 2):
 				var coll_a := points[j]
 				var coll_b := points[j + 1]
-				var pos_old := position_global
-				var pos_new := pos_old + (coll_b - coll_a)
-				#var pos_delta := pos_new - pos_old
+				var pos_delta := coll_b - coll_a
+				var direction := shape_origin + pos_delta - position_global
 
-				var direction := Plane(direction_global, (coll_a - pos_old).length()).project(pos_new)
 				if not direction.is_zero_approx():
 					direction_global = direction.normalized()
 
-				## Limit velocity if it points towards collision surface.
-				#var velocity := angular_velocity
-				#if pos_delta.dot(velocity) < 0.0:
-					#velocity = Plane(pos_delta.normalized(), 0.0).project(velocity)
-					#angular_velocity = velocity
-#
+				# Global velocity at bone tail.
+				var torque_force := angular_velocity.cross(direction_global)
+				# Limit velocity if it points towards the collision surface.
+				if torque_force.dot(pos_delta) < 0.0:
+					torque_force = Plane(pos_delta.normalized(), 0.0).project(torque_force)
+					angular_velocity = direction_global.cross(torque_force)
+
 		direction_global = direction_global.normalized()
 		# Remove rotation around bone forward axis.
 		angular_velocity = Plane(direction_global, 0.0).project(angular_velocity)

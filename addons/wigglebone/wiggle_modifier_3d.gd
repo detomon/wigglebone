@@ -115,7 +115,7 @@ func _resize_lists(count: int) -> void:
 
 
 func _get_shape() -> RID:
-	if not _shape_rid:
+	if not _shape_rid.is_valid():
 		_shape_rid = PhysicsServer3D.capsule_shape_create()
 
 	return _shape_rid

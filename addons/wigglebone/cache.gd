@@ -17,7 +17,7 @@ func _physics_process(_delta: float) -> void:
 
 
 func get_space() -> RID:
-	if not _space_rid:
+	if not _space_rid.is_valid():
 		_space_rid = PhysicsServer3D.space_create()
 
 	return _space_rid
@@ -53,5 +53,6 @@ static func get_for_skeleton(skeleton: Skeleton3D) -> DMWBCache:
 
 
 static func clear() -> void:
-	if _space_rid:
+	if _space_rid.is_valid():
 		PhysicsServer3D.free_rid(_space_rid)
+		_space_rid = RID()

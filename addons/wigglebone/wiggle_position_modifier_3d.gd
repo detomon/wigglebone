@@ -114,7 +114,7 @@ func _process_modification() -> void:
 			query_xform.origin = position_global + query_xform * (Vector3.UP * collision_length * 0.5)
 			shape_query.transform = query_xform
 
-			var points := space_state.collide_shape(shape_query, 2)
+			var points := space_state.collide_shape(shape_query, 1)
 			for j in range(0, len(points), 2):
 				var coll_a := points[j]
 				var coll_b := points[j + 1]
