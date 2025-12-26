@@ -39,7 +39,7 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.001, 0.1)
 
-	var skeleton_bone_parent_global_pose := skeleton.global_transform
+	var skeleton_transform := skeleton.global_transform
 	var frequency := properties.spring_freq * TAU
 	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.linear_damp
@@ -63,7 +63,7 @@ func _process_modification() -> void:
 		var position_global := _global_positions[i]
 		var velocity_global := _global_velocities[i]
 
-		var bone_parent_global_pose := skeleton_bone_parent_global_pose
+		var bone_parent_global_pose := skeleton_transform
 		if parent_idx >= 0:
 			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
 
@@ -71,16 +71,14 @@ func _process_modification() -> void:
 		var pose_to_global := bone_parent_global_pose * bone_pose
 		var global_to_pose := pose_to_global.affine_inverse()
 
-		if _reset:
-			position_local = Vector3.ZERO
-			position_global = pose_to_global.origin
-			velocity_global = Vector3.ZERO
-
 		var global_position_new := pose_to_global * position_local
 		position_global = global_position_new.lerp(position_global, properties.linear_scale)
 		var global_velocity := (global_position_new - position_global) / delta
 
 		if _reset:
+			position_local = Vector3.ZERO
+			position_global = pose_to_global.origin
+			velocity_global = Vector3.ZERO
 			global_velocity = Vector3.ZERO
 
 		# Global forces.
@@ -94,7 +92,7 @@ func _process_modification() -> void:
 		var acceleration := force
 		velocity_global += acceleration * delta
 
-		# Apply linear velocity to spring without damping (see README.md).
+		# Apply linear velocity to spring without damping.
 		if has_spring:
 			var pose_global := pose_to_global.origin
 			var spring_position := position_global - pose_global
@@ -181,7 +179,7 @@ func set_properties(value: DMWBWigglePositionProperties3D) -> void:
 		update_gizmos()
 
 
-## Adds a global force impulse.
+## Adds a global force impulse to all bones.
 func add_force_impulse(force: Vector3) -> void:
 	for i in len(_global_velocities):
 		_global_velocities[i] += force
@@ -195,7 +193,7 @@ func _setup() -> void:
 		return
 
 	var count := len(bones)
-	var skeleton_global_xform := skeleton.global_transform
+	var skeleton_transform := skeleton.global_transform
 
 	_resize_lists(count)
 
@@ -205,15 +203,15 @@ func _setup() -> void:
 			_resize_lists(0)
 			break
 
-		_bone_indices[i] = bone_idx
-
-		var skeleton_bone_pose := skeleton.get_bone_pose(bone_idx)
+		var bone_parent_global_pose := skeleton_transform
 		var parent_idx := skeleton.get_bone_parent(bone_idx)
-		_bone_parent_indices[i] = parent_idx
 		if parent_idx >= 0:
-			skeleton_bone_pose = skeleton.get_bone_global_pose(parent_idx) * skeleton_bone_pose
+			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
+		var position_global := bone_parent_global_pose * skeleton.get_bone_pose_position(bone_idx)
 
-		_global_positions[i] = skeleton_global_xform * skeleton_bone_pose.origin
+		_bone_indices[i] = bone_idx
+		_bone_parent_indices[i] = parent_idx
+		_global_positions[i] = position_global
 
 	_global_velocities.fill(Vector3.ZERO)
 	_local_positions.fill(Vector3.ZERO)

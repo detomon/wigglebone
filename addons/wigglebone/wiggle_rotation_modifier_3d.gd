@@ -6,7 +6,7 @@ extends DMWBWiggleModifier3D
 ## Adds jiggle physics to a bone influencing the pose rotation.
 
 const _SWING_LIMIT_EPSILON := 1e-4
-const _DEGREES_TO_RAD := PI / 180.0
+const _DEGREES_TO_RAD := TAU / 360.0
 
 ## Properties which define the spring behaviour.
 @export var properties: DMWBWiggleRotationProperties3D: set = set_properties
@@ -47,7 +47,7 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.0001, 0.1)
 
-	var skeleton_bone_parent_global_pose := skeleton.global_transform
+	var skeleton_transform := skeleton.global_transform
 	var frequency := properties.spring_freq * TAU
 	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.angular_damp
@@ -71,7 +71,7 @@ func _process_modification() -> void:
 		var direction_global := _global_directions[i]
 		var angular_velocity := _angular_velocities[i]
 
-		var bone_parent_global_pose := skeleton_bone_parent_global_pose
+		var bone_parent_global_pose := skeleton_transform
 		if parent_idx >= 0:
 			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
 
@@ -86,7 +86,9 @@ func _process_modification() -> void:
 		position_global = global_position_new
 
 		if _reset:
-			_angular_velocities[i] = Vector3.ZERO
+			position_global = pose_to_global.origin
+			direction_global = pose_global_direction
+			angular_velocity = Vector3.ZERO
 			global_velocity = Vector3.ZERO
 
 		# Global forces.
@@ -107,7 +109,7 @@ func _process_modification() -> void:
 			rotation_axis = pose_to_global_rotation * Vector3.RIGHT
 		rotation_axis = rotation_axis.normalized()
 
-		# Apply rotation velocity to spring without damping (see README.md).
+		# Apply rotation velocity to spring without damping.
 		if has_spring:
 			# Rotation axis where the length is the rotation difference to the pose in radians.
 			var spring_rotation := rotation_axis * rotation_angle
@@ -183,8 +185,8 @@ func _process_modification() -> void:
 		angular_velocity *= velocity_decay_delta
 
 		# Get rotation relative to current pose.
-		var local_direction := global_to_pose_rotation * direction_global
-		var rotation_relative := Quaternion(Vector3.UP, local_direction)
+		var direction_local := global_to_pose_rotation * direction_global
+		var rotation_relative := Quaternion(Vector3.UP, direction_local)
 		# Set bone pose rotation.
 		var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
 		var bone_rotation := bone_pose_rotation * rotation_relative
@@ -222,13 +224,13 @@ func set_handle_distance(value: float) -> void:
 	update_gizmos()
 
 
-## Adds a global torque impulse.
+## Adds a global torque impulse to all bones.
 func add_torque_impulse(torque: Vector3) -> void:
 	for i in len(_angular_velocities):
 		_angular_velocities[i] += torque
 
 
-## Adds a global force impulse.
+## Adds a global force impulse to all bones.
 func add_force_impulse(force: Vector3) -> void:
 	if not properties:
 		return
@@ -249,7 +251,7 @@ func _setup() -> void:
 		return
 
 	var count := len(bones)
-	var skeleton_global_xform := skeleton.global_transform
+	var skeleton_transform := skeleton.global_transform
 
 	_resize_lists(count)
 
@@ -259,18 +261,16 @@ func _setup() -> void:
 			_resize_lists(0)
 			break
 
-		_bone_indices[i] = bone_idx
-
-		var skeleton_bone_pose := skeleton.get_bone_pose(bone_idx)
+		var bone_parent_global_pose := skeleton_transform
 		var parent_idx := skeleton.get_bone_parent(bone_idx)
-		_bone_parent_indices[i] = parent_idx
 		if parent_idx >= 0:
-			skeleton_bone_pose = skeleton.get_bone_global_pose(parent_idx) * skeleton_bone_pose
+			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
+		var global_pose := bone_parent_global_pose * skeleton.get_bone_pose(bone_idx)
 
-		var global_bone_pose := skeleton_global_xform * skeleton_bone_pose
-
-		_global_positions[i] = global_bone_pose * Vector3.UP
-		_global_directions[i] = (global_bone_pose.basis * Vector3.UP).normalized()
+		_bone_indices[i] = bone_idx
+		_bone_parent_indices[i] = parent_idx
+		_global_positions[i] = global_pose.origin
+		_global_directions[i] = (global_pose.basis * Vector3.UP).normalized()
 
 	_angular_velocities.fill(Vector3.ZERO)
 

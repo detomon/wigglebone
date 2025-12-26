@@ -61,6 +61,7 @@ func _enter_tree() -> void:
 		_cache = DMWBCache.get_for_skeleton(skeleton)
 
 	_update_shape()
+	_update_shape_transform()
 
 
 func _exit_tree() -> void:
@@ -79,9 +80,9 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	# TODO: Update once.
-	PhysicsServer3D.area_set_transform(_area_rid, global_transform)
+	_update_shape_transform()
 
 
 func _notification(what: int) -> void:
@@ -148,6 +149,10 @@ func _update_shape_data() -> void:
 				height = cylinder.height,
 				radius = cylinder.radius,
 			})
+
+
+func _update_shape_transform() -> void:
+	PhysicsServer3D.area_set_transform(_area_rid, global_transform)
 
 
 func _on_shape_changed() -> void:
