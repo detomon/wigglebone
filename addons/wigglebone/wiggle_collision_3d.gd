@@ -27,6 +27,7 @@ var _cache: DMWBCache: set = _set_cache
 
 func _init() -> void:
 	_area_rid = PhysicsServer3D.area_create()
+	set_notify_transform(true)
 
 
 func set_shape(value: Shape3D) -> void:
@@ -49,9 +50,7 @@ func set_shape(value: Shape3D) -> void:
 func set_disabled(value: bool) -> void:
 	disabled = value
 
-	if _shape_rid.is_valid():
-		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, disabled)
-
+	_update_shape_disabled()
 	update_gizmos()
 
 
@@ -61,11 +60,10 @@ func _enter_tree() -> void:
 		_cache = DMWBCache.get_for_skeleton(skeleton)
 
 	_update_shape()
-	_update_shape_transform()
 
 
 func _exit_tree() -> void:
-	PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, true)
+	_update_shape_disabled(true)
 	_cache = null
 
 
@@ -80,15 +78,16 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-func _physics_process(_delta: float) -> void:
-	# TODO: Update once.
-	_update_shape_transform()
-
-
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_PREDELETE:
-		PhysicsServer3D.free_rid(_shape_rid)
-		PhysicsServer3D.free_rid(_area_rid)
+	match what:
+		NOTIFICATION_TRANSFORM_CHANGED:
+			_update_shape_transform()
+
+		NOTIFICATION_PREDELETE:
+			PhysicsServer3D.free_rid(_shape_rid)
+			PhysicsServer3D.free_rid(_area_rid)
+			_shape_rid = RID()
+			_area_rid = RID()
 
 
 func _set_cache(value: DMWBCache) -> void:
@@ -103,6 +102,9 @@ func _set_cache(value: DMWBCache) -> void:
 
 
 func _update_shape() -> void:
+	if not _area_rid.is_valid():
+		return
+
 	if _shape_rid.is_valid():
 		PhysicsServer3D.free_rid(_shape_rid)
 		_shape_rid = RID()
@@ -118,9 +120,9 @@ func _update_shape() -> void:
 
 	if _shape_rid.is_valid():
 		PhysicsServer3D.area_add_shape(_area_rid, _shape_rid)
-		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, disabled)
-
-	_update_shape_data()
+		_update_shape_disabled()
+		_update_shape_data()
+		_update_shape_transform()
 
 
 func _update_shape_data() -> void:
@@ -152,7 +154,13 @@ func _update_shape_data() -> void:
 
 
 func _update_shape_transform() -> void:
-	PhysicsServer3D.area_set_transform(_area_rid, global_transform)
+	if _area_rid.is_valid():
+		PhysicsServer3D.area_set_transform(_area_rid, global_transform)
+
+
+func _update_shape_disabled(value := disabled) -> void:
+	if _area_rid.is_valid() and _shape_rid.is_valid():
+		PhysicsServer3D.area_set_shape_disabled(_area_rid, 0, value)
 
 
 func _on_shape_changed() -> void:
