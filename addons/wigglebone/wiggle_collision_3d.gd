@@ -7,9 +7,6 @@ extends Node3D
 ##
 ## Allows bones from [DMWBWiggleRotationModifier3D] or [DMWBWigglePositionModifier3D] to collide
 ## with this shape. This node can be placed anywhere as a descendant in a [Skeleton3D].
-## [br][br]
-## [b]Note:[/b] Scaling is not supported. This node, the parent [Skeleton3D], and all nodes before
-## it have to be unscaled.
 
 const Functions := preload("functions.gd")
 

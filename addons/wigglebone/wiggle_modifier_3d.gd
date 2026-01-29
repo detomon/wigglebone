@@ -32,9 +32,7 @@ var _reset := true
 
 func _enter_tree() -> void:
 	var skeleton := get_skeleton()
-	if skeleton:
-		_cache = DMWBCache.get_for_skeleton(skeleton)
-
+	_cache = DMWBCache.get_for_skeleton(skeleton)
 	_setup()
 
 

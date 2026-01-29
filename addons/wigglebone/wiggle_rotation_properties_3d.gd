@@ -17,11 +17,11 @@ extends Resource
 	set = set_angular_damp
 
 ## Defines how much the rotation is influenced by forces ([code]°/m[/code]).
-@export_range(0.0, 6000.0, 0.001, "or_greater") var force_scale := 180.0:
+@export_range(0.0, 6000.0, 0.001, "or_greater", "suffix:°/m") var force_scale := 180.0:
 	set = set_force_scale
 
 ## Defines how much the rotation is influenced by global movement ([code]°/m[/code]).
-@export_range(0.0, 6000.0, 0.001, "or_greater") var linear_scale := 360.0:
+@export_range(0.0, 6000.0, 0.001, "or_greater", "suffix:°/m") var linear_scale := 360.0:
 	set = set_linear_scale
 
 ## Maximum angle in radians the bone can rotate around its pose.
@@ -31,12 +31,6 @@ extends Resource
 ## Applies a constant global force ([code]m/s²[/code]).
 @export_custom(PROPERTY_HINT_NONE, "suffix:m/s²") var gravity := Vector3.ZERO:
 	set = set_gravity
-
-
-func _validate_property(property: Dictionary) -> void:
-	match property.name:
-		&"force_scale", &"linear_scale":
-			property.hint_string = &"0,6000,0.001,or_greater,suffix:°/m"
 
 
 func set_spring_freq(value: float) -> void:

@@ -1,7 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://cnaxcfibm3xf8"]
+[gd_scene format=3 uid="uid://cnaxcfibm3xf8"]
 
 [ext_resource type="PackedScene" uid="uid://f8xayu7qvbjy" path="res://examples/wigglebone/palm/palm.gltf" id="1_agxe0"]
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_tjql0"]
+[ext_resource type="Script" uid="uid://dsc5b8h22r4pr" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_tjql0"]
 [ext_resource type="Resource" uid="uid://cwabaw2vr7rl" path="res://examples/wigglebone/palm/trunk.tres" id="3_3ngce"]
 [ext_resource type="Resource" uid="uid://w6m3ec6wrn42" path="res://examples/wigglebone/palm/leave.tres" id="4_12oac"]
 
@@ -41,30 +41,29 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_g66f6"]
 _data = {
-"RESET": SubResource("Animation_xchah"),
-"move": SubResource("Animation_q2f7y")
+&"RESET": SubResource("Animation_xchah"),
+&"move": SubResource("Animation_q2f7y")
 }
 
-[node name="Palm" instance=ExtResource("1_agxe0")]
+[node name="Palm" unique_id=836857380 instance=ExtResource("1_agxe0")]
 
 [node name="Skeleton3D" parent="Armature" index="0"]
-bones/5/rotation = Quaternion(0.619893, -0.557946, -0.533385, -0.141169)
-bones/5/scale = Vector3(1, 1, 1)
-bones/6/rotation = Quaternion(0.479159, 0.63294, 0.598154, -0.10957)
-bones/6/scale = Vector3(1, 1, 1)
-bones/7/rotation = Quaternion(-0.761246, 0.140111, 0.137308, 0.618078)
-bones/7/scale = Vector3(1, 1, 1)
-bones/8/rotation = Quaternion(0.710528, 0.364512, 0.348686, -0.490611)
-bones/8/scale = Vector3(1, 1, 1)
-bones/9/rotation = Quaternion(-0.668423, -0.16447, -0.165336, 0.706276)
-bones/10/rotation = Quaternion(0.648663, -0.432408, -0.422444, -0.462385)
-bones/11/scale = Vector3(1, 1, 1)
-bones/12/scale = Vector3(1, 1, 1)
-bones/13/rotation = Quaternion(0.721176, 0.329056, 0.327101, 0.514425)
-bones/13/scale = Vector3(1, 1, 1)
+bones/5/rotation = Quaternion(0.6198934, -0.5579457, -0.5333854, -0.14116949)
+bones/5/scale = Vector3(0.9999998, 0.99999976, 1)
+bones/6/rotation = Quaternion(0.47915858, 0.63294023, 0.598154, -0.109569736)
+bones/6/scale = Vector3(1, 0.9999996, 0.9999998)
+bones/7/rotation = Quaternion(-0.76124597, 0.14011122, 0.13730761, 0.6180777)
+bones/7/scale = Vector3(0.9999998, 0.9999998, 0.99999994)
+bones/8/rotation = Quaternion(0.7105276, 0.36451247, 0.3486864, -0.4906109)
+bones/8/scale = Vector3(1.0000001, 0.99999994, 0.99999994)
+bones/9/rotation = Quaternion(-0.6684226, -0.16446957, -0.16533604, 0.7062755)
+bones/10/rotation = Quaternion(0.6486631, -0.43240824, -0.42244443, -0.46238506)
+bones/11/scale = Vector3(1, 0.9999998, 0.9999999)
+bones/12/scale = Vector3(0.9999999, 0.9999998, 1)
+bones/13/rotation = Quaternion(0.7211757, 0.32905585, 0.3271015, 0.51442456)
+bones/13/scale = Vector3(0.9999998, 0.99999994, 0.99999994)
 
-[node name="ModifierTrunk" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="2"]
-_import_path = NodePath("")
+[node name="ModifierTrunk" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="2" unique_id=2082291997]
 unique_name_in_owner = false
 process_mode = 0
 process_priority = 0
@@ -73,7 +72,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3782, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.378198, 0)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false
@@ -82,12 +81,11 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_tjql0")
-bones = PackedStringArray("trunk.004")
 properties = ExtResource("3_3ngce")
 handle_distance = 1.5
+bones = PackedStringArray("trunk.004")
 
-[node name="ModifierLeaves" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="3"]
-_import_path = NodePath("")
+[node name="ModifierLeaves" type="SkeletonModifier3D" parent="Armature/Skeleton3D" index="3" unique_id=744480396]
 unique_name_in_owner = false
 process_mode = 0
 process_priority = 0
@@ -96,7 +94,7 @@ process_thread_group = 0
 physics_interpolation_mode = 0
 auto_translate_mode = 0
 editor_description = ""
-transform = Transform3D(0.269128, -0.951638, -0.14817, -0.17031, -0.198446, 0.965201, -0.947926, -0.234528, -0.215482, -0.0552611, 3.84572, -0.0336869)
+transform = Transform3D(0.2691275, -0.9516385, -0.14817011, -0.17031044, -0.19844627, 0.96520114, -0.9479265, -0.2345272, -0.2154814, -0.05526112, 3.845723, -0.033686876)
 rotation_edit_mode = 0
 rotation_order = 2
 top_level = false
@@ -105,11 +103,9 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_tjql0")
-bones = PackedStringArray("leave", "leave.000", "leave.001", "leave.002", "leave.003", "leave.004", "leave.005", "leave.006", "leave.007")
 properties = ExtResource("4_12oac")
 handle_distance = 1.0
+bones = PackedStringArray("leave", "leave.000", "leave.001", "leave.002", "leave.003", "leave.004", "leave.005", "leave.006", "leave.007")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="1"]
-libraries = {
-"": SubResource("AnimationLibrary_g66f6")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="1" unique_id=1386625371]
+libraries/ = SubResource("AnimationLibrary_g66f6")

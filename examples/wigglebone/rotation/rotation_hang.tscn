@@ -1,13 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://ocib660yqyfx"]
+[gd_scene format=3 uid="uid://ocib660yqyfx"]
 
-[ext_resource type="Script" path="res://examples/wigglebone/skeleton.gd" id="1_5lxs6"]
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_o4ifj"]
+[ext_resource type="Script" uid="uid://gybx2nvn3dxd" path="res://examples/wigglebone/skeleton.gd" id="1_5lxs6"]
+[ext_resource type="Script" uid="uid://dsc5b8h22r4pr" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_o4ifj"]
 [ext_resource type="Resource" uid="uid://bocywcrc2e0sc" path="res://examples/wigglebone/rotation/rotation_hang.tres" id="3_3cymf"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_5wbwm"]
 
-[node name="Position" type="Node3D"]
+[node name="Position" type="Node3D" unique_id=1182002890]
 
-[node name="Skeleton3D" type="Skeleton3D" parent="."]
+[node name="Skeleton3D" type="Skeleton3D" parent="." unique_id=1996217745]
 transform = Transform3D(-1, -1.50996e-07, 0, 1.50996e-07, -1, 0, 0, 0, 1, 0, 0, 0)
 bones/0/name = "bone0"
 bones/0/parent = -1
@@ -32,8 +32,7 @@ bones/2/rotation = Quaternion(0, 0, 0, 1)
 bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_5lxs6")
 
-[node name="RotationModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
-_import_path = NodePath("")
+[node name="RotationModifier" type="SkeletonModifier3D" parent="Skeleton3D" unique_id=1398390882]
 unique_name_in_owner = false
 process_mode = 0
 process_priority = 0
@@ -51,18 +50,17 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_o4ifj")
-bones = PackedStringArray("bone1")
 properties = ExtResource("3_3cymf")
 handle_distance = 0.5
+bones = PackedStringArray("bone1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/RotationModifier"]
+[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/RotationModifier" unique_id=1450664969]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_5wbwm")
 skeleton = NodePath("")
 metadata/_edit_lock_ = true
 
-[node name="RotationModifier2" type="SkeletonModifier3D" parent="Skeleton3D"]
-_import_path = NodePath("")
+[node name="RotationModifier2" type="SkeletonModifier3D" parent="Skeleton3D" unique_id=1319498608]
 unique_name_in_owner = false
 process_mode = 0
 process_priority = 0
@@ -80,11 +78,11 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_o4ifj")
-bones = PackedStringArray("end")
 properties = ExtResource("3_3cymf")
 handle_distance = 0.5
+bones = PackedStringArray("end")
 
-[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/RotationModifier2"]
+[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/RotationModifier2" unique_id=1645369442]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_5wbwm")
 skeleton = NodePath("")

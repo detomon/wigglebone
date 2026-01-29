@@ -188,7 +188,7 @@ func _process_modification() -> void:
 		var direction_local := global_to_pose_rotation * direction_global
 		var rotation_relative := Quaternion(Vector3.UP, direction_local)
 		# Set bone pose rotation.
-		var bone_pose_rotation := bone_pose.basis.get_rotation_quaternion()
+		var bone_pose_rotation := skeleton.get_bone_pose_rotation(bone_idx)
 		var bone_rotation := bone_pose_rotation * rotation_relative
 		skeleton.set_bone_pose_rotation(bone_idx, bone_rotation)
 
