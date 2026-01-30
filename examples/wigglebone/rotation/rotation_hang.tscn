@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://ocib660yqyfx"]
 
-[ext_resource type="Script" path="res://examples/wigglebone/skeleton.gd" id="1_5lxs6"]
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_o4ifj"]
+[ext_resource type="Script" uid="uid://gybx2nvn3dxd" path="res://examples/wigglebone/skeleton.gd" id="1_5lxs6"]
+[ext_resource type="Script" uid="uid://6fgx73tctu5v" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_o4ifj"]
 [ext_resource type="Resource" uid="uid://bocywcrc2e0sc" path="res://examples/wigglebone/rotation/rotation_hang.tres" id="3_3cymf"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_5wbwm"]
 

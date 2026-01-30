@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://cnaxcfibm3xf8"]
 
 [ext_resource type="PackedScene" uid="uid://f8xayu7qvbjy" path="res://examples/wigglebone/palm/palm.gltf" id="1_agxe0"]
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_tjql0"]
+[ext_resource type="Script" uid="uid://6fgx73tctu5v" path="res://addons/wigglebone/wiggle_rotation_modifier_3d.gd" id="2_tjql0"]
 [ext_resource type="Resource" uid="uid://cwabaw2vr7rl" path="res://examples/wigglebone/palm/trunk.tres" id="3_3ngce"]
 [ext_resource type="Resource" uid="uid://w6m3ec6wrn42" path="res://examples/wigglebone/palm/leave.tres" id="4_12oac"]
 
@@ -41,8 +41,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_g66f6"]
 _data = {
-"RESET": SubResource("Animation_xchah"),
-"move": SubResource("Animation_q2f7y")
+&"RESET": SubResource("Animation_xchah"),
+&"move": SubResource("Animation_q2f7y")
 }
 
 [node name="Palm" instance=ExtResource("1_agxe0")]

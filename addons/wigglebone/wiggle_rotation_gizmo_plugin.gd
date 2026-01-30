@@ -4,7 +4,7 @@ extends EditorNode3DGizmoPlugin
 const HANDLE_ID_FORCE := 0
 const FORCE_MULTIPLIER := 10.0
 
-const Functions := preload("functions.gd")
+const Functions := preload("gizmo_functions.gd")
 
 var _handle_init_position := Vector3.ZERO
 var _handle_position := Vector3.ZERO
