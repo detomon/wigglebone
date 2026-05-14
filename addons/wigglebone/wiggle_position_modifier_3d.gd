@@ -16,6 +16,10 @@ var _local_positions := PackedVector3Array() # Positions in pose space.
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := super()
 
+	if not bones:
+		warnings.append(tr(&"No bones defined.", &"DMWB"))
+	if len(_bone_indices) < len(bones):
+		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
 		warnings.append(tr(&"DMWBWigglePositionProperties3D resource is required.", &"DMWB"))
 
@@ -39,31 +43,21 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.001, 0.1)
 
-	var skeleton_transform := skeleton.global_transform
+	var skeleton_bone_parent_global_pose := skeleton.global_transform
 	var frequency := properties.spring_freq * TAU
 	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.linear_damp
 	var velocity_decay_delta := exp(-velocity_decay * delta)
 	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
 	var a := frequency * delta
-	var sin_ := sin(a)
 	var cos_ := cos(a)
-
-	var space_state: PhysicsDirectSpaceState3D
-	var shape_query: PhysicsShapeQueryParameters3D
-	if collision_enabled:
-		space_state = _cache.get_space_state()
-		if space_state:
-			shape_query = _get_query_params()
+	var sin_ := sin(a)
 
 	for i in len(_bone_indices):
 		var bone_idx := _bone_indices[i]
-		var parent_idx := _bone_parent_indices[i]
-		var position_local := _local_positions[i]
-		var position_global := _global_positions[i]
-		var velocity_global := _global_velocities[i]
+		var bone_parent_global_pose := skeleton_bone_parent_global_pose
 
-		var bone_parent_global_pose := skeleton_transform
+		var parent_idx := _bone_parent_indices[i]
 		if parent_idx >= 0:
 			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
 
@@ -71,14 +65,16 @@ func _process_modification() -> void:
 		var pose_to_global := bone_parent_global_pose * bone_pose
 		var global_to_pose := pose_to_global.affine_inverse()
 
-		var global_position_new := pose_to_global * position_local
-		position_global = global_position_new.lerp(position_global, properties.linear_scale)
-		var global_velocity := (global_position_new - position_global) / delta
+		if _reset:
+			_local_positions[i] = Vector3.ZERO
+			_global_positions[i] = pose_to_global.origin
+			_global_velocities[i] = Vector3.ZERO
+
+		var global_position_new := pose_to_global * _local_positions[i]
+		_global_positions[i] = global_position_new.lerp(_global_positions[i], properties.linear_scale)
+		var global_velocity := (global_position_new - _global_positions[i]) / delta
 
 		if _reset:
-			position_local = Vector3.ZERO
-			position_global = pose_to_global.origin
-			velocity_global = Vector3.ZERO
 			global_velocity = Vector3.ZERO
 
 		# Global forces.

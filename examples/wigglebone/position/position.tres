@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="DMWBWigglePositionProperties3D" load_steps=2 format=3 uid="uid://dwducfqd5pprg"]
 
-[ext_resource type="Script" path="res://addons/wigglebone/wiggle_position_properties_3d.gd" id="1_3njtd"]
+[ext_resource type="Script" uid="uid://l0kpkyxofqus" path="res://addons/wigglebone/wiggle_position_properties_3d.gd" id="1_3njtd"]
 
 [resource]
 script = ExtResource("1_3njtd")

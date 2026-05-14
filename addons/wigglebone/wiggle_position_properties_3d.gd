@@ -29,8 +29,14 @@ extends Resource
 	set = set_max_distance
 
 ## Applies a constant global force ([code]m/s²[/code]).
-@export_custom(PROPERTY_HINT_NONE, "suffix:m/s²") var gravity := Vector3.ZERO:
+@export var gravity := Vector3.ZERO:
 	set = set_gravity
+
+
+func _validate_property(property: Dictionary) -> void:
+	match property.name:
+		&"gravity":
+			property.hint_string = &"suffix:m/s²"
 
 
 func set_spring_freq(value: float) -> void:

@@ -8,15 +8,20 @@ extends DMWBWiggleModifier3D
 const _SWING_LIMIT_EPSILON := 1e-4
 const _DEGREES_TO_RAD := TAU / 360.0
 
-## Properties which define the spring behaviour.
-@export var properties: DMWBWiggleRotationProperties3D: set = set_properties
+const Functions := preload("functions.gd")
+
+@export_group("Force", "force")
+## Applies a constant global force.
+@export var force_global := Vector3.ZERO
+## Applies a constant force relative to the bone's pose.
+@export var force_local := Vector3.ZERO
 
 @export_group("Editor")
 ## Sets the distance of the editor handle on the bone's Y axis.
 @export_range(0.01, 1.0, 0.01, "or_greater", "suffix:m") var handle_distance := 0.25:
 	set = set_handle_distance
 
-var _global_positions := PackedVector3Array() # Global pose positions.
+var _global_positions := PackedVector3Array() # Global mass position.
 var _global_directions := PackedVector3Array() # Global bone direction.
 var _angular_velocities := PackedVector3Array() # Global angular velocity.
 
@@ -24,6 +29,10 @@ var _angular_velocities := PackedVector3Array() # Global angular velocity.
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := super()
 
+	if not bones:
+		warnings.append(tr(&"No bones defined.", &"DMWB"))
+	if len(_bone_indices) < len(bones):
+		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
 		warnings.append(tr(&"DMWBWiggleRotationProperties3D resource is required.", &"DMWB"))
 
@@ -47,7 +56,7 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.0001, 0.1)
 
-	var skeleton_transform := skeleton.global_transform
+	var skeleton_bone_parent_global_pose := skeleton.global_transform
 	var frequency := properties.spring_freq * TAU
 	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.angular_damp
@@ -222,6 +231,11 @@ func set_properties(value: DMWBWiggleRotationProperties3D) -> void:
 func set_handle_distance(value: float) -> void:
 	handle_distance = maxf(0.0, value)
 	update_gizmos()
+
+
+## Resets rotation and angular velocity.
+func reset() -> void:
+	_reset = true
 
 
 ## Adds a global torque impulse to all bones.

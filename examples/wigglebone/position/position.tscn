@@ -1,18 +1,13 @@
-[gd_scene format=3 uid="uid://ckue6504k456"]
+[gd_scene load_steps=5 format=3 uid="uid://ckue6504k456"]
 
 [ext_resource type="Script" uid="uid://gybx2nvn3dxd" path="res://examples/wigglebone/skeleton.gd" id="1_nwjfa"]
-[ext_resource type="Script" uid="uid://djes1fnqnt24y" path="res://addons/wigglebone/wiggle_position_modifier_3d.gd" id="2_5idjc"]
+[ext_resource type="Script" uid="uid://cu7klm6ckjl7c" path="res://addons/wigglebone/wiggle_position_modifier_3d.gd" id="2_5idjc"]
 [ext_resource type="Resource" uid="uid://dwducfqd5pprg" path="res://examples/wigglebone/position/position.tres" id="3_8uex0"]
 [ext_resource type="ArrayMesh" uid="uid://b08nxi61oc3eo" path="res://examples/wigglebone/bone.obj" id="4_71eoy"]
-[ext_resource type="Script" uid="uid://b4q0lvmxay1l4" path="res://addons/wigglebone/wiggle_collision_3d.gd" id="5_emmku"]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_eeukr"]
-height = 0.61
-radius = 0.145
+[node name="Position" type="Node3D"]
 
-[node name="Position" type="Node3D" unique_id=958814209]
-
-[node name="Skeleton3D" type="Skeleton3D" parent="." unique_id=1041472828]
+[node name="Skeleton3D" type="Skeleton3D" parent="."]
 bones/0/name = "bone0"
 bones/0/parent = -1
 bones/0/rest = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, -1)
@@ -36,7 +31,8 @@ bones/2/rotation = Quaternion(0, 0, 0, 1)
 bones/2/scale = Vector3(1, 1, 1)
 script = ExtResource("1_nwjfa")
 
-[node name="PositionModifier" type="SkeletonModifier3D" parent="Skeleton3D" unique_id=452481318]
+[node name="PositionModifier" type="SkeletonModifier3D" parent="Skeleton3D"]
+_import_path = NodePath("")
 unique_name_in_owner = false
 process_mode = 0
 process_priority = 0
@@ -54,17 +50,10 @@ visibility_parent = NodePath("")
 active = true
 influence = 1.0
 script = ExtResource("2_5idjc")
-properties = ExtResource("3_8uex0")
 bones = PackedStringArray("bone1")
-collision_enabled = true
-collision_length = 0.5
+properties = ExtResource("3_8uex0")
 
-[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/PositionModifier" unique_id=1698989595]
+[node name="Mesh" type="MeshInstance3D" parent="Skeleton3D/PositionModifier"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = ExtResource("4_71eoy")
 metadata/_edit_lock_ = true
-
-[node name="Collision" type="Node3D" parent="Skeleton3D" unique_id=439928679]
-transform = Transform3D(1, 0, 0, 0, 0.703482, 0.710714, 0, -0.710714, 0.703482, 0, -0.20500325, -0.238963)
-script = ExtResource("5_emmku")
-shape = SubResource("CylinderShape3D_eeukr")
