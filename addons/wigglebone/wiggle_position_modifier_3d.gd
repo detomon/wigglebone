@@ -3,31 +3,26 @@
 class_name DMWBWigglePositionModifier3D
 extends SkeletonModifier3D
 
-## Adds jiggle physics to a bone influencing the pose rotation.
+## Adds jiggle physics to a bone influencing the pose position.
 
 const Functions := preload("functions.gd")
 
-## Name of the bone to modify.
-@export var bone_name := "":
-	set = set_bone_name
-
-## Properties used to move the bone.
-@export var properties: DMWBWigglePositionProperties3D:
-	set = set_properties
+## Bone names to modify.
+@export var bones := PackedStringArray(): set = set_bones
+## Properties which define the spring behaviour.
+@export var properties: DMWBWigglePositionProperties3D: set = set_properties
 
 @export_group("Force", "force")
-
 ## Applies a constant global force.
 @export var force_global := Vector3.ZERO
-
 ## Applies a constant local force relative to the bone's pose.
 @export var force_local := Vector3.ZERO
 
-var _bone_idx := -1
-var _bone_parent_idx := -1
-var _global_position := Vector3.ZERO # Global pose position.
-var _global_velocity := Vector3.ZERO # Global velocity.
-var _local_position := Vector3.ZERO # Position in pose space.
+var _bone_indices := PackedInt32Array()
+var _bone_parent_indices := PackedInt32Array()
+var _global_positions := PackedVector3Array() # Global pose positions.
+var _global_velocities := PackedVector3Array() # Global velocities.
+var _local_positions := PackedVector3Array() # Positions in pose space.
 var _reset := true
 
 
@@ -36,18 +31,26 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
-	_bone_idx = -1
-	_bone_parent_idx = -1
+	_resize_lists(0)
+
+
+func _set(property: StringName, value: Variant) -> bool:
+	# Migrate old single bone name.
+	if property == &"bone_name":
+		set_bones([value])
+		return true
+
+	return false
 
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
-		&"bone_name":
+		&"bones":
 			var skeleton := get_skeleton()
-			var bone_names := Functions.get_sorted_skeleton_bones(skeleton)
+			var names := Functions.get_sorted_skeleton_bones(skeleton)
 
-			property.hint = PROPERTY_HINT_ENUM
-			property.hint_string = ",".join(bone_names)
+			property.hint = PROPERTY_HINT_TYPE_STRING
+			property.hint_string = "%d/%d:%s" % [TYPE_STRING, PROPERTY_HINT_ENUM, ",".join(names)]
 
 		&"force_global", &"force_local":
 			property.hint_string = &"suffix:m/s²"
@@ -56,6 +59,10 @@ func _validate_property(property: Dictionary) -> void:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 
+	if not bones:
+		warnings.append(tr(&"No bones defined.", &"DMWB"))
+	if len(_bone_indices) < len(bones):
+		warnings.append(tr(&"Some bone names are invalid.", &"DMWB"))
 	if not properties:
 		warnings.append(tr(&"DMWBWigglePositionProperties3D resource is required.", &"DMWB"))
 
@@ -63,7 +70,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _process_modification() -> void:
-	if _bone_idx < 0:
+	if not _bone_indices or not properties:
 		return
 
 	var skeleton := get_skeleton()
@@ -80,144 +87,166 @@ func _process_modification() -> void:
 	delta = clampf(delta, 0.001, 0.1)
 
 	var skeleton_bone_parent_global_pose := skeleton.global_transform
-	if _bone_parent_idx >= 0:
-		skeleton_bone_parent_global_pose *= skeleton.get_bone_global_pose(_bone_parent_idx)
-
-	var bone_pose := skeleton.get_bone_pose(_bone_idx)
-	var pose_to_global := skeleton_bone_parent_global_pose * bone_pose
-	var global_to_pose := pose_to_global.affine_inverse()
-
-	if _reset:
-		_local_position = Vector3.ZERO
-		_global_position = pose_to_global.origin
-		_global_velocity = Vector3.ZERO
-
-	var global_position_new := pose_to_global * _local_position
-	_global_position = global_position_new.lerp(_global_position, properties.linear_scale)
-	var global_velocity := (global_position_new - _global_position) / delta
-
-	if _reset:
-		global_velocity = Vector3.ZERO
-
-	# Global forces.
-	var force := (force_global + properties.get_gravity()) * properties.force_scale
-	# Add force relative to current pose.
-	force += pose_to_global.basis * force_local * properties.force_scale
-	# Add reverse global velocity.
-	force -= global_velocity
-
-	# Add force.
-	var acceleration := force
-	_global_velocity += acceleration * delta
-
-	# Apply spring velocity without damping (see README.md).
 	var frequency := properties.spring_freq * TAU
-	if not is_zero_approx(frequency):
-		var pose_global := pose_to_global.origin
-		var spring_position := _global_position - pose_global
-
-		var x0 := spring_position
-		var a := delta * frequency
-		var cos_ := cos(a)
-		var sin_ := sin(a)
-		var c2 := _global_velocity / frequency
-
-		_global_position = pose_global + (x0 * cos_ + c2 * sin_)
-		_global_velocity = (c2 * cos_ - x0 * sin_) * frequency
-
-	# No spring tension; linear movement.
-	else:
-		_global_position += _global_velocity * delta
-
-	# Set local position to calculate parent speed in next iteration.
-	_local_position = global_to_pose * _global_position
-
-	# Time-independent velocity damping (see README.md).
+	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.linear_damp
-	_global_velocity *= exp(-velocity_decay * delta)
+	var velocity_decay_delta := exp(-velocity_decay * delta)
+	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
+	var a := frequency * delta
+	var sin_ := sin(a)
+	var cos_ := cos(a)
 
-	# Limit position and velocity.
-	var length_squared := _local_position.length_squared()
-	var max_distance := properties.max_distance
-	if length_squared > max_distance * max_distance:
-		# Limit position to max_distance.
-		_local_position = _local_position * max_distance / sqrt(length_squared)
-		# Recalculate global position.
-		_global_position = pose_to_global * _local_position
+	for i in len(_bone_indices):
+		var bone_idx := _bone_indices[i]
+		var parent_idx := _bone_parent_indices[i]
+		var position_global := _global_positions[i]
+		var velocity_global := _global_velocities[i]
+		var position_local := _local_positions[i]
+		var bone_parent_global_pose := skeleton_bone_parent_global_pose
 
-		var position_relative := _global_position - pose_to_global.origin
-		# Limit velocity when moving towards limit.
-		if position_relative.dot(_global_velocity) > 0.0:
-			# Project velocity to sphere tangent.
-			_global_velocity = Plane(position_relative.normalized(), 0.0).project(_global_velocity)
+		if parent_idx >= 0:
+			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
 
-	# Set bone pose position.
-	var bone_position := bone_pose * _local_position
-	skeleton.set_bone_pose_position(_bone_idx, bone_position)
+		var bone_pose := skeleton.get_bone_pose(bone_idx)
+		var pose_to_global := bone_parent_global_pose * bone_pose
+		var global_to_pose := pose_to_global.affine_inverse()
 
-	# Apply bone transform to node.
-	bone_pose.origin = bone_position
-	global_transform = skeleton_bone_parent_global_pose * bone_pose
+		var global_position_new := pose_to_global * position_local
+		position_global = global_position_new.lerp(position_global, properties.linear_scale)
+		var global_velocity := (global_position_new - position_global) / delta
+
+		if _reset:
+			position_local = Vector3.ZERO
+			position_global = pose_to_global.origin
+			velocity_global = Vector3.ZERO
+			global_velocity = Vector3.ZERO
+
+		# Global forces.
+		var force := global_force \
+			# Add force relative to current pose.
+			+ pose_to_global.basis * force_local * properties.force_scale \
+			# Add reverse global velocity.
+			- global_velocity
+
+		# Add force.
+		var acceleration := force
+		velocity_global += acceleration * delta
+
+		# Apply linear velocity to spring without damping.
+		if has_spring:
+			var pose_global := pose_to_global.origin
+			var spring_position := position_global - pose_global
+
+			var x0 := spring_position
+			var c2 := velocity_global / frequency
+
+			position_global = pose_global + (x0 * cos_ + c2 * sin_)
+			velocity_global = (c2 * cos_ - x0 * sin_) * frequency
+
+		# No spring tension; linear movement.
+		else:
+			position_global += velocity_global * delta
+
+		# Set local position to calculate parent speed in next iteration.
+		position_local = global_to_pose * position_global
+		# Time-independent velocity damping.
+		velocity_global *= velocity_decay_delta
+
+		# Limit position and velocity.
+		var length_squared := position_local.length_squared()
+		var max_distance := properties.max_distance
+		if length_squared > max_distance * max_distance:
+			# Limit position to max_distance.
+			position_local = position_local * max_distance / sqrt(length_squared)
+			# Recalculate global position.
+			position_global = pose_to_global * position_local
+
+			var position_relative := position_global - pose_to_global.origin
+			# Limit velocity when moving towards limit.
+			if position_relative.dot(velocity_global) > 0.0:
+				# Project velocity to sphere tangent.
+				velocity_global = Plane(position_relative.normalized(), 0.0).project(velocity_global)
+
+		# Set bone pose position.
+		var bone_position := bone_pose * position_local
+		skeleton.set_bone_pose_position(bone_idx, bone_position)
+
+		_local_positions[i] = position_local
+		_global_positions[i] = position_global
+		_global_velocities[i] = velocity_global
+
+		# Use first bone for modifier position.
+		if i == 0:
+			# Apply bone transform to node.
+			bone_pose.origin = bone_position
+			global_transform = bone_parent_global_pose * bone_pose
 
 	_reset = false
 
 
 func set_properties(value: DMWBWigglePositionProperties3D) -> void:
-	var is_editor := Engine.is_editor_hint()
-
-	if properties and is_editor:
-		properties.changed.disconnect(_on_properties_changed)
+	if Engine.is_editor_hint():
+		if properties:
+			properties.changed.disconnect(_on_properties_changed)
+		if value:
+			value.changed.connect(_on_properties_changed)
 
 	properties = value
-
-	if properties and is_editor:
-		properties.changed.connect(_on_properties_changed)
-
-	_setup()
-	update_gizmos()
-	update_configuration_warnings()
-
-
-func set_bone_name(value: String) -> void:
-	bone_name = value
-	_setup()
 	update_gizmos()
 
 
-## Reset position and velocity.
+func set_bones(value: PackedStringArray) -> void:
+	bones = value
+	if is_inside_tree():
+		_setup()
+		update_gizmos()
+
+
+## Resets position and velocity.
 func reset() -> void:
 	_reset = true
 
 
-## Add a global force impulse.
+## Adds a global force impulse.
 func add_force_impulse(force: Vector3) -> void:
-	_global_velocity += force
+	for i in len(_global_velocities):
+		_global_velocities[i] += force
 
 
 func _setup() -> void:
-	_bone_idx = -1
-
-	if not properties:
-		return
+	_resize_lists(0)
 
 	var skeleton := get_skeleton()
 	if not skeleton:
 		return
 
-	_bone_idx = skeleton.find_bone(bone_name)
-	if _bone_idx < 0:
-		return
+	var count := len(bones)
+	var valid_count := 0
 
-	var skeleton_bone_pose := skeleton.get_bone_pose(_bone_idx)
-	_bone_parent_idx = skeleton.get_bone_parent(_bone_idx)
+	_resize_lists(count)
 
-	if _bone_parent_idx >= 0:
-		skeleton_bone_pose = skeleton.get_bone_global_pose(_bone_parent_idx) * skeleton_bone_pose
+	for i in count:
+		var bone_idx := skeleton.find_bone(bones[i])
+		if bone_idx < 0:
+			continue
 
-	_global_position = skeleton.global_transform * skeleton_bone_pose.origin
-	_global_velocity = Vector3.ZERO
-	_local_position = Vector3.ZERO
-	_reset = true
+		_bone_indices[valid_count] = bone_idx
+		_bone_parent_indices[valid_count] = skeleton.get_bone_parent(bone_idx)
+		valid_count += 1
+
+	if valid_count < count:
+		_resize_lists(valid_count)
+
+	reset()
+	update_configuration_warnings()
+
+
+func _resize_lists(count: int) -> void:
+	_bone_indices.resize(count)
+	_bone_parent_indices.resize(count)
+	_global_positions.resize(count)
+	_global_velocities.resize(count)
+	_local_positions.resize(count)
 
 
 func _on_properties_changed() -> void:

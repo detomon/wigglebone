@@ -14,7 +14,7 @@ Adds jiggle physics to a `Skeleton3D` bone using `SkeletonModifier3D` nodes.
 
 ---
 
-![Palm](images/palm.gif)
+![A palm swaying in the wind](images/palm.gif)
 
 ## Installation
 
@@ -30,24 +30,29 @@ or...
 
 ## Usage
 
-You can now add `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D` nodes to a `Skeleton3D`. See the example scenes in [examples](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone).
+- Add `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D` nodes to a `Skeleton3D`.
+- Define the `bones` which should be modified.
+- Add a property resource (`DMWBWiggleRotationProperties3D` or `DMWBWigglePositionProperties3D`) to define how the bones should behave.
+
+See the [example scenes](https://github.com/detomon/wigglebone/tree/master/examples/wigglebone) for some examples.
 
 **Note:** Poses modified in `SkeletonModifier3D` nodes are only temporary for the current frame. Modifiers for parent bones should come first (above) in the scene tree, otherwise it may have not the desired effect.
 
 > [!WARNING]
-> The `WiggleBone` node is deprecated and should be replaced with either `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D`.
+> The `WiggleBone` node is deprecated and will be removed in a future release. It should be replaced with either `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D`.
 
 ## Wiggle rotation
 
-**DMWBWiggleRotationModifier3D**
+![Icon of the rotation modifier node](addons/wigglebone/icons/wiggle_rotation_modifier_3d.svg) **DMWBWiggleRotationModifier3D**
 
-Rotates the bone around the current bone pose. The current pose direction acts as the spring's rest position.
+Behaves like a spring attached to the bone's current pose and rotates it around its origin. It reacts to global movement, rotation, or applied forces. The current pose direction acts as the spring's rest position.
 
 ### Modifier properties
 
 | Property | Description |
 |---|---|
-| `properties` | Properties used to move the bone. (`DMWBWiggleRotationProperties3D`) |
+| `bones` | A list of bone names to modify with the defined properties. |
+| `properties` | Properties which define the spring behaviour. (`DMWBWiggleRotationProperties3D`) |
 | `force_global ` | Applies a constant global force. |
 | `force_local ` | Applies a constant force relative to the bone's pose. |
 | `handle_distance ` | Sets the distance of the editor handle on the bone's Y axis. |
@@ -56,16 +61,16 @@ Rotates the bone around the current bone pose. The current pose direction acts a
 
 **DMWBWiggleRotationProperties3D**
 
-Used to set the modifier properties. Can be shared by multiple modifiers.
+Sets the modifier properties. Can be shared by multiple modifiers.
 
 | Property | Description |
 |---|---|
-| `spring_freq ` | The spring's oscillation frequency. *Note: Adding forces may change the frequency.* |
+| `spring_freq ` | The spring's oscillation frequency in `Hz`. *Note: Adding forces may change the frequency.* |
 | `angular_damp` | Damping factor of the angular velocity. |
-| `force_scale` | Defines how much the rotation is influenced by forces. |
-| `linear_scale` | Defines how much the rotation is influenced by global movement. |
-| `swing_span` | Maximum angle the bone can rotate around its pose. |
-| `gravity` | Applies a constant global force. |
+| `force_scale` | Defines how much the rotation is influenced by forces (`°/m`). |
+| `linear_scale` | Defines how much the rotation is influenced by global movement (`°/m`). |
+| `swing_span` |  Maximum angle in radians the bone can rotate around its pose. |
+| `gravity` | Applies a constant global force (`m/s²`). |
 
 ### Methods
 
@@ -77,7 +82,7 @@ Used to set the modifier properties. Can be shared by multiple modifiers.
 
 ### Free rotation
 
-To allow the bone to rotate freely, the spring frequency (`spring_freq`) can  be set to `0.0` or a very low value.
+To allow the bone to rotate freely, the spring frequency (`spring_freq`) can be set to `0.0` or a very low value.
 
 ### Limitations
 
@@ -89,15 +94,16 @@ To allow the bone to rotate freely, the spring frequency (`spring_freq`) can  be
 
 ## Wiggle position
 
-**DMWBWigglePositionModifier3D**
+![Icon of the position modifier node](addons/wigglebone/icons/wiggle_position_modifier_3d.svg) **DMWBWigglePositionModifier3D**
 
-Moves the bone around the current bone pose without rotating. The current pose position acts as the spring's rest position.
+Behaves like a spring attached to the bone's current pose and moves its origin without rotating. It reacts to global movement or applied forces. The current pose position acts as the spring's rest position.
 
 ### Modifier properties
 
 | Property | Description |
 |---|---|
-| `properties` | Properties used to move the bone. (`DMWBWigglePositionProperties3D`) |
+| `bones` | A list of bone names to modify with the defined properties. |
+| `properties` | Properties which define the spring behaviour. (`DMWBWigglePositionProperties3D`) |
 | `force_global ` | Applies a constant global force. |
 | `force_local ` | Applies a constant local force relative to the bone's pose. |
 
@@ -105,16 +111,16 @@ Moves the bone around the current bone pose without rotating. The current pose p
 
 **DMWBWigglePositionProperties3D**
 
-Used to set the modifier properties. Can be shared by multiple modifiers.
+Sets the modifier properties. Can be shared by multiple modifiers.
 
 | Property | Description |
 |---|---|
-| `spring_freq ` | The spring's oscillation frequency. *Note: Adding forces may change the frequency.* |
+| `spring_freq ` | The spring's oscillation frequency in `Hz`. *Note: Adding forces may change the frequency.* |
 | `linear_damp` | Damping factor of the velocity. |
-| `force_scale` | Defines how much the position is influenced by forces. |
-| `linear_scale` | Defines how much the position is influenced by global movement. |
-| `max_distance` | Maximum distance the bone can move around its pose position. |
-| `gravity` | Applies a constant global force. |
+| `force_scale` | A factor which defines how much the position is influenced by forces. |
+| `linear_scale` | A factor which defines how much the position is influenced by global movement. |
+| `max_distance` | Maximum distance in meters the bone can move around its pose position. |
+| `gravity` | Applies a constant global force (`m/s²`). |
 
 ### Methods
 
@@ -123,11 +129,15 @@ Used to set the modifier properties. Can be shared by multiple modifiers.
 | `void reset()` | Reset position and velocity. |
 | `void add_force_impulse(force: Vector3)` | Add a global force impulse. |
 
-## Testing in Editor
+### Free movement
+
+To allow the bone to move freely, the spring frequency (`spring_freq`) can be set to `0.0` or a very low value.
+
+## Testing in editor
 
 When a `DMWBWiggleRotationModifier3D` or `DMWBWigglePositionModifier3D` node is selected in the scene tree, a force can be applied to it by dragging its handle. Another way is to drag or rotate the `Skeleton3D` or one of its parents.
 
-### Disabling Editor Gizmo
+### Disabling editor gizmos
 
 The editor gizmo (cone/sphere) can be hidden in the 3D viewport by disabling it in `View > Gizmos > DMWBWiggleRotationModifier3D` or `View > Gizmos > DMWBWigglePositionModifier3D`, respectively.
 
