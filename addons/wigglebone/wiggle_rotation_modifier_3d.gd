@@ -81,8 +81,8 @@ func _process_modification() -> void:
 	if not _bone_indices:
 		return
 
-	var skeleton := get_skeleton()
 	var delta := 0.0
+	var skeleton := get_skeleton()
 
 	match skeleton.modifier_callback_mode_process:
 		Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_IDLE:
@@ -94,21 +94,24 @@ func _process_modification() -> void:
 	# Limit delta.
 	delta = clampf(delta, 0.0001, 0.1)
 
-	var skeleton_bone_parent_global_pose := skeleton.global_transform
+	var skeleton_transform := skeleton.global_transform
 	var frequency := properties.spring_freq * TAU
 	var has_spring := not is_zero_approx(frequency)
 	var velocity_decay := properties.angular_damp
 	var velocity_decay_delta := exp(-velocity_decay * delta)
 	var global_force := (force_global + properties.get_gravity()) * properties.force_scale
 	var a := frequency * delta
-	var cos_ := cos(a)
 	var sin_ := sin(a)
+	var cos_ := cos(a)
 
 	for i in len(_bone_indices):
 		var bone_idx := _bone_indices[i]
-		var bone_parent_global_pose := skeleton_bone_parent_global_pose
-
 		var parent_idx := _bone_parent_indices[i]
+		var position_global := _global_positions[i]
+		var direction_global := _global_directions[i]
+		var angular_velocity := _angular_velocities[i]
+
+		var bone_parent_global_pose := skeleton_transform
 		if parent_idx >= 0:
 			bone_parent_global_pose *= skeleton.get_bone_global_pose(parent_idx)
 
@@ -119,11 +122,13 @@ func _process_modification() -> void:
 		var pose_global_direction := pose_to_global_rotation * Vector3.UP
 
 		var global_position_new := pose_to_global.origin
-		var global_velocity := (global_position_new - _global_positions[i]) / delta
-		_global_positions[i] = global_position_new
+		var global_velocity := (global_position_new - position_global) / delta
+		position_global = global_position_new
 
 		if _reset:
-			_angular_velocities[i] = Vector3.ZERO
+			position_global = pose_to_global.origin
+			direction_global = pose_global_direction
+			angular_velocity = Vector3.ZERO
 			global_velocity = Vector3.ZERO
 
 		# Global forces.
@@ -134,44 +139,44 @@ func _process_modification() -> void:
 			- global_velocity * properties.linear_scale
 
 		# Add torque.
-		var angular_acceleration := _global_directions[i].cross(force) * _DEGREES_TO_RAD
-		_angular_velocities[i] += angular_acceleration * delta
+		var angular_acceleration := direction_global.cross(force) * _DEGREES_TO_RAD
+		angular_velocity += angular_acceleration * delta
 
-		var rotation_axis := pose_global_direction.cross(_global_directions[i])
-		var rotation_angle := pose_global_direction.angle_to(_global_directions[i])
+		var rotation_axis := pose_global_direction.cross(direction_global)
+		var rotation_angle := pose_global_direction.angle_to(direction_global)
 		# Use fallback axis when exactly 0° or 180°.
 		if rotation_axis.is_zero_approx():
 			rotation_axis = pose_to_global_rotation * Vector3.RIGHT
 		rotation_axis = rotation_axis.normalized()
 
-		# Apply rotation velocity to spring without damping (see README.md).
+		# Apply rotation velocity to spring without damping.
 		if has_spring:
 			# Rotation axis where the length is the rotation difference to the pose in radians.
 			var spring_rotation := rotation_axis * rotation_angle
 
 			var x0 := spring_rotation
-			var c2 := _angular_velocities[i] / frequency
+			var c2 := angular_velocity / frequency
 
 			spring_rotation = x0 * cos_ + c2 * sin_
-			_angular_velocities[i] = (c2 * cos_ - x0 * sin_) * frequency
+			angular_velocity = (c2 * cos_ - x0 * sin_) * frequency
 
 			# FIXME: Handle wrapping around pole when rotation_angle > PI.
 			rotation_angle = spring_rotation.length()
 			if not is_zero_approx(rotation_angle):
 				rotation_axis = spring_rotation / rotation_angle # Normalize axis.
-				_global_directions[i] = pose_global_direction.rotated(rotation_axis, rotation_angle)
+				direction_global = pose_global_direction.rotated(rotation_axis, rotation_angle)
 
 		# No spring tension; linear rotation.
 		else:
-			var velocity := _angular_velocities[i].length()
+			var velocity := angular_velocity.length()
 			if not is_zero_approx(velocity):
-				var velocity_axis := _angular_velocities[i] / velocity
+				var velocity_axis := angular_velocity / velocity
 				var velocity_delta := velocity * delta
-				_global_directions[i] = _global_directions[i].rotated(velocity_axis, velocity_delta)
+				direction_global = direction_global.rotated(velocity_axis, velocity_delta)
 
 				# FIXME: Optimize.
-				rotation_axis = pose_global_direction.cross(_global_directions[i])
-				rotation_angle = pose_global_direction.angle_to(_global_directions[i])
+				rotation_axis = pose_global_direction.cross(direction_global)
+				rotation_angle = pose_global_direction.angle_to(direction_global)
 				# Use fallback axis when exactly 0° or 180°.
 				if rotation_axis.is_zero_approx():
 					rotation_axis = pose_to_global_rotation * Vector3.RIGHT
@@ -180,33 +185,33 @@ func _process_modification() -> void:
 		# Limit rotation and angular velocity. _SWING_LIMIT_EPSILON prevents sticking to limit.
 		if rotation_angle > properties.swing_span + _SWING_LIMIT_EPSILON:
 			# Limit rotation.
-			_global_directions[i] = pose_global_direction.rotated(rotation_axis, properties.swing_span)
+			direction_global = pose_global_direction.rotated(rotation_axis, properties.swing_span)
 
 			# Limit velocity when rotating towards limit
-			if _angular_velocities[i].dot(rotation_axis) > 0.0:
+			if angular_velocity.dot(rotation_axis) > 0.0:
 				# Global velocity at bone tail.
-				var torque_force := _angular_velocities[i].cross(_global_directions[i])
+				var torque_force := angular_velocity.cross(direction_global)
 				# Limit force to tangent on swing span circle.
 				torque_force = torque_force.project(rotation_axis)
-				_angular_velocities[i] = _global_directions[i].cross(torque_force)
+				angular_velocity = direction_global.cross(torque_force)
 
-		_global_directions[i] = _global_directions[i].normalized()
+		direction_global = direction_global.normalized()
 		# Remove rotation around bone forward axis.
-		_angular_velocities[i] = Plane(_global_directions[i], 0.0).project(_angular_velocities[i])
-
-		# Time-independent velocity damping (see README.md).
-		_angular_velocities[i] *= velocity_decay_delta
+		angular_velocity = Plane(direction_global, 0.0).project(angular_velocity)
+		# Time-independent velocity damping.
+		angular_velocity *= velocity_decay_delta
 
 		# Get rotation relative to current pose.
-		var local_direction := global_to_pose_rotation * _global_directions[i]
-		var rotation_relative := Quaternion(Vector3.UP, local_direction) \
-			if not is_equal_approx(local_direction.dot(Vector3.UP), -1.0) \
-			else Quaternion(1.0, 0.0, 0.0, 0.0) # Rotate around X axis as fallback when rotation is exactly 180°.
-
+		var direction_local := global_to_pose_rotation * direction_global
+		var rotation_relative := Quaternion(Vector3.UP, direction_local)
 		# Set bone pose rotation.
 		var bone_pose_rotation := skeleton.get_bone_pose_rotation(bone_idx)
 		var bone_rotation := bone_pose_rotation * rotation_relative
 		skeleton.set_bone_pose_rotation(bone_idx, bone_rotation)
+
+		_global_positions[i] = position_global
+		_global_directions[i] = direction_global
+		_angular_velocities[i] = angular_velocity
 
 		# Use first bone for modifier position.
 		if i == 0:
