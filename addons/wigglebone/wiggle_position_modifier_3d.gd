@@ -70,7 +70,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _process_modification() -> void:
-	if not _bone_indices:
+	if not _bone_indices or not properties:
 		return
 
 	var skeleton := get_skeleton()
@@ -192,14 +192,14 @@ func set_properties(value: DMWBWigglePositionProperties3D) -> void:
 			value.changed.connect(_on_properties_changed)
 
 	properties = value
-	_setup()
 	update_gizmos()
 
 
 func set_bones(value: PackedStringArray) -> void:
 	bones = value
-	_setup()
-	update_gizmos()
+	if is_inside_tree():
+		_setup()
+		update_gizmos()
 
 
 ## Resets position and velocity.
@@ -216,16 +216,12 @@ func add_force_impulse(force: Vector3) -> void:
 func _setup() -> void:
 	_resize_lists(0)
 
-	if not properties:
-		return
-
 	var skeleton := get_skeleton()
 	if not skeleton:
 		return
 
 	var count := len(bones)
 	var valid_count := 0
-	var skeleton_global_xform := skeleton.global_transform
 
 	_resize_lists(count)
 
@@ -235,17 +231,7 @@ func _setup() -> void:
 			continue
 
 		_bone_indices[valid_count] = bone_idx
-
-		var skeleton_bone_pose := skeleton.get_bone_pose(bone_idx)
-		var parent_idx := skeleton.get_bone_parent(bone_idx)
-		_bone_parent_indices[valid_count] = parent_idx
-		if parent_idx >= 0:
-			skeleton_bone_pose = skeleton.get_bone_global_pose(parent_idx) * skeleton_bone_pose
-
-		_global_positions[i] = skeleton_global_xform * skeleton_bone_pose.origin
-		_global_velocities[i] = Vector3.ZERO
-		_local_positions[i] = Vector3.ZERO
-
+		_bone_parent_indices[valid_count] = skeleton.get_bone_parent(bone_idx)
 		valid_count += 1
 
 	if valid_count < count:
